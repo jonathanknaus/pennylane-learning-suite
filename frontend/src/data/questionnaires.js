@@ -1,6 +1,7 @@
 // Banque : exactement 5 questions par module (pré et post posent les mêmes 5, ordre aléatoire différent)
 // Une question : { id, enonce, options: [A,B,C,D], reponse: 'A'|'B'|'C'|'D' }
 
+import { uid } from './ids.js'
 const BANQUE_STANDARD = {
   saisie_comptable: [
     { id: 'sc1', enonce: "Quelle fonctionnalité Pennylane permet de catégoriser automatiquement les transactions bancaires ?", options: ["Le rapprochement manuel", "Les règles de catégorisation automatique", "L'export comptable", "Le lettrage"], reponse: "B" },
@@ -214,7 +215,7 @@ export function sauvegarderReponses({ sessionId, stagiaireId, type, questions, r
   const all = getReponses()
   const score = calculerScore(questions, reponses)
   const entry = {
-    id: `${sessionId}_${stagiaireId}_${type}_${Date.now()}`,
+    id: `${sessionId}_${stagiaireId}_${type}_${uid()}`,
     sessionId, stagiaireId, type,
     date: new Date().toISOString(),
     questions, reponses, score,

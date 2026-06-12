@@ -1,4 +1,5 @@
 // Trace de traitement des articles de veille — preuve Qualiopi
+import { uid } from './ids.js'
 const STORAGE_KEY = 'pls_traitements'
 
 export const DECISIONS = {
@@ -22,7 +23,7 @@ export function getTraitement(articleId) {
 export function enregistrerTraitement({ articleId, articleTitre, articleSource, articleThematique, articleDate, decision, commentaire, destinataires }) {
   const traitements = getTraitements().filter(t => t.articleId !== articleId)
   const trace = {
-    id: `t_${Date.now()}`,
+    id: uid('t'),
     articleId,
     articleTitre,
     articleSource,

@@ -1,3 +1,4 @@
+import { uid } from './ids.js'
 export const RESPONSABLE = {
   prenom: 'Sarah',
   nom: 'BRIDEN',
@@ -30,7 +31,7 @@ export function saveFormateurs(liste) {
 
 export function addFormateur(prenom, nom, email) {
   const liste = getFormateurs()
-  const nouveau = { id: `f_${Date.now()}`, prenom, nom, email, actif: true }
+  const nouveau = { id: uid('f'), prenom, nom, email, actif: true }
   const updated = [...liste, nouveau]
   saveFormateurs(updated)
   return updated

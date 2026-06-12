@@ -1,4 +1,5 @@
 import { THEMATIQUES, TARIFS } from './catalogue-afs'
+import { uid } from './ids.js'
 
 export const FORMATS = Object.entries(TARIFS)
   .filter(([k]) => k !== 'journee_sur_mesure')
@@ -28,7 +29,7 @@ export function saveSession(session) {
   if (idx >= 0) {
     sessions[idx] = session
   } else {
-    sessions.push({ ...session, id: `s_${Date.now()}`, createdAt: new Date().toISOString() })
+    sessions.push({ ...session, id: uid('s'), createdAt: new Date().toISOString() })
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions))
   return sessions

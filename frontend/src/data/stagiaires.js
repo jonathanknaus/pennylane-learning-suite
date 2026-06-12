@@ -1,3 +1,4 @@
+import { uid } from './ids.js'
 const STAGIAIRES_KEY = 'pls_stagiaires'
 const INSCRIPTIONS_KEY = 'pls_inscriptions'
 
@@ -14,7 +15,7 @@ export function saveStagiaire(stagiaire) {
   if (idx >= 0) {
     list[idx] = stagiaire
   } else {
-    list.push({ ...stagiaire, id: `stag_${Date.now()}`, createdAt: new Date().toISOString() })
+    list.push({ ...stagiaire, id: uid('stag'), createdAt: new Date().toISOString() })
   }
   localStorage.setItem(STAGIAIRES_KEY, JSON.stringify(list))
   return list
@@ -48,7 +49,7 @@ export function inscrire(sessionId, stagiaireId) {
   const list = getInscriptions()
   if (list.find(i => i.sessionId === sessionId && i.stagiaireId === stagiaireId)) return list
   list.push({
-    id: `ins_${Date.now()}`,
+    id: uid('ins'),
     sessionId,
     stagiaireId,
     statut: 'inscrit',
