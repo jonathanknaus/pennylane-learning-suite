@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ARTICLES, SOURCES, NIVEAUX } from '../data/veille'
 import { getTraitements, getTraitement, enregistrerTraitement, DECISIONS, exportRegistreCSV } from '../data/traitement'
 import { getFormateurs, addFormateur, updateFormateur, removeFormateur } from '../data/formateurs'
 import { RESPONSABLE } from '../data/formateurs'
+import { chargerDepuisGitHub, sauvegarderSurGitHub } from '../data/github-storage'
 import './TableauDeBord.css'
 
 // ── Modale de traitement ──────────────────────────────────────────────────────
@@ -204,12 +205,36 @@ export default function TableauDeBord() {
   const [modaleArticle, setModaleArticle] = useState(null)
   const [onglet, setOnglet] = useState('veille')
   const [banniereVisible, setBanniereVisible] = useState(() => shouldWarnBackup(getTraitements()))
+  const [syncStatus, setSyncStatus] = useState(null) // null | 'saving' | 'ok' | 'error'
 
-  function handleSaveTraitement(data) {
+  // Charger depuis GitHub au démarrage
+  useEffect(() => {
+    chargerDepuisGitHub().then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem('pls_traitements', JSON.stringify(data))
+        setTraitements(data)
+        setBanniereVisible(shouldWarnBackup(data))
+      }
+    })
+  }, [])
+
+  async function handleSaveTraitement(data) {
     enregistrerTraitement(data)
     const updated = getTraitements()
     setTraitements(updated)
     setBanniereVisible(shouldWarnBackup(updated))
+    // Sauvegarde automatique sur GitHub à chaque modification
+    setSyncStatus('saving')
+    try {
+      await sauvegarderSurGitHub(updated)
+      setLastBackup()
+      setBanniereVisible(false)
+      setSyncStatus('ok')
+      setTimeout(() => setSyncStatus(null), 3000)
+    } catch {
+      setSyncStatus('error')
+      setTimeout(() => setSyncStatus(null), 5000)
+    }
   }
 
   function handleExport() {
@@ -223,7 +248,8 @@ export default function TableauDeBord() {
     URL.revokeObjectURL(url)
   }
 
-  function handleSauvegarder() {
+  async function handleSauvegarder() {
+    // Sauvegarde locale
     const blob = new Blob([JSON.stringify(traitements, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -231,8 +257,18 @@ export default function TableauDeBord() {
     a.download = `sauvegarde-veille-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
-    setLastBackup()
-    setBanniereVisible(false)
+    // Sauvegarde GitHub
+    setSyncStatus('saving')
+    try {
+      await sauvegarderSurGitHub(traitements)
+      setLastBackup()
+      setBanniereVisible(false)
+      setSyncStatus('ok')
+      setTimeout(() => setSyncStatus(null), 3000)
+    } catch {
+      setSyncStatus('error')
+      setTimeout(() => setSyncStatus(null), 5000)
+    }
   }
 
   function handleRestaurer(e) {
@@ -273,6 +309,9 @@ export default function TableauDeBord() {
             <p className="tdb-subtitle">Responsable : {RESPONSABLE.prenom} {RESPONSABLE.nom} · {RESPONSABLE.email}</p>
           </div>
           <div className="tdb-head-actions">
+            {syncStatus === 'saving' && <span className="sync-status sync-saving">⏳ Sync GitHub…</span>}
+            {syncStatus === 'ok'     && <span className="sync-status sync-ok">✓ Sauvegardé sur GitHub</span>}
+            {syncStatus === 'error'  && <span className="sync-status sync-error">⚠️ Erreur sync GitHub</span>}
             <button className="btn-sauvegarder" onClick={handleSauvegarder} title="Sauvegarder toutes les traces en JSON">
               ↓ Sauvegarder
             </button>

@@ -35,6 +35,8 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: frontend
+        env:
+          VITE_GITHUB_DATA_TOKEN: ${{ secrets.VITE_GITHUB_DATA_TOKEN }}
 
       - uses: actions/configure-pages@v4
 

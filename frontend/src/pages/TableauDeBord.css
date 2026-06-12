@@ -81,6 +81,12 @@
 }
 .banniere-close:hover { opacity: 1; }
 
+/* Indicateur sync GitHub */
+.sync-status { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 6px; }
+.sync-saving { background: #EFF6FF; color: #2563EB; }
+.sync-ok     { background: var(--vert-clair); color: #059669; }
+.sync-error  { background: #FEF2F2; color: #DC2626; }
+
 /* Stats */
 .stats-grid {
   display: grid;
