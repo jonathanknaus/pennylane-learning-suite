@@ -103,7 +103,7 @@ function FormulaireDemandeCollectif() {
       `Nombre de participants estimé : ${form.nbParticipants || 'non renseigné'}\n\n` +
       `Message :\n${form.message || '–'}`
     )
-    window.open(`mailto:sarah.briden@pennylane-partners.com?subject=${subject}&body=${body}`)
+    window.open(`mailto:sarah.briden@pennylane-partners.com?cc=jonathan.knaus@pennylane.com&subject=${subject}&body=${body}`)
     setSubmitted(true)
   }
 
