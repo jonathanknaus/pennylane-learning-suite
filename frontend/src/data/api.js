@@ -99,3 +99,10 @@ export const parametres = {
   list: () => get('/parametres'),
   update: (data) => put('/parametres', data),
 }
+
+// ── Emails ───────────────────────────────────────────────────────────────────
+export const emails = {
+  // payload: { type, sujet, session_id, destinataires: [{ email, nom, stagiaire_id, html }] }
+  send: (payload) => post('/emails/send', payload),
+  log: () => get('/emails/log'),
+}

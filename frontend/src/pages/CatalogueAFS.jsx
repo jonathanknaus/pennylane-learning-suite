@@ -80,9 +80,7 @@ export default function CatalogueAFS() {
         </div>
 
         <aside className="catalogue-aside">
-          <div className="aside-sticky">
-            <TarifsTable tarifs={TARIFS} />
-
+          <div className="aside-stack">
             {selectedModules.length > 0 && (
               <div className="devis-panel">
                 <h3>Ma sélection</h3>
@@ -115,6 +113,8 @@ export default function CatalogueAFS() {
                 </button>
               </div>
             )}
+
+            <TarifsTable tarifs={TARIFS} />
           </div>
         </aside>
       </div>

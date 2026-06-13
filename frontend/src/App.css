@@ -84,9 +84,13 @@
 }
 
 .nav-link.active {
-  background: var(--vert);
-  color: var(--bg-dark);
+  /* !important nécessaire : la règle .nav-link de base force background/color
+     avec !important, ce qui masquait sinon l'onglet actif. */
+  background: var(--vert) !important;
+  color: var(--bg-dark) !important;
+  border-color: var(--vert);
   font-weight: 700;
+  box-shadow: 0 0 0 1px var(--vert), 0 2px 8px rgba(0, 248, 114, 0.3);
 }
 
 .nav-link.disabled { opacity: 0.35; cursor: default; }

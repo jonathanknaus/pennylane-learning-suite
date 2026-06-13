@@ -4,10 +4,24 @@ from app.config import RESEND_API_KEY, FROM_EMAIL, FRONTEND_URL, OF_NOM
 from app.models.db import get_pool
 import json
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
 resend.api_key = RESEND_API_KEY
+
+
+def _as_uuid(value: str | None) -> str | None:
+    """emails_log.session_id / stagiaire_id sont des UUID avec FK.
+    Le frontend en mode démo envoie des IDs non-UUID (ex: s_demo_1) : on les
+    neutralise pour ne pas casser l'insert ni violer la contrainte de clé."""
+    if not value:
+        return None
+    try:
+        uuid.UUID(str(value))
+        return str(value)
+    except (ValueError, AttributeError, TypeError):
+        return None
 
 
 def _render(template: str, variables: dict) -> str:
@@ -210,3 +224,72 @@ async def send_rappel_enquete(session_id: str, stagiaire_id: str, type_enquete: 
         logger.error(f"Erreur rappel enquête {session_id}/{stagiaire_id}: {e}")
         await _log_email(session_id, stagiaire_id, f"rappel_{type_enquete}", row["email"], sujet, "erreur")
         return False
+
+
+async def _existing_fk(session_id: str | None, stagiaire_id: str | None) -> tuple[str | None, str | None]:
+    """Ne conserve session_id / stagiaire_id pour emails_log que s'ils existent
+    réellement en base (sinon la FK ferait échouer l'insert)."""
+    sid = _as_uuid(session_id)
+    stid = _as_uuid(stagiaire_id)
+    if sid is None and stid is None:
+        return None, None
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        if sid is not None:
+            if not await conn.fetchval("SELECT 1 FROM sessions WHERE id=$1", sid):
+                sid = None
+        if stid is not None:
+            if not await conn.fetchval("SELECT 1 FROM stagiaires WHERE id=$1", stid):
+                stid = None
+    return sid, stid
+
+
+_NOMS_FICHIER = {
+    "convocation": "Convocation",
+    "attestation": "Attestation",
+    "emargement": "Emargement",
+}
+
+
+def _nom_pdf(type_doc: str) -> str:
+    return f"{_NOMS_FICHIER.get(type_doc, 'Document')}.pdf"
+
+
+async def send_document_email(type_doc: str, sujet: str, destinataire: str, html: str,
+                              session_id: str | None = None, stagiaire_id: str | None = None,
+                              joindre_pdf: bool = True) -> dict:
+    """Envoi à la demande d'un document (convocation / attestation / émargement)
+    dont le corps HTML est déjà rendu par le frontend. Réutilise Resend +
+    emails_log. Si joindre_pdf, le même HTML est rendu en PDF et attaché (avec
+    dégradation gracieuse si la génération PDF est indisponible).
+    Renvoie {ok, resend_id?, pdf_joint, erreur?}."""
+    sid, stid = await _existing_fk(session_id, stagiaire_id)
+
+    payload = {
+        "from": f"{OF_NOM} Formation <{FROM_EMAIL}>",
+        "to": [destinataire],
+        "subject": sujet,
+        "html": html,
+    }
+
+    pdf_joint = False
+    if joindre_pdf:
+        from app.services.pdf import html_to_pdf
+        pdf_bytes = html_to_pdf(html)
+        if pdf_bytes:
+            payload["attachments"] = [{
+                "filename": _nom_pdf(type_doc),
+                "content": list(pdf_bytes),
+                "content_type": "application/pdf",
+            }]
+            pdf_joint = True
+
+    try:
+        response = resend.Emails.send(payload)
+        resend_id = response.get("id") if isinstance(response, dict) else None
+        await _log_email(sid, stid, type_doc, destinataire, sujet, "envoyé", resend_id)
+        return {"ok": True, "resend_id": resend_id, "pdf_joint": pdf_joint}
+    except Exception as e:
+        logger.error(f"Erreur envoi {type_doc} à {destinataire}: {e}")
+        await _log_email(sid, stid, type_doc, destinataire, sujet, "erreur")
+        return {"ok": False, "pdf_joint": pdf_joint, "erreur": str(e)}

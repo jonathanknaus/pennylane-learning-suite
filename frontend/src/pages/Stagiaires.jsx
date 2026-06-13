@@ -5,6 +5,15 @@ import './Stagiaires.css'
 
 const EMPTY_FORM = { prenom: '', nom: '', email: '', telephone: '', fonction: '', cabinet: '' }
 
+// Format téléphone : on ne garde que les chiffres et on insère un espace tous les
+// deux chiffres (06 12 34 56 78). Cap à 10 chiffres (numéro français).
+function formatTelephone(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 10)
+  return digits.replace(/(\d{2})(?=\d)/g, '$1 ')
+}
+
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+
 export default function Stagiaires() {
   const [stagiaires, setStagiaires] = useState([])
   const [sessions, setSessions] = useState([])
@@ -55,7 +64,12 @@ export default function Stagiaires() {
     if (!form.prenom.trim()) e.prenom = 'Requis'
     if (!form.nom.trim()) e.nom = 'Requis'
     if (!form.email.trim()) e.email = 'Requis'
-    else if (!/^[^@]+@[^@]+\.[^@]+$/.test(form.email)) e.email = 'Email invalide'
+    else if (!EMAIL_RE.test(form.email.trim())) e.email = 'Email invalide'
+    // Téléphone optionnel, mais s'il est rempli il doit faire 10 chiffres (FR).
+    if (form.telephone.trim()) {
+      const digits = form.telephone.replace(/\D/g, '')
+      if (digits.length !== 10) e.telephone = 'Numéro invalide (10 chiffres attendus)'
+    }
     return e
   }
 
@@ -192,7 +206,16 @@ export default function Stagiaires() {
               <div className="form-row">
                 <div className="form-group">
                   <label>Téléphone</label>
-                  <input value={form.telephone} onChange={e => setForm(f => ({...f, telephone: e.target.value}))} placeholder="06 00 00 00 00" />
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={form.telephone}
+                    onChange={e => setForm(f => ({ ...f, telephone: formatTelephone(e.target.value) }))}
+                    className={errors.telephone ? 'error' : ''}
+                    placeholder="06 00 00 00 00"
+                    maxLength={14}
+                  />
+                  {errors.telephone && <span className="form-error">{errors.telephone}</span>}
                 </div>
                 <div className="form-group">
                   <label>Fonction</label>

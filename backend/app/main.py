@@ -12,6 +12,7 @@ from app.routers.sessions import sessions_router
 from app.routers.questionnaires import questionnaires_router
 from app.routers.enquetes import enquetes_router
 from app.routers.parametres import parametres_router
+from app.routers.emails import emails_router
 from app.config import FRONTEND_URL
 import logging
 
@@ -44,6 +45,7 @@ app = Litestar(
         questionnaires_router,
         enquetes_router,
         parametres_router,
+        emails_router,
     ],
     cors_config=cors_config,
     lifespan=[lifespan],

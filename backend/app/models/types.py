@@ -134,3 +134,18 @@ class Facture(msgspec.Struct, kw_only=True):
 class UserLogin(msgspec.Struct, kw_only=True):
     email: str
     password: str
+
+
+class EmailDestinataire(msgspec.Struct, kw_only=True):
+    email: str
+    nom: str | None = None
+    stagiaire_id: str | None = None
+    html: str  # corps HTML déjà rendu par le frontend (1 par destinataire)
+
+
+class EmailEnvoi(msgspec.Struct, kw_only=True):
+    type: str  # convocation | attestation | emargement
+    sujet: str
+    session_id: str | None = None
+    joindre_pdf: bool = True  # joindre le document en PDF (sinon email HTML seul)
+    destinataires: list[EmailDestinataire]

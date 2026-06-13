@@ -70,16 +70,29 @@
 .webinaire-inscrire:hover { opacity: 0.85; }
 .webinaire-inscrire.inscrire-devis { background: #EEF2FF; color: #6366F1; }
 
-/* Aside */
-.catalogue-aside { }
-.aside-sticky { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 16px; }
+/* Aside — la colonne entière (sélection + grille) reste collée pendant le scroll
+   du catalogue. On la sticke d'un seul bloc : les deux panneaux restent solidaires
+   et donc toujours visibles ensemble, au lieu que « Ma sélection » passe par-dessus
+   la grille. Le max-height + scroll interne garantit qu'on voit l'ensemble même si
+   l'écran est court. */
+.catalogue-aside {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  /* place pour la scrollbar sans rogner l'ombre des panneaux */
+  padding-right: 2px;
+  scrollbar-gutter: stable;
+}
+.aside-stack { display: flex; flex-direction: column; gap: 16px; }
 
-/* Devis panel */
+/* Devis panel — pas de sticky individuel : c'est l'aside complet qui colle. */
 .devis-panel {
   background: var(--blanc);
   border-radius: var(--radius);
   padding: 20px;
   border: 2px solid var(--vert);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -152,5 +165,33 @@
 
 @media (max-width: 900px) {
   .catalogue-layout { grid-template-columns: 1fr; }
-  .aside-sticky { position: static; }
+
+  /* En colonne unique le sticky n'a plus de sens : on libère l'aside… */
+  .catalogue-aside {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  /* …la grille tarifaire passe sous les modules… */
+  .aside-stack { gap: 0; }
+
+  /* …mais « Ma sélection » devient une barre flottante toujours visible
+     en bas de l'écran, à côté du catalogue qu'on est en train de parcourir. */
+  .devis-panel {
+    position: fixed;
+    top: auto;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-height: 60vh;
+    overflow-y: auto;
+    margin: 0;
+    box-shadow: 0 -2px 24px rgba(0, 0, 0, 0.18);
+    z-index: 50;
+  }
+
+  /* Réserve de l'espace pour que la barre ne masque pas le bas du contenu. */
+  .catalogue { padding-bottom: 220px; }
 }
