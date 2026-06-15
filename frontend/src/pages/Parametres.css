@@ -1,0 +1,124 @@
+/* ── Page Paramètres ─────────────────────────────────────────────────────── */
+.param-page { padding: 32px 24px; }
+
+.param-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.param-head { display: flex; flex-direction: column; gap: 4px; }
+.param-title { font-size: 26px; font-weight: 800; color: var(--bg-dark); letter-spacing: -0.04em; }
+.param-subtitle { font-size: 13px; color: var(--texte-secondaire); }
+
+/* ── Onglets ─────────────────────────────────────────────────────────────── */
+.param-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+}
+
+.param-tab {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texte-secondaire);
+  border-radius: 8px 8px 0 0;
+  margin-bottom: -2px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  background: none;
+}
+.param-tab:hover { color: var(--texte); background: var(--gris); }
+.param-tab.active { color: var(--bg-dark); border-bottom-color: var(--bg-dark); background: none; }
+
+/* ── Section générique ───────────────────────────────────────────────────── */
+.param-content { display: flex; flex-direction: column; gap: 24px; }
+
+.param-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.param-section-header { display: flex; flex-direction: column; gap: 4px; }
+.param-section-header h2 { font-size: 18px; font-weight: 700; color: var(--texte); }
+.param-section-header p { font-size: 13px; color: var(--texte-secondaire); line-height: 1.5; }
+
+/* ── Formulaire Infos OF ─────────────────────────────────────────────────── */
+.param-form {
+  background: var(--blanc);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.param-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+}
+
+.param-field { display: flex; flex-direction: column; gap: 6px; }
+
+.param-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texte);
+}
+
+.param-input {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--texte);
+  background: var(--blanc);
+  transition: border-color 0.15s;
+}
+.param-input:focus { outline: none; border-color: var(--bg-dark); }
+.param-input::placeholder { color: var(--texte-secondaire); opacity: 0.6; }
+
+.param-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.param-saved {
+  font-size: 13px;
+  font-weight: 600;
+  color: #059669;
+  background: #D1FAE5;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.btn-save-param {
+  background: var(--bg-dark);
+  color: var(--blanc);
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.btn-save-param:hover { background: var(--bg-medium); }
+
+/* ── Banque de questions (réutilise les classes de BanqueQuestions.css) ──── */
+/* Les styles banque-* sont déjà dans BanqueQuestions.css et restent actifs   */
+
+@media (max-width: 768px) {
+  .param-fields { grid-template-columns: 1fr; }
+  .param-tabs { flex-wrap: wrap; }
+}
