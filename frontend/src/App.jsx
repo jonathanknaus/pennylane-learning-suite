@@ -5,6 +5,7 @@ import CatalogueAFS from './pages/CatalogueAFS'
 import Sessions from './pages/Sessions'
 import Stagiaires from './pages/Stagiaires'
 import Documents from './pages/Documents'
+import Entreprises from './pages/Entreprises'
 import TableauDeBord from './pages/TableauDeBord'
 import VeilleFormateur from './pages/VeilleFormateur'
 import Parametres from './pages/Parametres'
@@ -15,6 +16,7 @@ const PAGES_ADMIN = [
   { id: 'catalogue',   label: 'Catalogue AFS' },
   { id: 'sessions',    label: 'Sessions' },
   { id: 'stagiaires',  label: 'Stagiaires' },
+  { id: 'entreprises', label: 'Cabinets' },
   { id: 'documents',   label: 'Documents Qualiopi' },
   { id: 'parametres',  label: 'Paramètres' },
   { id: 'veille',      label: 'Veille juridique' },
@@ -134,8 +136,9 @@ export default function App() {
       <main className="main">
         {currentPage === 'catalogue'  && <CatalogueAFS />}
         {currentPage === 'sessions'   && <Sessions />}
-        {currentPage === 'stagiaires' && <Stagiaires />}
-        {currentPage === 'documents'  && <Documents />}
+        {currentPage === 'stagiaires'  && <Stagiaires />}
+        {currentPage === 'entreprises' && <Entreprises />}
+        {currentPage === 'documents'   && <Documents />}
         {currentPage === 'parametres' && <Parametres />}
         {currentPage === 'veille'     && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}
         {currentPage === 'webinaires' && <Webinaires />}
