@@ -2,9 +2,10 @@ import { getSessions, ALL_MODULES, FORMATS } from './sessions'
 import { getStagiaires, getInscriptionsBySession } from './stagiaires'
 
 export const TYPES_DOCUMENT = [
-  { id: 'convocation', label: 'Convocation', icon: '✉️', description: 'Envoyée avant la session à chaque participant' },
-  { id: 'emargement', label: "Feuille d'émargement", icon: '✍️', description: 'Signée le jour J, preuve de présence Qualiopi' },
-  { id: 'attestation', label: 'Attestation de formation', icon: '🎓', description: 'Remise à chaque participant après la session' },
+  { id: 'convocation',  label: 'Convocation',              icon: '✉️',  description: 'Envoyée avant la session à chaque participant' },
+  { id: 'convention',   label: 'Convention de formation',  icon: '📄',  description: '10 clauses légales, liste participants, prix, signatures' },
+  { id: 'emargement',  label: "Feuille d'émargement",      icon: '✍️',  description: 'Signée le jour J, preuve de présence Qualiopi' },
+  { id: 'attestation', label: 'Attestation de formation',  icon: '🎓',  description: 'Remise à chaque participant après la session' },
 ]
 
 export function getSessionData(sessionId) {

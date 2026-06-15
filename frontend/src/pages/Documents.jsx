@@ -3,6 +3,7 @@ import { getSessions, seedDemoSessions } from '../data/sessions'
 import { seedDemoStagiaires } from '../data/stagiaires'
 import { getSessionData, TYPES_DOCUMENT } from '../data/documents'
 import Convocation from '../components/documents/Convocation'
+import Convention from '../components/documents/Convention'
 import Emargement from '../components/documents/Emargement'
 import Attestation from '../components/documents/Attestation'
 import './Documents.css'
@@ -27,6 +28,7 @@ export default function Documents() {
   const participants = data?.participants || []
 
   const needsStagiaire = typeDoc === 'convocation' || typeDoc === 'attestation'
+  const noStagiaireNeeded = typeDoc === 'emargement' || typeDoc === 'convention'
 
   const stagiaireSelectionne = needsStagiaire && stagiaireId !== 'tous'
     ? participants.find(p => p.stagiaire.id === stagiaireId)?.stagiaire
@@ -41,6 +43,10 @@ export default function Documents() {
 
     if (typeDoc === 'emargement') {
       return <Emargement data={data} />
+    }
+
+    if (typeDoc === 'convention') {
+      return <Convention data={data} />
     }
 
     if (typeDoc === 'convocation') {
@@ -66,7 +72,7 @@ export default function Documents() {
 
   const docCount = () => {
     if (!data) return 0
-    if (typeDoc === 'emargement') return 1
+    if (typeDoc === 'emargement' || typeDoc === 'convention') return 1
     if (stagiaireId === 'tous') return participants.length
     return 1
   }
@@ -148,21 +154,21 @@ export default function Documents() {
             <div className="doc-actions">
               <button
                 className="btn-preview"
-                disabled={!sessionId || participants.length === 0}
+                disabled={!sessionId || (participants.length === 0 && !noStagiaireNeeded)}
                 onClick={() => setPreview(true)}
               >
                 👁 Aperçu
               </button>
               <button
                 className="btn-print"
-                disabled={!sessionId || participants.length === 0}
+                disabled={!sessionId || (participants.length === 0 && !noStagiaireNeeded)}
                 onClick={() => { setPreview(true); setTimeout(handlePrint, 300) }}
               >
                 🖨 Imprimer / PDF ({docCount()} document{docCount() > 1 ? 's' : ''})
               </button>
             </div>
 
-            {(!sessionId || participants.length === 0) && sessionId && (
+            {(!sessionId || participants.length === 0) && sessionId && !noStagiaireNeeded && (
               <div className="doc-empty-warning">
                 ⚠️ Cette session n'a pas de participants inscrits. Ajoutez des stagiaires depuis l'onglet <strong>Sessions → ouvrir la session → Ajouter</strong>.
               </div>
@@ -173,6 +179,13 @@ export default function Documents() {
           <div className="qualiopi-help">
             <h3>Guide d'utilisation — Conformité Qualiopi</h3>
             <div className="qualiopi-help-grid">
+              <div className="help-item">
+                <span className="help-icon">📄</span>
+                <div>
+                  <strong>Convention de formation</strong>
+                  <p>À faire signer <strong>avant le démarrage</strong> de la session. Obligatoire pour toute formation financée ou subrogée (Indicateur 3).</p>
+                </div>
+              </div>
               <div className="help-item">
                 <span className="help-icon">✉️</span>
                 <div>
