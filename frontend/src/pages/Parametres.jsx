@@ -3,6 +3,7 @@ import { getParametres, saveParametres, CHAMPS_OF } from '../data/parametres'
 import { THEMATIQUES } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
 import './Parametres.css'
+import './BanqueQuestions.css'
 
 // ── Onglet Infos OF ───────────────────────────────────────────────────────────
 function InfosOF() {
@@ -53,7 +54,7 @@ function InfosOF() {
   )
 }
 
-// ── Onglet Banque de questions (repris de BanqueQuestions.jsx) ────────────────
+// ── Banque de questions (présentation originale) ──────────────────────────────
 const OPTIONS_LABELS = ['A', 'B', 'C', 'D']
 
 function emptyQuestion() {
@@ -209,83 +210,78 @@ function BanqueQuestions() {
   })() : false
 
   return (
-    <div className="param-section">
-      <div className="param-section-header">
-        <h2>Banque de questions</h2>
-        <p>Personnalisez les questions QCM pré et post-formation pour chaque module du catalogue.</p>
+    <div className="banque-layout">
+      <div className="banque-sidebar">
+        <div className="banque-sidebar-title">Modules</div>
+        {THEMATIQUES.map(t => (
+          <div key={t.id} className="banque-thematique">
+            <div className="banque-thematique-label">{t.emoji} {t.titre}</div>
+            {t.modules.map(m => {
+              const stored = JSON.parse(localStorage.getItem('pls_banque_questions') || '{}')
+              const hasCustom = !!(stored[m.id]?.custom?.length >= 5)
+              const hasStandard = !!(BANQUE_STANDARD[m.id]?.length)
+              return (
+                <button
+                  key={m.id}
+                  className={`banque-module-btn ${moduleSelId === m.id ? 'active' : ''}`}
+                  onClick={() => selectModule(m.id)}
+                >
+                  <span className="banque-module-titre">{m.titre}</span>
+                  {hasCustom
+                    ? <span className="banque-badge custom">Perso</span>
+                    : hasStandard
+                      ? <span className="banque-badge standard">Standard</span>
+                      : <span className="banque-badge empty">Vide</span>
+                  }
+                </button>
+              )
+            })}
+          </div>
+        ))}
       </div>
-      <div className="banque-layout">
-        <div className="banque-sidebar">
-          <div className="banque-sidebar-title">Modules</div>
-          {THEMATIQUES.map(t => (
-            <div key={t.id} className="banque-thematique">
-              <div className="banque-thematique-label">{t.emoji} {t.titre}</div>
-              {t.modules.map(m => {
-                const stored = JSON.parse(localStorage.getItem('pls_banque_questions') || '{}')
-                const hasCustom = !!(stored[m.id]?.custom?.length >= 5)
-                const hasStandard = !!(BANQUE_STANDARD[m.id]?.length)
-                return (
-                  <button
-                    key={m.id}
-                    className={`banque-module-btn ${moduleSelId === m.id ? 'active' : ''}`}
-                    onClick={() => selectModule(m.id)}
-                  >
-                    <span className="banque-module-titre">{m.titre}</span>
-                    {hasCustom
-                      ? <span className="banque-badge custom">Perso</span>
-                      : hasStandard
-                        ? <span className="banque-badge standard">Standard</span>
-                        : <span className="banque-badge empty">Vide</span>
-                    }
-                  </button>
-                )
-              })}
-            </div>
-          ))}
-        </div>
 
-        <div className="banque-main">
-          {!moduleSel ? (
-            <div className="banque-empty-state">
-              <div className="empty-icon">📚</div>
-              <h2>Banque de questions</h2>
-              <p>Sélectionnez un module dans la liste pour voir et modifier ses questions.</p>
-            </div>
-          ) : (
-            <>
-              <div className="banque-module-header">
-                <div>
-                  <div className="banque-module-thematique">{moduleSel.thematique}</div>
-                  <h2>{moduleSel.titre}</h2>
-                  <p className="banque-module-desc">{moduleSel.description}</p>
-                </div>
-                <div className="banque-header-actions">
-                  {isCustom && !editing && (
-                    <button className="btn-reset" onClick={resetToStandard}>↩ Revenir au standard</button>
-                  )}
-                  {!editing && (
-                    <button className="btn-edit-banque" onClick={startEdit}>
-                      {isCustom ? '✏️ Modifier les questions' : '✏️ Personnaliser'}
-                    </button>
-                  )}
-                </div>
+      <div className="banque-main">
+        {!moduleSel ? (
+          <div className="banque-empty-state">
+            <div className="empty-icon">📚</div>
+            <h2>Banque de questions</h2>
+            <p>Sélectionnez un module dans la liste pour voir et modifier ses questions.</p>
+            <p className="banque-hint">Chaque module dispose de questions standard. Vous pouvez les remplacer par des questions personnalisées.</p>
+          </div>
+        ) : (
+          <>
+            <div className="banque-module-header">
+              <div>
+                <div className="banque-module-thematique">{moduleSel.thematique}</div>
+                <h2>{moduleSel.titre}</h2>
+                <p className="banque-module-desc">{moduleSel.description}</p>
               </div>
-              {saved && <div className="banque-saved-banner">✓ Questions enregistrées avec succès.</div>}
-              {!editing
-                ? <QuestionsList moduleId={moduleSelId} isCustom={isCustom} />
-                : <QuestionsEditor
-                    draft={draft}
-                    onUpdateQuestion={updateQuestion}
-                    onUpdateOption={updateOption}
-                    onAddQuestion={addQuestion}
-                    onRemoveQuestion={removeQuestion}
-                    onSave={handleSave}
-                    onCancel={() => setEditing(false)}
-                  />
-              }
-            </>
-          )}
-        </div>
+              <div className="banque-header-actions">
+                {isCustom && !editing && (
+                  <button className="btn-reset" onClick={resetToStandard}>↩ Revenir au standard</button>
+                )}
+                {!editing && (
+                  <button className="btn-edit-banque" onClick={startEdit}>
+                    {isCustom ? '✏️ Modifier les questions' : '✏️ Personnaliser'}
+                  </button>
+                )}
+              </div>
+            </div>
+            {saved && <div className="banque-saved-banner">✓ Questions enregistrées avec succès.</div>}
+            {!editing
+              ? <QuestionsList moduleId={moduleSelId} isCustom={isCustom} />
+              : <QuestionsEditor
+                  draft={draft}
+                  onUpdateQuestion={updateQuestion}
+                  onUpdateOption={updateOption}
+                  onAddQuestion={addQuestion}
+                  onRemoveQuestion={removeQuestion}
+                  onSave={handleSave}
+                  onCancel={() => setEditing(false)}
+                />
+            }
+          </>
+        )}
       </div>
     </div>
   )
@@ -293,7 +289,7 @@ function BanqueQuestions() {
 
 // ── Page principale Paramètres ────────────────────────────────────────────────
 const ONGLETS = [
-  { id: 'of',       label: 'Organisme de formation' },
+  { id: 'of',        label: 'Organisme de formation' },
   { id: 'questions', label: 'Banque de questions' },
 ]
 
