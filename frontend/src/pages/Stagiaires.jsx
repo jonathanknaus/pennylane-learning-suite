@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getStagiaires, saveStagiaire, deleteStagiaire, seedDemoStagiaires, getInscriptionsByStagiaire, FONCTIONS } from '../data/stagiaires'
 import { getSessions } from '../data/sessions'
+import { getEntreprises } from '../data/entreprises'
 import './Stagiaires.css'
 
 const EMPTY_FORM = { prenom: '', nom: '', email: '', telephone: '', fonction: '', cabinet: '' }
@@ -8,6 +9,7 @@ const EMPTY_FORM = { prenom: '', nom: '', email: '', telephone: '', fonction: ''
 export default function Stagiaires() {
   const [stagiaires, setStagiaires] = useState([])
   const [sessions, setSessions] = useState([])
+  const [entreprises, setEntreprises] = useState([])
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null) // null | 'form' | 'detail'
   const [selected, setSelected] = useState(null)
@@ -18,11 +20,13 @@ export default function Stagiaires() {
     seedDemoStagiaires()
     setStagiaires(getStagiaires())
     setSessions(getSessions())
+    setEntreprises(getEntreprises())
   }, [])
 
   function refresh() {
     setStagiaires(getStagiaires())
     setSessions(getSessions())
+    setEntreprises(getEntreprises())
   }
 
   function openNew() {
@@ -204,7 +208,16 @@ export default function Stagiaires() {
               </div>
               <div className="form-group">
                 <label>Cabinet / Organisation</label>
-                <input value={form.cabinet} onChange={e => setForm(f => ({...f, cabinet: e.target.value}))} placeholder="Nom du cabinet" />
+                {entreprises.length > 0 ? (
+                  <select value={form.cabinet} onChange={e => setForm(f => ({...f, cabinet: e.target.value}))}>
+                    <option value="">— Sélectionner un cabinet —</option>
+                    {entreprises.sort((a, b) => a.nom.localeCompare(b.nom)).map(ent => (
+                      <option key={ent.id} value={ent.nom}>{ent.nom}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input value={form.cabinet} onChange={e => setForm(f => ({...f, cabinet: e.target.value}))} placeholder="Nom du cabinet" />
+                )}
               </div>
               <div className="modal-actions">
                 <button type="submit" className="btn-primary">{selected ? 'Enregistrer' : 'Ajouter'}</button>
