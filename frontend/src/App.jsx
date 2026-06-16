@@ -18,27 +18,51 @@ import BilanAnnuel from './pages/BilanAnnuel'
 import Reclamations from './pages/Reclamations'
 import './App.css'
 
-const PAGES_ADMIN = [
-  { id: 'catalogue',   label: 'Catalogue AFS' },
-  { id: 'sessions',    label: 'Sessions' },
-  { id: 'stagiaires',  label: 'Apprenants' },
-  { id: 'entreprises', label: 'Cabinets' },
-  { id: 'formateurs',  label: 'Formateurs' },
-  { id: 'financeurs',  label: 'Financeurs' },
-  { id: 'calendrier',  label: 'Calendrier' },
-  { id: 'facturation', label: 'Facturation' },
-  { id: 'bilan',        label: 'Bilan annuel' },
-  { id: 'reclamations', label: 'Réclamations' },
-  { id: 'documents',   label: 'Documents Qualiopi' },
-  { id: 'parametres',  label: 'Paramètres' },
-  { id: 'veille',      label: 'Veille juridique' },
-  { id: 'webinaires',  label: 'Webinaires' },
+const NAV_ADMIN = [
+  {
+    group: 'Formation',
+    items: [
+      { id: 'catalogue',  label: 'Catalogue AFS',     icon: '📚' },
+      { id: 'sessions',   label: 'Sessions',           icon: '🎓' },
+      { id: 'calendrier', label: 'Calendrier',         icon: '📅' },
+    ],
+  },
+  {
+    group: 'Participants',
+    items: [
+      { id: 'stagiaires',  label: 'Apprenants', icon: '👤' },
+      { id: 'entreprises', label: 'Cabinets',   icon: '🏢' },
+    ],
+  },
+  {
+    group: 'Équipe',
+    items: [
+      { id: 'formateurs', label: 'Formateurs', icon: '🧑‍🏫' },
+      { id: 'financeurs', label: 'Financeurs', icon: '🏦' },
+    ],
+  },
+  {
+    group: 'Gestion',
+    items: [
+      { id: 'facturation',  label: 'Facturation',          icon: '🧾' },
+      { id: 'bilan',        label: 'Bilan annuel',          icon: '📊' },
+      { id: 'reclamations', label: 'Réclamations',          icon: '📋' },
+      { id: 'documents',    label: 'Documents Qualiopi',    icon: '📄' },
+    ],
+  },
+  {
+    group: 'Ressources',
+    items: [
+      { id: 'veille',    label: 'Veille juridique', icon: '⚖️' },
+      { id: 'webinaires', label: 'Webinaires',      icon: '💻' },
+    ],
+  },
 ]
 
-const PAGES_FORMATEUR = [
-  { id: 'veille',      label: 'Veille juridique' },
-  { id: 'catalogue',   label: 'Catalogue AFS' },
-  { id: 'webinaires',  label: 'Webinaires' },
+const NAV_FORMATEUR = [
+  { id: 'veille',    label: 'Veille juridique' },
+  { id: 'catalogue', label: 'Catalogue AFS' },
+  { id: 'webinaires', label: 'Webinaires' },
 ]
 
 function PennylaneLogo() {
@@ -54,6 +78,27 @@ function PennylaneLogo() {
 function RoleBadge({ role }) {
   if (role === ROLES.admin) return <span className="role-badge role-admin">Admin</span>
   return <span className="role-badge role-formateur">Formateur</span>
+}
+
+function PageContent({ currentPage, isAdmin }) {
+  return (
+    <>
+      {currentPage === 'catalogue'   && <CatalogueAFS />}
+      {currentPage === 'sessions'    && <Sessions />}
+      {currentPage === 'stagiaires'  && <Stagiaires />}
+      {currentPage === 'entreprises' && <Entreprises />}
+      {currentPage === 'formateurs'  && <Formateurs />}
+      {currentPage === 'financeurs'  && <Financeurs />}
+      {currentPage === 'calendrier'  && <Calendrier />}
+      {currentPage === 'facturation' && <Facturation />}
+      {currentPage === 'bilan'       && <BilanAnnuel />}
+      {currentPage === 'reclamations'&& <Reclamations />}
+      {currentPage === 'documents'   && <Documents />}
+      {currentPage === 'parametres'  && <Parametres />}
+      {currentPage === 'veille'      && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}
+      {currentPage === 'webinaires'  && <Webinaires />}
+    </>
+  )
 }
 
 export default function App() {
@@ -72,14 +117,13 @@ export default function App() {
     setPage('webinaires')
   }
 
-  // Page publique accessible sans authentification
   const isPublicPage = page === 'webinaires'
 
   if (!user && !isPublicPage) {
     return <Login onLogin={handleLogin} onWebinaires={() => setPage('webinaires')} />
   }
 
-  // Header public (non connecté) ou header connecté
+  // Page publique non connectée
   if (!user) {
     return (
       <div className="app">
@@ -97,70 +141,107 @@ export default function App() {
               <button className="nav-link active">Webinaires</button>
             </nav>
             <div className="header-user">
-              <button className="btn-login" onClick={() => setPage(null)}>
-                Se connecter
-              </button>
+              <button className="btn-login" onClick={() => setPage(null)}>Se connecter</button>
             </div>
           </div>
         </header>
-        <main className="main">
-          <Webinaires />
-        </main>
+        <main className="main"><Webinaires /></main>
       </div>
     )
   }
 
   const isAdmin = user?.role === ROLES.admin
-  const pages = isAdmin ? PAGES_ADMIN : PAGES_FORMATEUR
-  const currentPage = page || pages[0].id
+  const currentPage = page || (isAdmin ? 'catalogue' : 'veille')
 
-  return (
-    <div className="app">
-      <header className="header">
-        <div className="header-inner">
-          <div className="header-logo">
-            <div className="logo-wordmark">
-              <PennylaneLogo />
-              <span className="logo-text">pennylane</span>
+  // Formateur : layout header simple (3 items seulement)
+  if (!isAdmin) {
+    return (
+      <div className="app">
+        <header className="header">
+          <div className="header-inner">
+            <div className="header-logo">
+              <div className="logo-wordmark">
+                <PennylaneLogo />
+                <span className="logo-text">pennylane</span>
+              </div>
+              <div className="logo-sep" />
+              <span className="logo-suite">Learning Suite · AFS</span>
             </div>
-            <div className="logo-sep" />
-            <span className="logo-suite">Learning Suite · AFS</span>
+            <nav className="header-nav">
+              {NAV_FORMATEUR.map(p => (
+                <button
+                  key={p.id}
+                  className={`nav-link ${currentPage === p.id ? 'active' : ''}`}
+                  onClick={() => setPage(p.id)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </nav>
+            <div className="header-user">
+              <RoleBadge role={user?.role} />
+              <button className="btn-logout" onClick={handleLogout}>Déconnexion</button>
+            </div>
           </div>
-          <nav className="header-nav">
-            {pages.map(p => (
-              <button
-                key={p.id}
-                className={`nav-link ${currentPage === p.id ? 'active' : ''}`}
-                onClick={() => setPage(p.id)}
-              >
-                {p.label}
-              </button>
-            ))}
-          </nav>
-          <div className="header-user">
+        </header>
+        <main className="main">
+          <PageContent currentPage={currentPage} isAdmin={false} />
+        </main>
+      </div>
+    )
+  }
+
+  // Admin : layout sidebar
+  return (
+    <div className="app app-sidebar-layout">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <div className="logo-wordmark">
+            <PennylaneLogo />
+            <span className="logo-text">pennylane</span>
+          </div>
+          <div className="logo-sep" />
+          <span className="logo-suite">AFS</span>
+        </div>
+
+        <nav className="sidebar-nav">
+          {NAV_ADMIN.map(({ group, items }) => (
+            <div key={group} className="sidebar-group">
+              <div className="sidebar-group-label">{group}</div>
+              {items.map(p => (
+                <button
+                  key={p.id}
+                  className={`sidebar-link ${currentPage === p.id ? 'active' : ''}`}
+                  onClick={() => setPage(p.id)}
+                >
+                  <span className="sidebar-icon">{p.icon}</span>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <button
+            className={`sidebar-link ${currentPage === 'parametres' ? 'active' : ''}`}
+            onClick={() => setPage('parametres')}
+          >
+            <span className="sidebar-icon">⚙️</span>
+            Paramètres
+          </button>
+          <div className="sidebar-user">
             <RoleBadge role={user?.role} />
-            <button className="btn-logout" onClick={handleLogout} title="Se déconnecter">
-              Déconnexion
-            </button>
+            <button className="btn-logout" onClick={handleLogout}>Déconnexion</button>
           </div>
         </div>
-      </header>
-      <main className="main">
-        {currentPage === 'catalogue'  && <CatalogueAFS />}
-        {currentPage === 'sessions'   && <Sessions />}
-        {currentPage === 'stagiaires'  && <Stagiaires />}
-        {currentPage === 'entreprises' && <Entreprises />}
-        {currentPage === 'formateurs'  && <Formateurs />}
-        {currentPage === 'financeurs'  && <Financeurs />}
-        {currentPage === 'calendrier'  && <Calendrier />}
-        {currentPage === 'facturation' && <Facturation />}
-        {currentPage === 'bilan'        && <BilanAnnuel />}
-        {currentPage === 'reclamations' && <Reclamations />}
-        {currentPage === 'documents'   && <Documents />}
-        {currentPage === 'parametres' && <Parametres />}
-        {currentPage === 'veille'     && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}
-        {currentPage === 'webinaires' && <Webinaires />}
-      </main>
+      </aside>
+
+      {/* Contenu */}
+      <div className="sidebar-content">
+        <PageContent currentPage={currentPage} isAdmin={true} />
+      </div>
     </div>
   )
 }
