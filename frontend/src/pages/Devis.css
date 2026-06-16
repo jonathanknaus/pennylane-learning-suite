@@ -69,12 +69,7 @@
 }
 
 /* ---- Filtres ---- */
-.dv-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 20px;
-}
+.dv-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
 
 /* ---- Tableau ---- */
 .dv-table-wrap {
@@ -317,17 +312,10 @@
   padding: 12px 14px;
 }
 
-/* ---- Section title dans form ---- */
-.form-section-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #9CA3AF;
-  padding: 12px 0 4px;
-  border-bottom: 1px solid #F3F4F6;
-  margin-bottom: 8px;
-}
+/* form padding interne modale */
+.dv-form { padding-bottom: 8px; }
+.dv-statut-strip { padding: 0 24px 8px; }
+.dv-recap { margin: 0 24px 8px; }
 
 @media (max-width: 700px) {
   .dv-stats { grid-template-columns: repeat(2, 1fr); }

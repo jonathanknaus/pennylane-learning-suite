@@ -69,20 +69,6 @@
   gap: 6px;
 }
 
-.filter-chip {
-  padding: 5px 12px;
-  border-radius: 20px;
-  border: 1.5px solid #E5E7EB;
-  background: #fff;
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: #374151;
-  transition: all .15s;
-}
-
-.filter-chip:hover { border-color: #9CA3AF; }
-.filter-chip.active { background: var(--bg-dark); color: #fff; border-color: var(--bg-dark); }
 
 /* ---- Tableau ---- */
 .rec-table-wrap {
@@ -166,12 +152,12 @@
 .rec-empty-sub { font-size: 0.82rem; }
 
 /* ---- Modal ---- */
-.rec-modal {
-  width: 680px;
-  max-width: 96vw;
-  max-height: 90vh;
-  overflow-y: auto;
-}
+.rec-modal { width: 680px; }
+
+.rec-form { padding-bottom: 8px; }
+.rec-form .form-row { padding: 0 24px; }
+.rec-form .type-selector { margin: 0 24px 4px; }
+.rec-detail { padding: 20px 24px; }
 
 /* Type selector */
 .type-selector {

@@ -46,3 +46,215 @@ h1, h2, h3, h4 {
   letter-spacing: -0.03em;
   font-weight: 700;
 }
+
+/* ===== BOUTONS GLOBAUX ===== */
+.btn-primary {
+  background: var(--vert);
+  color: var(--bg-dark);
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background 0.15s;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover:not(:disabled) { background: #00d45f; }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-secondary {
+  background: var(--gris);
+  color: var(--texte);
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.btn-secondary:hover { background: var(--border); }
+
+.btn-danger {
+  background: #FEE2E2;
+  color: #DC2626;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-danger:hover { background: #FECACA; }
+
+.btn-icon {
+  background: var(--gris);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-icon:hover { background: var(--border); }
+.btn-icon.btn-danger { background: transparent; color: #DC2626; }
+.btn-icon.btn-danger:hover { background: #FEE2E2; }
+
+/* ===== MODALES GLOBALES ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 16px;
+}
+
+.modal-box {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 560px;
+  max-width: 96vw;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+  border-radius: 14px 14px 0 0;
+}
+
+.modal-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--texte);
+  margin: 0;
+}
+
+.modal-close {
+  background: var(--gris);
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 18px;
+  color: var(--texte-secondaire);
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-close:hover { background: var(--border); }
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  border-radius: 0 0 14px 14px;
+}
+
+.modal-confirm {
+  width: 360px;
+  padding: 28px 24px 20px;
+  text-align: center;
+}
+
+.modal-confirm p {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--texte);
+  margin: 0 0 20px;
+}
+
+/* ===== FORMULAIRES GLOBAUX ===== */
+.form-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 0 24px;
+  margin-bottom: 4px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.form-group.form-full { flex: 1 1 100%; }
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texte-secondaire);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--texte);
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--vert-fonce);
+}
+
+.form-group textarea { resize: vertical; min-height: 72px; }
+
+.form-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #9CA3AF;
+  padding: 14px 24px 6px;
+  border-bottom: 1px solid #F3F4F6;
+  margin-bottom: 6px;
+}
+
+/* ===== FILTER CHIPS ===== */
+.filter-chip {
+  padding: 5px 13px;
+  border-radius: 20px;
+  border: 1.5px solid #E5E7EB;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #374151;
+  transition: all .15s;
+}
+.filter-chip:hover { border-color: #9CA3AF; }
+.filter-chip.active { background: var(--bg-dark); color: #fff; border-color: var(--bg-dark); }
