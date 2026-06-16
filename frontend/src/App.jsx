@@ -16,6 +16,7 @@ import Parametres from './pages/Parametres'
 import Webinaires from './pages/Webinaires'
 import BilanAnnuel from './pages/BilanAnnuel'
 import Reclamations from './pages/Reclamations'
+import Devis from './pages/Devis'
 import './App.css'
 
 const NAV_ADMIN = [
@@ -44,6 +45,7 @@ const NAV_ADMIN = [
   {
     group: 'Gestion',
     items: [
+      { id: 'devis',        label: 'Devis',                icon: '📝' },
       { id: 'facturation',  label: 'Facturation',          icon: '🧾' },
       { id: 'bilan',        label: 'Bilan annuel',          icon: '📊' },
       { id: 'reclamations', label: 'Réclamations',          icon: '📋' },
@@ -90,6 +92,7 @@ function PageContent({ currentPage, isAdmin }) {
       {currentPage === 'formateurs'  && <Formateurs />}
       {currentPage === 'financeurs'  && <Financeurs />}
       {currentPage === 'calendrier'  && <Calendrier />}
+      {currentPage === 'devis'       && <Devis />}
       {currentPage === 'facturation' && <Facturation />}
       {currentPage === 'bilan'       && <BilanAnnuel />}
       {currentPage === 'reclamations'&& <Reclamations />}
