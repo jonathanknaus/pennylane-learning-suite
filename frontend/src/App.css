@@ -287,4 +287,12 @@
   min-width: 0;
   background: var(--gris);
   overflow-y: auto;
+  padding: 28px 28px 40px;
+}
+
+/* Les pages gèrent leur propre max-width mais pas le padding externe */
+.sidebar-content > * {
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
 }
