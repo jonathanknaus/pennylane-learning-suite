@@ -9,6 +9,7 @@ import Entreprises from './pages/Entreprises'
 import Formateurs from './pages/Formateurs'
 import Financeurs from './pages/Financeurs'
 import Calendrier from './pages/Calendrier'
+import Facturation from './pages/Facturation'
 import TableauDeBord from './pages/TableauDeBord'
 import VeilleFormateur from './pages/VeilleFormateur'
 import Parametres from './pages/Parametres'
@@ -23,6 +24,7 @@ const PAGES_ADMIN = [
   { id: 'formateurs',  label: 'Formateurs' },
   { id: 'financeurs',  label: 'Financeurs' },
   { id: 'calendrier',  label: 'Calendrier' },
+  { id: 'facturation', label: 'Facturation' },
   { id: 'documents',   label: 'Documents Qualiopi' },
   { id: 'parametres',  label: 'Paramètres' },
   { id: 'veille',      label: 'Veille juridique' },
@@ -147,6 +149,7 @@ export default function App() {
         {currentPage === 'formateurs'  && <Formateurs />}
         {currentPage === 'financeurs'  && <Financeurs />}
         {currentPage === 'calendrier'  && <Calendrier />}
+        {currentPage === 'facturation' && <Facturation />}
         {currentPage === 'documents'   && <Documents />}
         {currentPage === 'parametres' && <Parametres />}
         {currentPage === 'veille'     && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}

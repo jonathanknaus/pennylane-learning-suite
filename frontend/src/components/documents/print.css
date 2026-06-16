@@ -554,6 +554,89 @@
   margin-top: 6px;
 }
 
+/* =================== FACTURE =================== */
+
+.facture-statut {
+  font-size: 10pt;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 10px;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+.facture-dates {
+  display: flex;
+  gap: 24px;
+  background: #F9FAFB;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 9pt;
+}
+
+.facture-date-row { display: flex; gap: 6px; }
+.facture-date-row span { color: #6B7280; }
+.facture-date-row strong { color: #1A1A1A; }
+
+.facture-opco { color: #2563EB !important; }
+
+.facture-totaux {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  margin-left: auto;
+  min-width: 280px;
+}
+
+.facture-total-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-size: 9.5pt;
+  width: 100%;
+}
+
+.facture-total-row span { color: #6B7280; }
+.facture-total-row strong { color: #1A1A1A; }
+
+.facture-total-ttc {
+  padding-top: 6px;
+  border-top: 2px solid #003D3D;
+  font-size: 11pt !important;
+}
+
+.facture-total-ttc strong { color: #003D3D !important; font-size: 12pt; }
+
+.facture-total-acompte strong { color: #D97706; }
+
+.facture-total-solde {
+  padding-top: 4px;
+  border-top: 1px dashed #E5E7EB;
+}
+
+.facture-total-solde strong { color: #003D3D; font-size: 11pt; }
+
+.facture-conditions {
+  border: 1px solid #E5E7EB;
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-size: 8.5pt;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.facture-cond-title {
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6B7280;
+  margin-bottom: 6px;
+}
+
+.facture-conditions p { margin: 4px 0 0; }
+
 /* =================== IMPRESSION =================== */
 @media print {
   body { margin: 0; padding: 0; background: #fff; }
