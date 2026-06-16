@@ -14,6 +14,7 @@ import TableauDeBord from './pages/TableauDeBord'
 import VeilleFormateur from './pages/VeilleFormateur'
 import Parametres from './pages/Parametres'
 import Webinaires from './pages/Webinaires'
+import BilanAnnuel from './pages/BilanAnnuel'
 import './App.css'
 
 const PAGES_ADMIN = [
@@ -25,6 +26,7 @@ const PAGES_ADMIN = [
   { id: 'financeurs',  label: 'Financeurs' },
   { id: 'calendrier',  label: 'Calendrier' },
   { id: 'facturation', label: 'Facturation' },
+  { id: 'bilan',        label: 'Bilan annuel' },
   { id: 'documents',   label: 'Documents Qualiopi' },
   { id: 'parametres',  label: 'Paramètres' },
   { id: 'veille',      label: 'Veille juridique' },
@@ -150,6 +152,7 @@ export default function App() {
         {currentPage === 'financeurs'  && <Financeurs />}
         {currentPage === 'calendrier'  && <Calendrier />}
         {currentPage === 'facturation' && <Facturation />}
+        {currentPage === 'bilan'        && <BilanAnnuel />}
         {currentPage === 'documents'   && <Documents />}
         {currentPage === 'parametres' && <Parametres />}
         {currentPage === 'veille'     && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}
