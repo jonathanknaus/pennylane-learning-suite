@@ -6,6 +6,7 @@ import Sessions from './pages/Sessions'
 import Stagiaires from './pages/Stagiaires'
 import Documents from './pages/Documents'
 import Entreprises from './pages/Entreprises'
+import Formateurs from './pages/Formateurs'
 import TableauDeBord from './pages/TableauDeBord'
 import VeilleFormateur from './pages/VeilleFormateur'
 import Parametres from './pages/Parametres'
@@ -17,6 +18,7 @@ const PAGES_ADMIN = [
   { id: 'sessions',    label: 'Sessions' },
   { id: 'stagiaires',  label: 'Apprenants' },
   { id: 'entreprises', label: 'Cabinets' },
+  { id: 'formateurs',  label: 'Formateurs' },
   { id: 'documents',   label: 'Documents Qualiopi' },
   { id: 'parametres',  label: 'Paramètres' },
   { id: 'veille',      label: 'Veille juridique' },
@@ -138,6 +140,7 @@ export default function App() {
         {currentPage === 'sessions'   && <Sessions />}
         {currentPage === 'stagiaires'  && <Stagiaires />}
         {currentPage === 'entreprises' && <Entreprises />}
+        {currentPage === 'formateurs'  && <Formateurs />}
         {currentPage === 'documents'   && <Documents />}
         {currentPage === 'parametres' && <Parametres />}
         {currentPage === 'veille'     && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}
