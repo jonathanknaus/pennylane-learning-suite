@@ -33,7 +33,7 @@ export default function SessionDetail({ session, onClose, onEdit }) {
   }
 
   function handleDesinscrire(stagiaireId) {
-    if (!confirm('Désinscrire ce stagiaire ?')) return
+    if (!confirm('Désinscrire cet apprenant ?')) return
     desinscrire(session.id, stagiaireId)
     refresh()
   }
@@ -117,14 +117,14 @@ export default function SessionDetail({ session, onClose, onEdit }) {
                   <input
                     autoFocus
                     type="text"
-                    placeholder="Rechercher un stagiaire par nom, cabinet, email…"
+                    placeholder="Rechercher un apprenant par nom, cabinet, email…"
                     value={searchAjout}
                     onChange={e => setSearchAjout(e.target.value)}
                   />
                   <div className="ajout-list">
                     {filtresAjout.length === 0 ? (
                       <div className="ajout-empty">
-                        {nonInscrits.length === 0 ? 'Tous les stagiaires sont déjà inscrits' : 'Aucun résultat'}
+                        {nonInscrits.length === 0 ? 'Tous les apprenants sont déjà inscrits' : 'Aucun résultat'}
                       </div>
                     ) : (
                       filtresAjout.slice(0, 8).map(s => (

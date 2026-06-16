@@ -105,7 +105,7 @@ export default function Documents() {
                 {data && (
                   <div className="step-meta">
                     {participants.length} participant{participants.length > 1 ? 's' : ''} inscrit{participants.length > 1 ? 's' : ''}
-                    {participants.length === 0 && <span className="step-warn"> · Aucun inscrit — ajoutez des stagiaires depuis l'onglet Sessions</span>}
+                    {participants.length === 0 && <span className="step-warn"> · Aucun inscrit — ajoutez des apprenants depuis l'onglet Sessions</span>}
                   </div>
                 )}
               </div>
@@ -170,7 +170,7 @@ export default function Documents() {
 
             {(!sessionId || participants.length === 0) && sessionId && !noStagiaireNeeded && (
               <div className="doc-empty-warning">
-                ⚠️ Cette session n'a pas de participants inscrits. Ajoutez des stagiaires depuis l'onglet <strong>Sessions → ouvrir la session → Ajouter</strong>.
+                ⚠️ Cette session n'a pas de participants inscrits. Ajoutez des apprenants depuis l'onglet <strong>Sessions → ouvrir la session → Ajouter</strong>.
               </div>
             )}
           </div>

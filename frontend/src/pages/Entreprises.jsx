@@ -179,7 +179,7 @@ export default function Entreprises() {
                   </a>
                 )}
                 <div className="ent-stats">
-                  <span className="ent-stat"><span className="ent-stat-val">{stags.length}</span> stagiaire{stags.length > 1 ? 's' : ''}</span>
+                  <span className="ent-stat"><span className="ent-stat-val">{stags.length}</span> apprenant{stags.length > 1 ? 's' : ''}</span>
                   <span className="ent-stat-sep">·</span>
                   <span className="ent-stat"><span className="ent-stat-val">{sess.length}</span> session{sess.length > 1 ? 's' : ''}</span>
                 </div>
@@ -361,11 +361,11 @@ function DetailModal({ entreprise, stagiaires, sessions, onClose, onEdit }) {
           </div>
         )}
 
-        {/* Stagiaires */}
+        {/* Apprenants */}
         <div className="detail-section">
-          <h3>Stagiaires ({stagiaires.length})</h3>
+          <h3>Apprenants ({stagiaires.length})</h3>
           {stagiaires.length === 0 ? (
-            <p className="detail-empty">Aucun stagiaire lié à ce cabinet</p>
+            <p className="detail-empty">Aucun apprenant lié à ce cabinet</p>
           ) : (
             <div className="detail-stags-list">
               {stagiaires.map(s => (

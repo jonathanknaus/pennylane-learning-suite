@@ -15,7 +15,7 @@ import './App.css'
 const PAGES_ADMIN = [
   { id: 'catalogue',   label: 'Catalogue AFS' },
   { id: 'sessions',    label: 'Sessions' },
-  { id: 'stagiaires',  label: 'Stagiaires' },
+  { id: 'stagiaires',  label: 'Apprenants' },
   { id: 'entreprises', label: 'Cabinets' },
   { id: 'documents',   label: 'Documents Qualiopi' },
   { id: 'parametres',  label: 'Paramètres' },

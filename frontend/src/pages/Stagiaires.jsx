@@ -49,7 +49,7 @@ export default function Stagiaires() {
   }
 
   function handleDelete(id) {
-    if (!confirm('Supprimer ce stagiaire ? Toutes ses inscriptions seront supprimées.')) return
+    if (!confirm('Supprimer cet apprenant ? Toutes ses inscriptions seront supprimées.')) return
     deleteStagiaire(id)
     refresh()
   }
@@ -84,10 +84,10 @@ export default function Stagiaires() {
     <div className="stagiaires">
       <div className="stagiaires-topbar">
         <div>
-          <h1 className="stagiaires-title">Stagiaires</h1>
-          <p className="stagiaires-sub">{stagiaires.length} stagiaire{stagiaires.length > 1 ? 's' : ''} · {cabinets.length} cabinet{cabinets.length > 1 ? 's' : ''}</p>
+          <h1 className="stagiaires-title">Apprenants</h1>
+          <p className="stagiaires-sub">{stagiaires.length} apprenant{stagiaires.length > 1 ? 's' : ''} · {cabinets.length} cabinet{cabinets.length > 1 ? 's' : ''}</p>
         </div>
-        <button className="btn-primary" onClick={openNew}>+ Ajouter un stagiaire</button>
+        <button className="btn-primary" onClick={openNew}>+ Ajouter un apprenant</button>
       </div>
 
       {/* Stats cabinets */}
@@ -117,8 +117,8 @@ export default function Stagiaires() {
       {filtres.length === 0 ? (
         <div className="stagiaires-empty">
           <div className="empty-icon">👤</div>
-          <p>Aucun stagiaire{search ? ' pour cette recherche' : ''}</p>
-          {!search && <button className="btn-primary" onClick={openNew}>Ajouter un stagiaire</button>}
+          <p>Aucun apprenant{search ? ' pour cette recherche' : ''}</p>
+          {!search && <button className="btn-primary" onClick={openNew}>Ajouter un apprenant</button>}
         </div>
       ) : (
         <div className="stagiaires-table-wrap">
@@ -172,7 +172,7 @@ export default function Stagiaires() {
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{selected ? 'Modifier le stagiaire' : 'Nouveau stagiaire'}</h2>
+              <h2>{selected ? "Modifier l'apprenant" : 'Nouvel apprenant'}</h2>
               <button className="modal-close" onClick={() => setModal(null)}>×</button>
             </div>
             <form onSubmit={handleSave} className="modal-form">
