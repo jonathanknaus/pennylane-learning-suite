@@ -287,11 +287,47 @@
   min-width: 0;
   background: var(--gris);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Topbar dans la zone contenu */
+.content-topbar {
+  background: var(--bg-dark);
+  color: #fff;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.content-topbar-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: -0.01em;
+}
+
+.content-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Supprime logout/badge du sidebar-footer car c'est maintenant dans le topbar */
+.sidebar-footer .sidebar-user { display: none; }
+
+.sidebar-content-inner {
+  flex: 1;
   padding: 28px 28px 40px;
 }
 
-/* Les pages gèrent leur propre max-width mais pas le padding externe */
-.sidebar-content > * {
+.sidebar-content-inner > * {
   max-width: 1180px;
   margin-left: auto;
   margin-right: auto;

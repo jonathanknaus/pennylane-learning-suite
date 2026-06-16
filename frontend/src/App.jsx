@@ -243,7 +243,19 @@ export default function App() {
 
       {/* Contenu */}
       <div className="sidebar-content">
-        <PageContent currentPage={currentPage} isAdmin={true} />
+        <header className="content-topbar">
+          <div className="content-topbar-title">
+            {NAV_ADMIN.flatMap(g => g.items).find(p => p.id === currentPage)?.label
+              || (currentPage === 'parametres' ? 'Paramètres' : '')}
+          </div>
+          <div className="content-topbar-right">
+            <RoleBadge role={user?.role} />
+            <button className="btn-logout" onClick={handleLogout}>Déconnexion</button>
+          </div>
+        </header>
+        <div className="sidebar-content-inner">
+          <PageContent currentPage={currentPage} isAdmin={true} />
+        </div>
       </div>
     </div>
   )
