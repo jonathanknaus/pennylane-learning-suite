@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { getStagiaires, getInscriptionsBySession, inscrire, desinscrire, updatePresence, updateStatutInscription, STATUTS_INSCRIPTION } from '../data/stagiaires'
 import { FORMATS, STATUTS, ALL_MODULES } from '../data/sessions'
 import { getResultat, calculerProgression } from '../data/questionnaires'
+import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
 import Passation from '../pages/Passation'
+import EnqueteSatisfaction from './EnqueteSatisfaction'
 import './SessionDetail.css'
 
-const TABS = ['participants', 'evaluations']
+const TABS = ['participants', 'evaluations', 'satisfaction']
 
 export default function SessionDetail({ session, onClose, onEdit }) {
   const [tab, setTab] = useState('participants')
@@ -14,6 +16,7 @@ export default function SessionDetail({ session, onClose, onEdit }) {
   const [searchAjout, setSearchAjout] = useState('')
   const [showAjout, setShowAjout] = useState(false)
   const [passation, setPassation] = useState(null) // { stagiaireId, type }
+  const [enquete, setEnquete] = useState(null) // { stagiaireId, type: 'chaud'|'froid' }
 
   useEffect(() => {
     setStagiaires(getStagiaires())
@@ -78,6 +81,23 @@ export default function SessionDetail({ session, onClose, onEdit }) {
     )
   }
 
+  // Si en mode enquête satisfaction
+  if (enquete) {
+    return (
+      <div className="session-detail">
+        <div className="detail-topbar">
+          <button className="btn-back" onClick={() => setEnquete(null)}>← Retour à la session</button>
+        </div>
+        <EnqueteSatisfaction
+          sessionId={session.id}
+          stagiaireId={enquete.stagiaireId}
+          type={enquete.type}
+          onDone={() => { setEnquete(null); refresh() }}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="session-detail">
       <div className="detail-topbar">
@@ -94,6 +114,9 @@ export default function SessionDetail({ session, onClose, onEdit }) {
             </button>
             <button className={`detail-tab ${tab === 'evaluations' ? 'active' : ''}`} onClick={() => setTab('evaluations')}>
               📊 Évaluations Qualiopi
+            </button>
+            <button className={`detail-tab ${tab === 'satisfaction' ? 'active' : ''}`} onClick={() => setTab('satisfaction')}>
+              ⭐ Satisfaction
             </button>
           </div>
 
@@ -218,6 +241,15 @@ export default function SessionDetail({ session, onClose, onEdit }) {
               inscriptions={inscriptions}
               stagiaires={stagiaires}
               onStartPassation={(stagiaireId, type) => setPassation({ stagiaireId, type })}
+            />
+          )}
+
+          {tab === 'satisfaction' && (
+            <SatisfactionTab
+              session={session}
+              inscriptions={inscriptions}
+              stagiaires={stagiaires}
+              onStartEnquete={(stagiaireId, type) => setEnquete({ stagiaireId, type })}
             />
           )}
         </div>
@@ -383,6 +415,93 @@ function EvaluationsTab({ session, inscriptions, stagiaires, onStartPassation })
           </tbody>
         </table>
       </div>
+    </div>
+  )
+}
+
+function SatisfactionTab({ session, inscriptions, stagiaires, onStartEnquete }) {
+  const rows = inscriptions.map(ins => {
+    const stag = stagiaires.find(s => s.id === ins.stagiaireId)
+    if (!stag) return null
+    const chaud = getReponsesChaud(session.id, ins.stagiaireId)
+    const froid = getReponsesFroid(session.id, ins.stagiaireId)
+    return { stag, ins, chaud, froid }
+  }).filter(Boolean)
+
+  const chaudRemplis = rows.filter(r => r.chaud).length
+  const froidRemplis = rows.filter(r => r.froid).length
+  const moyenneChaud = chaudRemplis
+    ? Math.round((rows.filter(r => r.chaud).reduce((s, r) => s + (r.chaud.moyenne || 0), 0) / chaudRemplis) * 10) / 10
+    : null
+
+  return (
+    <div className="satisfaction-tab">
+      <div className="satisfaction-header">
+        <div className="sat-stat">
+          <div className="sat-stat-val">{chaudRemplis}/{rows.length}</div>
+          <div className="sat-stat-label">Enquêtes à chaud</div>
+        </div>
+        {moyenneChaud !== null && (
+          <div className="sat-stat">
+            <div className="sat-stat-val" style={{ color: moyenneChaud >= 8 ? '#10B981' : moyenneChaud >= 6 ? '#F59E0B' : '#EF4444' }}>
+              {moyenneChaud}/10
+            </div>
+            <div className="sat-stat-label">Satisfaction moyenne</div>
+          </div>
+        )}
+        <div className="sat-stat">
+          <div className="sat-stat-val">{froidRemplis}/{rows.length}</div>
+          <div className="sat-stat-label">Enquêtes à froid</div>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="sat-empty">Aucun participant inscrit.</div>
+      ) : (
+        <div className="sat-table-wrap">
+          <table className="sat-table">
+            <thead>
+              <tr>
+                <th>Apprenant</th>
+                <th>Enquête à chaud</th>
+                <th>Enquête à froid</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ stag, chaud, froid }) => (
+                <tr key={stag.id}>
+                  <td>
+                    <div className="sat-stag-name">{stag.prenom} {stag.nom}</div>
+                    <div className="sat-stag-cab">{stag.cabinet || stag.email}</div>
+                  </td>
+                  <td>
+                    {chaud
+                      ? <div className="sat-done">
+                          <span className="sat-score" style={{ color: chaud.moyenne >= 8 ? '#10B981' : chaud.moyenne >= 6 ? '#F59E0B' : '#EF4444' }}>
+                            {chaud.moyenne}/10
+                          </span>
+                          <button className="eval-redo" onClick={() => onStartEnquete(stag.id, 'chaud')}>Voir</button>
+                        </div>
+                      : <button className="eval-start post" onClick={() => onStartEnquete(stag.id, 'chaud')}>▶ Démarrer</button>
+                    }
+                  </td>
+                  <td>
+                    {froid
+                      ? <div className="sat-done">
+                          <span className="sat-score" style={{ color: froid.moyenne >= 8 ? '#10B981' : froid.moyenne >= 6 ? '#F59E0B' : '#EF4444' }}>
+                            {froid.moyenne}/10
+                          </span>
+                          <button className="eval-redo" onClick={() => onStartEnquete(stag.id, 'froid')}>Voir</button>
+                        </div>
+                      : <button className="eval-start" onClick={() => onStartEnquete(stag.id, 'froid')}>▶ Démarrer</button>
+                    }
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
