@@ -6,6 +6,7 @@ import './CatalogueAFS.css'
 
 export default function CatalogueAFS() {
   const [selectedModules, setSelectedModules] = useState([])
+  const [detailModule, setDetailModule] = useState(null)
 
   function toggleModule(moduleId) {
     setSelectedModules(prev =>
@@ -25,6 +26,62 @@ export default function CatalogueAFS() {
 
   return (
     <div className="catalogue">
+      {detailModule && (
+        <div className="modal-overlay catalogue-detail-overlay" onClick={() => setDetailModule(null)}>
+          <div className="modal catalogue-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <div className="catalogue-detail-theme">{detailModule.thematique.emoji} {detailModule.thematique.titre}</div>
+                <h2>{detailModule.module.titre}</h2>
+              </div>
+              <button className="modal-close" onClick={() => setDetailModule(null)}>×</button>
+            </div>
+            <div className="catalogue-detail-body">
+              <p className="catalogue-detail-desc">{detailModule.module.description}</p>
+              {detailModule.module.format_special && (
+                <div className="catalogue-detail-format">{detailModule.module.format_special}</div>
+              )}
+              <div className="catalogue-detail-section">
+                <div className="catalogue-detail-section-title">Ce que vous allez maîtriser</div>
+                <ul className="catalogue-detail-objectives">
+                  <li>Découvrir et configurer ce module dans votre environnement Pennylane</li>
+                  <li>Appliquer les fonctionnalités directement sur vos dossiers clients</li>
+                  <li>Gagner en autonomie et en efficacité au quotidien</li>
+                  <li>Répondre aux questions pratiques de votre équipe et de vos clients</li>
+                </ul>
+              </div>
+              <div className="catalogue-detail-section">
+                <div className="catalogue-detail-section-title">Format recommandé</div>
+                <div className="catalogue-detail-formats">
+                  <div className="catalogue-detail-format-item">
+                    <span className="fmt-label">Session 1h</span>
+                    <span className="fmt-info">1-2 modules · Visio · <strong>200€ HT</strong></span>
+                  </div>
+                  <div className="catalogue-detail-format-item">
+                    <span className="fmt-label">Session 2h</span>
+                    <span className="fmt-info">3-4 modules · Visio · <strong>400€ HT</strong></span>
+                  </div>
+                  <div className="catalogue-detail-format-item">
+                    <span className="fmt-label">½ Journée</span>
+                    <span className="fmt-info">5+ modules · Visio 600€ · Présentiel 1 000€ HT</span>
+                  </div>
+                </div>
+              </div>
+              <div className="catalogue-detail-actions">
+                <button
+                  className="btn-primary"
+                  onClick={() => { toggleModule(detailModule.module.id); setDetailModule(null) }}
+                >
+                  {selectedModules.includes(detailModule.module.id) ? '✓ Sélectionné' : '+ Ajouter à ma sélection'}
+                </button>
+                <a href="mailto:afs@pennylane.com?subject=Demande%20de%20devis%20—%20Formation%20Pennylane" className="btn-secondary catalogue-devis-link">
+                  Demander un devis
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="catalogue-hero">
         <div className="hero-badge">Qualiopi certifié</div>
         <h1 className="hero-title">Catalogue AFS — Formations Premium</h1>
@@ -47,6 +104,7 @@ export default function CatalogueAFS() {
               thematique={thematique}
               selectedModules={selectedModules}
               onToggle={toggleModule}
+              onDetail={(module, them) => setDetailModule({ module, thematique: them })}
             />
           ))}
 

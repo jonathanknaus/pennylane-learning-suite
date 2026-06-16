@@ -154,3 +154,119 @@
   .catalogue-layout { grid-template-columns: 1fr; }
   .aside-sticky { position: static; }
 }
+
+/* =================== MODULE DETAIL MODAL =================== */
+
+.catalogue-detail-overlay { z-index: 200; }
+
+.catalogue-detail-modal {
+  max-width: 560px;
+  width: 90vw;
+}
+
+.catalogue-detail-theme {
+  font-size: 12px;
+  color: #6B7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.catalogue-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 4px;
+}
+
+.catalogue-detail-desc {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.catalogue-detail-format {
+  font-size: 12px;
+  color: #6366F1;
+  font-weight: 600;
+  background: #EEF2FF;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.catalogue-detail-section { display: flex; flex-direction: column; gap: 8px; }
+
+.catalogue-detail-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6B7280;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.catalogue-detail-objectives {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.catalogue-detail-objectives li {
+  font-size: 13px;
+  color: #374151;
+  padding-left: 18px;
+  position: relative;
+}
+
+.catalogue-detail-objectives li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--vert);
+  font-weight: 700;
+}
+
+.catalogue-detail-formats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.catalogue-detail-format-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.fmt-label {
+  min-width: 90px;
+  font-weight: 700;
+  color: var(--bg-dark);
+  background: var(--vert-clair);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.fmt-info { color: #374151; }
+.fmt-info strong { color: var(--bg-dark); }
+
+.catalogue-detail-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.catalogue-devis-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
