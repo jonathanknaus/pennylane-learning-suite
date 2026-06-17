@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
 import { getStagiaires, getInscriptionsBySession, inscrire, desinscrire, updatePresence, updateStatutInscription, STATUTS_INSCRIPTION } from '../data/stagiaires'
-import { FORMATS, STATUTS, ALL_MODULES } from '../data/sessions'
+import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS } from '../data/sessions'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
+import { WORKFLOW_STEPS, getWorkflowsForSession, setWorkflowStep } from '../data/workflows'
 import Passation from '../pages/Passation'
 import EnqueteSatisfaction from './EnqueteSatisfaction'
 import './SessionDetail.css'
 
-const TABS = ['participants', 'evaluations', 'satisfaction']
+const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows']
 
 export default function SessionDetail({ session, onClose, onEdit }) {
   const [tab, setTab] = useState('participants')
+  const [wfStatuts, setWfStatuts] = useState(() => getWorkflowsForSession(session.id))
   const [inscriptions, setInscriptions] = useState([])
   const [stagiaires, setStagiaires] = useState([])
   const [searchAjout, setSearchAjout] = useState('')
@@ -117,6 +119,9 @@ export default function SessionDetail({ session, onClose, onEdit }) {
             </button>
             <button className={`detail-tab ${tab === 'satisfaction' ? 'active' : ''}`} onClick={() => setTab('satisfaction')}>
               ⭐ Satisfaction
+            </button>
+            <button className={`detail-tab ${tab === 'workflows' ? 'active' : ''}`} onClick={() => setTab('workflows')}>
+              ⚡ Workflows
             </button>
           </div>
 
@@ -252,6 +257,17 @@ export default function SessionDetail({ session, onClose, onEdit }) {
               onStartEnquete={(stagiaireId, type) => setEnquete({ stagiaireId, type })}
             />
           )}
+
+          {tab === 'workflows' && (
+            <WorkflowsTab
+              session={session}
+              statuts={wfStatuts}
+              onUpdate={(stepId, status) => {
+                setWorkflowStep(session.id, stepId, status)
+                setWfStatuts(getWorkflowsForSession(session.id))
+              }}
+            />
+          )}
         </div>
 
         {/* Aside — infos session */}
@@ -265,7 +281,14 @@ export default function SessionDetail({ session, onClose, onEdit }) {
 
             <div className="session-info-rows">
               <div className="info-row"><span>📅</span><span>{dateFormatee}{session.heure ? ` · ${session.heure}` : ''}</span></div>
-              <div className="info-row"><span>📡</span><span>{session.modalite === 'visio' ? 'Visio' : 'Présentiel'}</span></div>
+              <div className="info-row">
+                <span>📡</span>
+                <span>{MODALITES.find(m => m.id === session.modalite)?.label || session.modalite}</span>
+                {session.qualiopi && session.qualiopi !== 'non' && (() => {
+                  const q = QUALIOPI_OPTIONS.find(o => o.id === session.qualiopi)
+                  return q ? <span className="qualiopi-badge" style={{ color: q.color, background: q.bg }}>{q.label}</span> : null
+                })()}
+              </div>
               {format && <div className="info-row"><span>⏱</span><span>{format.label} · {format.duree}</span></div>}
               <div className="info-row"><span>👤</span><span>{session.formateur || 'Non assigné'}</span></div>
               {prix && <div className="info-row"><span>💶</span><strong>{prix}€ HT</strong></div>}
@@ -307,6 +330,69 @@ export default function SessionDetail({ session, onClose, onEdit }) {
           </div>
         </aside>
       </div>
+    </div>
+  )
+}
+
+const GROUPES_LABELS = { client: 'Workflows client', apprenants: 'Workflows apprenants' }
+
+function WorkflowsTab({ session, statuts, onUpdate }) {
+  const groupes = ['client', 'apprenants']
+
+  return (
+    <div className="workflows-tab">
+      <div className="workflows-aws-banner">
+        <span>⚠️</span>
+        <div>
+          <strong>Envois email — disponible après déploiement AWS</strong>
+          <span>Les boutons d'envoi seront actifs une fois le backend FastAPI déployé. Vous pouvez dès maintenant marquer les étapes manuellement.</span>
+        </div>
+      </div>
+
+      {groupes.map(groupe => {
+        const steps = WORKFLOW_STEPS.filter(s => s.groupe === groupe)
+        return (
+          <div key={groupe} className="wf-groupe">
+            <div className="wf-groupe-title">{GROUPES_LABELS[groupe]}</div>
+            <div className="wf-steps">
+              {steps.map(step => {
+                const entry = statuts[step.id]
+                const status = entry?.status || 'pending'
+                return (
+                  <div key={step.id} className={`wf-step wf-step-${status}`}>
+                    <div className="wf-step-icon">{step.icon}</div>
+                    <div className="wf-step-body">
+                      <div className="wf-step-label">{step.label}</div>
+                      <div className="wf-step-desc">{step.description}</div>
+                      {entry?.updatedAt && (
+                        <div className="wf-step-date">
+                          {status === 'sent' ? 'Envoyé' : status === 'done' ? 'Fait' : 'Ignoré'} le {new Date(entry.updatedAt).toLocaleDateString('fr-FR')}
+                        </div>
+                      )}
+                    </div>
+                    <div className="wf-step-actions">
+                      <button
+                        className="wf-btn wf-btn-send"
+                        title="Envoyer (indisponible — AWS requis)"
+                        disabled
+                      >
+                        📤 Envoyer
+                      </button>
+                      <button
+                        className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
+                        onClick={() => onUpdate(step.id, status === 'done' ? 'pending' : 'done')}
+                        title="Marquer comme fait manuellement"
+                      >
+                        {status === 'done' ? '✓ Fait' : 'Marquer fait'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

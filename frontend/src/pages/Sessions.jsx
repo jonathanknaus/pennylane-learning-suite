@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getSessions, deleteSession, seedDemoSessions, STATUTS, ALL_MODULES, FORMATS } from '../data/sessions'
+import { getSessions, deleteSession, seedDemoSessions, STATUTS, ALL_MODULES, FORMATS, MODALITES, QUALIOPI_OPTIONS } from '../data/sessions'
 import { seedDemoStagiaires } from '../data/stagiaires'
 import SessionForm from '../components/SessionForm'
 import SessionDetail from '../components/SessionDetail'
@@ -162,7 +162,11 @@ function SessionCard({ session, onOpen, onEdit, onDelete }) {
         </div>
         <div className="meta-item">
           <span className="meta-icon">📡</span>
-          <span>{session.modalite === 'visio' ? 'Visio' : 'Présentiel'}</span>
+          <span>{MODALITES.find(m => m.id === session.modalite)?.label || session.modalite}</span>
+          {session.qualiopi && session.qualiopi !== 'non' && (() => {
+            const q = QUALIOPI_OPTIONS.find(o => o.id === session.qualiopi)
+            return q ? <span className="meta-qualiopi-badge" style={{ color: q.color, background: q.bg }}>{q.label}</span> : null
+          })()}
         </div>
         {format && (
           <div className="meta-item">

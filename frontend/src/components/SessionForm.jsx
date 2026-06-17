@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { saveSession, STATUTS, MODALITES, FORMATS, ALL_MODULES } from '../data/sessions'
+import { saveSession, STATUTS, MODALITES, FORMATS, ALL_MODULES, QUALIOPI_OPTIONS } from '../data/sessions'
 import { THEMATIQUES } from '../data/catalogue-afs'
 import './SessionForm.css'
 
@@ -15,11 +15,12 @@ const EMPTY = {
   formateur: 'Équipe AFS',
   participants_max: 15,
   participants_inscrits: 0,
+  qualiopi: 'non',
   notes: '',
 }
 
 export default function SessionForm({ session, onSaved, onCancel }) {
-  const [form, setForm] = useState(session ? { ...session } : { ...EMPTY })
+  const [form, setForm] = useState(session ? { qualiopi: 'non', ...session } : { ...EMPTY })
   const [errors, setErrors] = useState({})
 
   function set(key, value) {
@@ -51,8 +52,9 @@ export default function SessionForm({ session, onSaved, onCancel }) {
   }
 
   const formatSelectionne = FORMATS.find(f => f.id === form.format)
+  const modaliteLabel = MODALITES.find(m => m.id === form.modalite)?.label || '—'
   const prix = formatSelectionne
-    ? (form.modalite === 'visio' ? formatSelectionne.visio : formatSelectionne.presentiel)
+    ? (form.modalite === 'presentiel' ? formatSelectionne.presentiel : formatSelectionne.visio)
     : null
 
   return (
@@ -152,6 +154,18 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                   </select>
                 </div>
               </div>
+              <div className="form-group">
+                <label>QUALIOPI</label>
+                <div className="radio-group">
+                  {QUALIOPI_OPTIONS.map(q => (
+                    <label key={q.id} className={`radio-option ${form.qualiopi === q.id ? 'selected' : ''}`}
+                      style={form.qualiopi === q.id ? { borderColor: q.color, color: q.color, background: q.bg } : {}}>
+                      <input type="radio" name="qualiopi" value={q.id} checked={form.qualiopi === q.id} onChange={() => set('qualiopi', q.id)} />
+                      {q.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Participants */}
@@ -235,7 +249,7 @@ export default function SessionForm({ session, onSaved, onCancel }) {
               </div>
               <div className="recap-row">
                 <span>Modalité</span>
-                <strong>{form.modalite === 'visio' ? 'Visio' : 'Présentiel'}</strong>
+                <strong>{modaliteLabel}</strong>
               </div>
               <div className="recap-row">
                 <span>Modules</span>
@@ -245,6 +259,15 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                 <span>Participants</span>
                 <strong>{form.participants_inscrits} / {form.participants_max}</strong>
               </div>
+              {form.qualiopi !== 'non' && (() => {
+                const q = QUALIOPI_OPTIONS.find(o => o.id === form.qualiopi)
+                return (
+                  <div className="recap-row">
+                    <span>Qualiopi</span>
+                    <strong style={{ color: q.color }}>{q.label}</strong>
+                  </div>
+                )
+              })()}
 
               {prix && (
                 <div className="recap-prix">

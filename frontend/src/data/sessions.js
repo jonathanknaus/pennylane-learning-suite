@@ -51,6 +51,13 @@ export const STATUTS = [
 export const MODALITES = [
   { id: 'visio', label: 'Visio' },
   { id: 'presentiel', label: 'Présentiel' },
+  { id: 'mixte', label: 'Mixte' },
+]
+
+export const QUALIOPI_OPTIONS = [
+  { id: 'non', label: 'Non', color: '#9CA3AF', bg: '#F3F4F6' },
+  { id: 'oui', label: 'Qualiopi', color: '#059669', bg: '#D1FAE5' },
+  { id: 'subrogation', label: 'Subrogation', color: '#7C3AED', bg: '#EDE9FE' },
 ]
 
 // Données de démonstration

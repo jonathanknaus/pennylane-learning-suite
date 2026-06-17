@@ -151,9 +151,10 @@
 .session-info-client { font-size: 13px; color: rgba(255,255,255,0.7); }
 
 .session-info-rows { padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border); }
-.info-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--texte-secondaire); }
+.info-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--texte-secondaire); flex-wrap: wrap; }
 .info-row span:first-child { font-size: 14px; flex-shrink: 0; }
 .info-row strong { color: var(--texte); font-size: 15px; font-weight: 700; }
+.qualiopi-badge { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
 
 .session-info-modules { padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .info-modules-label { font-size: 12px; font-weight: 600; color: var(--texte-secondaire); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; }
@@ -322,7 +323,86 @@
 
 .sat-score { font-size: 16px; font-weight: 800; }
 
+/* =================== WORKFLOWS =================== */
+
+.workflows-tab { display: flex; flex-direction: column; gap: 24px; }
+
+.workflows-aws-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 13px;
+}
+.workflows-aws-banner span:first-child { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.workflows-aws-banner strong { display: block; font-weight: 700; color: #92400E; margin-bottom: 3px; }
+.workflows-aws-banner span:last-child { color: #78350F; }
+
+.wf-groupe { display: flex; flex-direction: column; gap: 8px; }
+
+.wf-groupe-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--texte-secondaire);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wf-steps { display: flex; flex-direction: column; gap: 6px; }
+
+.wf-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--blanc);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: border-color 0.15s;
+}
+.wf-step-done { border-color: #10B981; background: #F0FDF4; }
+.wf-step-sent { border-color: #3B82F6; background: #EFF6FF; }
+
+.wf-step-icon { font-size: 22px; flex-shrink: 0; }
+
+.wf-step-body { flex: 1; min-width: 0; }
+.wf-step-label { font-size: 14px; font-weight: 600; color: var(--texte); }
+.wf-step-desc { font-size: 12px; color: var(--texte-secondaire); margin-top: 2px; line-height: 1.4; }
+.wf-step-date { font-size: 11px; color: #059669; font-weight: 600; margin-top: 4px; }
+
+.wf-step-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.wf-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.wf-btn-send {
+  background: var(--bg-dark);
+  color: var(--vert);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.wf-btn-send:disabled { cursor: not-allowed; }
+.wf-btn-done {
+  background: var(--gris);
+  color: var(--texte-secondaire);
+  border: 1.5px solid var(--border);
+}
+.wf-btn-done:hover { background: #D1FAE5; border-color: #059669; color: #059669; }
+.wf-btn-done.active { background: #D1FAE5; border-color: #059669; color: #059669; }
+
 @media (max-width: 900px) {
   .detail-layout { grid-template-columns: 1fr; }
   .session-info-card { position: static; }
+  .wf-step { flex-wrap: wrap; }
+  .wf-step-actions { width: 100%; justify-content: flex-end; }
 }
