@@ -106,6 +106,9 @@ export default function Passation({ sessionId, stagiaireId, type, onDone }) {
   return (
     <div className="passation-wrap">
       <div className="passation-top">
+        {onDone && (
+          <button className="passation-back" onClick={onDone}>← Retour à la session</button>
+        )}
         <div className="passation-meta">
           <span className="passation-type-badge">{type === 'pre' ? 'Pré-formation' : 'Post-formation'}</span>
           <span className="passation-who">{stagiaire.prenom} {stagiaire.nom}</span>

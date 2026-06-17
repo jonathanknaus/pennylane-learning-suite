@@ -16,6 +16,19 @@
   gap: 12px;
 }
 
+.passation-back {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--texte-secondaire);
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all 0.15s;
+}
+.passation-back:hover { border-color: var(--vert); color: var(--vert); }
+
 .passation-meta {
   display: flex;
   align-items: center;
