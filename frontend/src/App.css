@@ -327,6 +327,51 @@
   padding: 28px 28px 40px;
 }
 
+/* ===== PAGE QUIZ PUBLIQUE ===== */
+.quiz-public-wrap {
+  min-height: 100vh;
+  background: var(--gris);
+  display: flex;
+  flex-direction: column;
+}
+
+.quiz-public-header {
+  background: var(--bg-dark);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quiz-public-header .logo-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quiz-public-header .logo-svg {
+  width: 28px;
+  height: 28px;
+}
+
+.quiz-public-header .logo-text {
+  color: var(--blanc);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.quiz-public-header .logo-suite {
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+}
+
+.quiz-public-wrap > .passation-wrap,
+.quiz-public-wrap > .passation-result,
+.quiz-public-wrap > .passation-loading,
+.quiz-public-wrap > .passation-error {
+  padding: 32px 24px;
+}
+
 .sidebar-content-inner > * {
   max-width: 1180px;
   margin-left: auto;

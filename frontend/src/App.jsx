@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getSession, getCurrentUser, logout, ROLES } from './data/auth'
 import Login from './pages/Login'
+import Passation from './pages/Passation'
 import CatalogueAFS from './pages/CatalogueAFS'
 import Sessions from './pages/Sessions'
 import Stagiaires from './pages/Stagiaires'
@@ -104,10 +105,44 @@ function PageContent({ currentPage, isAdmin }) {
   )
 }
 
+function parseQuizHash() {
+  const hash = window.location.hash // e.g. #quiz/s_123/stag_456/pre
+  const m = hash.match(/^#quiz\/([^/]+)\/([^/]+)\/(pre|post)$/)
+  return m ? { sessionId: m[1], stagiaireId: m[2], type: m[3] } : null
+}
+
 export default function App() {
   const stored = getSession()
   const [user, setUser] = useState(stored ? getCurrentUser() : null)
   const [page, setPage] = useState(null)
+  const [quizParams, setQuizParams] = useState(() => parseQuizHash())
+
+  useEffect(() => {
+    function onHash() { setQuizParams(parseQuizHash()) }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  // Lien quiz public : rendu sans auth, sans sidebar
+  if (quizParams) {
+    return (
+      <div className="quiz-public-wrap">
+        <div className="quiz-public-header">
+          <div className="logo-wordmark">
+            <PennylaneLogo />
+            <span className="logo-text">pennylane</span>
+          </div>
+          <span className="logo-suite">Learning Suite · AFS</span>
+        </div>
+        <Passation
+          sessionId={quizParams.sessionId}
+          stagiaireId={quizParams.stagiaireId}
+          type={quizParams.type}
+          onDone={() => { window.location.hash = ''; setQuizParams(null) }}
+        />
+      </div>
+    )
+  }
 
   function handleLogin(role) {
     setUser(getCurrentUser())

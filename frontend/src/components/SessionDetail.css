@@ -400,6 +400,64 @@
 .wf-btn-done:hover { background: #D1FAE5; border-color: #059669; color: #059669; }
 .wf-btn-done.active { background: #D1FAE5; border-color: #059669; color: #059669; }
 
+.wf-btn-copy { background: var(--gris); color: var(--texte-secondaire); border: 1.5px solid var(--border); }
+.wf-btn-copy:hover { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; }
+.wf-btn-copy.copied { background: #D1FAE5; border-color: #059669; color: #059669; }
+.wf-btn-open { background: var(--bg-dark); color: var(--vert); text-decoration: none; display: flex; align-items: center; }
+.wf-btn-open:hover { opacity: 0.85; }
+
+/* Quizz panel dans workflow */
+.wf-step { flex-wrap: wrap; }
+
+.wf-quizz-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--texte-secondaire);
+}
+.wf-quizz-progress-bar-wrap { flex: 1; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; max-width: 120px; }
+.wf-quizz-bar { height: 4px; background: #059669; border-radius: 4px; transition: width 0.3s; }
+
+.wf-quizz-panel {
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.wf-quizz-empty { padding: 12px; font-size: 13px; color: var(--texte-secondaire); }
+
+.wf-quizz-list { display: flex; flex-direction: column; gap: 6px; }
+
+.wf-quizz-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.wf-quizz-row.done { background: #F0FDF4; border-color: #BBF7D0; }
+
+.wf-quizz-avatar {
+  width: 30px; height: 30px; min-width: 30px;
+  border-radius: 50%;
+  background: var(--bg-dark); color: var(--vert);
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wf-quizz-info { flex: 1; min-width: 0; }
+.wf-quizz-nom { font-size: 13px; font-weight: 600; color: var(--texte); }
+.wf-quizz-cab { font-size: 11px; color: var(--texte-secondaire); }
+.wf-quizz-statut { flex-shrink: 0; }
+.wf-quizz-score { font-size: 13px; font-weight: 700; color: #059669; }
+.wf-quizz-pending { font-size: 12px; color: #9CA3AF; }
+.wf-quizz-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
 @media (max-width: 900px) {
   .detail-layout { grid-template-columns: 1fr; }
   .session-info-card { position: static; }

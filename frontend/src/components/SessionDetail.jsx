@@ -262,6 +262,8 @@ export default function SessionDetail({ session, onClose, onEdit }) {
             <WorkflowsTab
               session={session}
               statuts={wfStatuts}
+              inscriptions={inscriptions}
+              stagiaires={stagiaires}
               onUpdate={(stepId, status) => {
                 setWorkflowStep(session.id, stepId, status)
                 setWfStatuts(getWorkflowsForSession(session.id))
@@ -336,8 +338,74 @@ export default function SessionDetail({ session, onClose, onEdit }) {
 
 const GROUPES_LABELS = { client: 'Workflows client', apprenants: 'Workflows apprenants' }
 
-function WorkflowsTab({ session, statuts, onUpdate }) {
+function QuizzStepDetail({ session, inscriptions, stagiaires, type }) {
+  const baseUrl = window.location.origin + window.location.pathname
+  const [copied, setCopied] = useState(null)
+
+  function getLien(stagiaireId) {
+    return `${baseUrl}#quiz/${session.id}/${stagiaireId}/${type}`
+  }
+
+  function copyLink(stagiaireId) {
+    navigator.clipboard.writeText(getLien(stagiaireId)).then(() => {
+      setCopied(stagiaireId)
+      setTimeout(() => setCopied(null), 2000)
+    })
+  }
+
+  if (inscriptions.length === 0) {
+    return <div className="wf-quizz-empty">Aucun participant inscrit à cette session.</div>
+  }
+
+  return (
+    <div className="wf-quizz-list">
+      {inscriptions.map(ins => {
+        const stag = stagiaires.find(s => s.id === ins.stagiaireId)
+        if (!stag) return null
+        const resultat = getResultat(session.id, ins.stagiaireId, type)
+        return (
+          <div key={ins.stagiaireId} className={`wf-quizz-row ${resultat ? 'done' : ''}`}>
+            <div className="wf-quizz-avatar">{stag.prenom[0]}{stag.nom[0]}</div>
+            <div className="wf-quizz-info">
+              <div className="wf-quizz-nom">{stag.prenom} {stag.nom}</div>
+              <div className="wf-quizz-cab">{stag.cabinet || stag.email}</div>
+            </div>
+            <div className="wf-quizz-statut">
+              {resultat
+                ? <span className="wf-quizz-score">✓ {resultat.score}%</span>
+                : <span className="wf-quizz-pending">En attente</span>
+              }
+            </div>
+            <div className="wf-quizz-actions">
+              <button
+                className={`wf-btn wf-btn-copy ${copied === ins.stagiaireId ? 'copied' : ''}`}
+                onClick={() => copyLink(ins.stagiaireId)}
+                title="Copier le lien du quizz"
+              >
+                {copied === ins.stagiaireId ? '✓ Copié !' : '🔗 Copier lien'}
+              </button>
+              <a
+                href={getLien(ins.stagiaireId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="wf-btn wf-btn-open"
+                title="Ouvrir le quizz"
+              >
+                ▶ Ouvrir
+              </a>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires }) {
   const groupes = ['client', 'apprenants']
+  const [openQuizz, setOpenQuizz] = useState(null)
+
+  const quizzSteps = { quizz_initial: 'pre', quizz_final: 'post' }
 
   return (
     <div className="workflows-tab">
@@ -345,7 +413,7 @@ function WorkflowsTab({ session, statuts, onUpdate }) {
         <span>⚠️</span>
         <div>
           <strong>Envois email — disponible après déploiement AWS</strong>
-          <span>Les boutons d'envoi seront actifs une fois le backend FastAPI déployé. Vous pouvez dès maintenant marquer les étapes manuellement.</span>
+          <span>Les boutons d'envoi seront actifs une fois le backend FastAPI déployé. Les quizz sont disponibles dès maintenant via lien partageable.</span>
         </div>
       </div>
 
@@ -358,34 +426,70 @@ function WorkflowsTab({ session, statuts, onUpdate }) {
               {steps.map(step => {
                 const entry = statuts[step.id]
                 const status = entry?.status || 'pending'
+                const isQuizz = step.id in quizzSteps
+                const quizzType = quizzSteps[step.id]
+                const quizzOpen = openQuizz === step.id
+
+                const nbInscrits = inscriptions.length
+                const nbCompletes = isQuizz
+                  ? inscriptions.filter(ins => getResultat(session.id, ins.stagiaireId, quizzType)).length
+                  : 0
+
                 return (
-                  <div key={step.id} className={`wf-step wf-step-${status}`}>
+                  <div key={step.id} className={`wf-step wf-step-${isQuizz && nbCompletes === nbInscrits && nbInscrits > 0 ? 'done' : status}`}>
                     <div className="wf-step-icon">{step.icon}</div>
                     <div className="wf-step-body">
                       <div className="wf-step-label">{step.label}</div>
                       <div className="wf-step-desc">{step.description}</div>
-                      {entry?.updatedAt && (
+                      {isQuizz && nbInscrits > 0 && (
+                        <div className="wf-quizz-progress">
+                          <div className="wf-quizz-progress-bar-wrap">
+                            <div
+                              className="wf-quizz-bar"
+                              style={{ width: `${Math.round((nbCompletes / nbInscrits) * 100)}%` }}
+                            />
+                          </div>
+                          <span>{nbCompletes}/{nbInscrits} complétés</span>
+                        </div>
+                      )}
+                      {!isQuizz && entry?.updatedAt && (
                         <div className="wf-step-date">
-                          {status === 'sent' ? 'Envoyé' : status === 'done' ? 'Fait' : 'Ignoré'} le {new Date(entry.updatedAt).toLocaleDateString('fr-FR')}
+                          {status === 'done' ? 'Fait' : 'Ignoré'} le {new Date(entry.updatedAt).toLocaleDateString('fr-FR')}
                         </div>
                       )}
                     </div>
                     <div className="wf-step-actions">
-                      <button
-                        className="wf-btn wf-btn-send"
-                        title="Envoyer (indisponible — AWS requis)"
-                        disabled
-                      >
-                        📤 Envoyer
-                      </button>
-                      <button
-                        className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
-                        onClick={() => onUpdate(step.id, status === 'done' ? 'pending' : 'done')}
-                        title="Marquer comme fait manuellement"
-                      >
-                        {status === 'done' ? '✓ Fait' : 'Marquer fait'}
-                      </button>
+                      {isQuizz ? (
+                        <button
+                          className={`wf-btn wf-btn-done ${quizzOpen ? 'active' : ''}`}
+                          onClick={() => setOpenQuizz(quizzOpen ? null : step.id)}
+                        >
+                          {quizzOpen ? '▲ Masquer' : '👥 Gérer'}
+                        </button>
+                      ) : (
+                        <>
+                          <button className="wf-btn wf-btn-send" disabled title="Envoyer (indisponible — AWS requis)">
+                            📤 Envoyer
+                          </button>
+                          <button
+                            className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
+                            onClick={() => onUpdate(step.id, status === 'done' ? 'pending' : 'done')}
+                          >
+                            {status === 'done' ? '✓ Fait' : 'Marquer fait'}
+                          </button>
+                        </>
+                      )}
                     </div>
+                    {isQuizz && quizzOpen && (
+                      <div className="wf-quizz-panel">
+                        <QuizzStepDetail
+                          session={session}
+                          inscriptions={inscriptions}
+                          stagiaires={stagiaires}
+                          type={quizzType}
+                        />
+                      </div>
+                    )}
                   </div>
                 )
               })}
