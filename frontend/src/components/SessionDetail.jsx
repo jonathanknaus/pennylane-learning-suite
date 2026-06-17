@@ -273,9 +273,17 @@ export default function SessionDetail({ session, onClose, onEdit }) {
 
             {modules.length > 0 && (
               <div className="session-info-modules">
-                <div className="info-modules-label">Modules</div>
-                <div className="info-modules-tags">
-                  {modules.map(m => <span key={m.id} className="info-module-tag">{m.titre}</span>)}
+                <div className="info-modules-label">Programme ({modules.length} module{modules.length > 1 ? 's' : ''})</div>
+                <div className="info-programme">
+                  {modules.map((m, i) => (
+                    <div key={m.id} className="info-programme-item">
+                      <div className="info-programme-num">{i + 1}</div>
+                      <div>
+                        <div className="info-programme-titre">{m.titre}</div>
+                        {m.description && <div className="info-programme-desc">{m.description}</div>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

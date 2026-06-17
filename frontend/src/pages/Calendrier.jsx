@@ -69,8 +69,13 @@ export default function Calendrier() {
 
   const days = getMonthDays(year, month)
 
-  // Assign a color per formateur name
-  const formateursUniques = [...new Set(sessions.map(s => s.formateur).filter(Boolean))]
+  // Assign a color per formateur — use all formateurs, not just those with sessions
+  const formateursNoms = formateurs.length > 0
+    ? formateurs.map(f => `${f.prenom} ${f.nom}`.trim())
+    : [...new Set(sessions.map(s => s.formateur).filter(Boolean))]
+  const formateursUniques = formateursNoms.length > 0
+    ? formateursNoms
+    : [...new Set(sessions.map(s => s.formateur).filter(Boolean))]
   const colorMap = {}
   formateursUniques.forEach((nom, i) => { colorMap[nom] = COLORS[i % COLORS.length] })
 

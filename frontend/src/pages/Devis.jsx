@@ -6,8 +6,13 @@ import {
 import { saveFacture } from '../data/factures'
 import { getSessions } from '../data/sessions'
 import { getParametres } from '../data/parametres'
+import { THEMATIQUES } from '../data/catalogue-afs'
 import DevisDoc from '../components/documents/DevisDoc'
 import './Devis.css'
+
+const ALL_MODULES_CATALOGUE = THEMATIQUES.flatMap(t =>
+  t.modules.map(m => ({ ...m, thematique: t.titre, thematiqueId: t.id }))
+)
 
 function Badge({ id, list, small }) {
   const item = list.find(x => x.id === id)
@@ -301,6 +306,31 @@ export default function Devis() {
 
                 {/* Prestation */}
                 <div className="form-section-title">Prestation</div>
+                <div className="form-row">
+                  <div className="form-group form-full">
+                    <label>Formation du catalogue (optionnel)</label>
+                    <select
+                      value=""
+                      onChange={e => {
+                        const m = ALL_MODULES_CATALOGUE.find(mod => mod.id === e.target.value)
+                        if (!m) return
+                        const modaliteLabel = form.modalite === 'visio' ? 'en distanciel' : 'en présentiel'
+                        const objetAuto = `Formation Pennylane — ${m.titre} (${modaliteLabel})`
+                        const descAuto = `La formation est dispensée par des experts formateurs qui vont traiter les thèmes suivants :\n${m.titre} — ${m.description}\n\nFinancement possible par OPCO/FAF sous réserve d'un dépôt de dossier 15 jours au moins avant la date de la formation.`
+                        f({ objet: objetAuto, description: descAuto, formation_id: m.id })
+                      }}
+                    >
+                      <option value="">— Sélectionner une formation pour auto-remplir —</option>
+                      {THEMATIQUES.map(t => (
+                        <optgroup key={t.id} label={`${t.emoji} ${t.titre}`}>
+                          {t.modules.map(m => (
+                            <option key={m.id} value={m.id}>{m.titre}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 <div className="form-row">
                   <div className="form-group form-full">
                     <label>Intitulé *</label>

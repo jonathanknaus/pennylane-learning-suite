@@ -7,6 +7,11 @@ export const RESPONSABLE = {
 
 export const CIVILITES = ['M.', 'Mme', 'Dr', 'Pr']
 
+export const TYPES_FORMATEUR = [
+  { id: 'interne', label: 'Interne', color: '#2563EB', bg: '#EFF6FF' },
+  { id: 'freelance', label: 'Freelance', color: '#7C3AED', bg: '#F5F3FF' },
+]
+
 export const STATUTS_BPF_FORMATEUR = [
   { id: 'oui',      label: 'Transmis',     color: '#059669', bg: '#D1FAE5' },
   { id: 'en_cours', label: 'En cours',     color: '#D97706', bg: '#FEF3C7' },
@@ -16,11 +21,11 @@ export const STATUTS_BPF_FORMATEUR = [
 const STORAGE_KEY = 'pls_formateurs'
 
 const DEFAUT = [
-  { id: 'f1', civilite: 'M.',  prenom: 'Timothy',  nom: 'RATSIMA',     email: 'timothy.ratsima@pennylane.com',   actif: true, competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', telephone: '', notes: '' },
-  { id: 'f2', civilite: 'M.',  prenom: 'Thomas',   nom: 'NOUET',        email: 'thomas.nouet@pennylane.com',      actif: true, competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', telephone: '', notes: '' },
-  { id: 'f3', civilite: 'Mme', prenom: 'Laure',    nom: 'CASAGRAN',     email: 'laure.casagran@pennylane.com',    actif: true, competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', telephone: '', notes: '' },
-  { id: 'f4', civilite: 'M.',  prenom: 'Etienne',  nom: 'BARTHELEMY',   email: 'etienne.barthelemy@pennylane.com',actif: true, competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', telephone: '', notes: '' },
-  { id: 'f5', civilite: 'M.',  prenom: 'Jonathan', nom: 'KNAUS',        email: 'jonathan.knaus@pennylane.com',    actif: true, competences: [], statut_bpf: 'oui', adresse: '4 Rue Jules Lefebvre, 75009 Paris', cout_journalier: 800, telephone: '', notes: 'Responsable AFS' },
+  { id: 'f1', civilite: 'M.',  prenom: 'Timothy',  nom: 'RATSIMA',     email: 'timothy.ratsima@pennylane.com',   actif: true, type_formateur: 'interne', competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', telephone: '', notes: '' },
+  { id: 'f2', civilite: 'M.',  prenom: 'Thomas',   nom: 'NOUET',        email: 'thomas.nouet@pennylane.com',      actif: true, type_formateur: 'interne', competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', telephone: '', notes: '' },
+  { id: 'f3', civilite: 'Mme', prenom: 'Laure',    nom: 'CASAGRAN',     email: 'laure.casagran@pennylane.com',    actif: true, type_formateur: 'interne', competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', telephone: '', notes: '' },
+  { id: 'f4', civilite: 'M.',  prenom: 'Etienne',  nom: 'BARTHELEMY',   email: 'etienne.barthelemy@pennylane.com',actif: true, type_formateur: 'interne', competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', telephone: '', notes: '' },
+  { id: 'f5', civilite: 'M.',  prenom: 'Jonathan', nom: 'KNAUS',        email: 'jonathan.knaus@pennylane.com',    actif: true, type_formateur: 'interne', competences: [], statut_bpf: 'oui', adresse: '4 Rue Jules Lefebvre, 75009 Paris', cout_journalier: 800, telephone: '', notes: 'Responsable AFS' },
 ]
 
 export function getFormateurs() {

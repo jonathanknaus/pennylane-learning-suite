@@ -34,7 +34,18 @@ export default function ThematiqueCard({ thematique, selectedModules, onToggle, 
                     {isSelected ? '✓' : ''}
                   </div>
                   <div className="module-content">
-                    <div className="module-titre">{module.titre}</div>
+                    <div className="module-titre">
+                      {module.titre}
+                      {onDetail && (
+                        <button
+                          className="module-titre-link"
+                          onClick={e => { e.stopPropagation(); onDetail(module, thematique) }}
+                          title="Voir le détail"
+                        >
+                          Détail →
+                        </button>
+                      )}
+                    </div>
                     <div className="module-desc">{module.description}</div>
                     {module.format_special && (
                       <div className="module-format">{module.format_special}</div>

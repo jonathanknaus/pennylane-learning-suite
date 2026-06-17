@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getFormateurs, saveFormateur, deleteFormateur, CIVILITES, STATUTS_BPF_FORMATEUR } from '../data/formateurs'
+import { getFormateurs, saveFormateur, deleteFormateur, CIVILITES, STATUTS_BPF_FORMATEUR, TYPES_FORMATEUR } from '../data/formateurs'
 import { THEMATIQUES } from '../data/catalogue-afs'
 import './Formateurs.css'
 
@@ -7,7 +7,7 @@ const ALL_MODULES = THEMATIQUES.flatMap(t => t.modules.map(m => ({ ...m, themati
 
 const EMPTY_FORM = {
   civilite: '', prenom: '', nom: '', email: '', telephone: '',
-  competences: [], statut_bpf: 'non', adresse: '', cout_journalier: '', notes: '',
+  competences: [], statut_bpf: 'non', type_formateur: 'interne', adresse: '', cout_journalier: '', notes: '',
 }
 
 export default function Formateurs() {
@@ -39,6 +39,7 @@ export default function Formateurs() {
       telephone: f.telephone || '',
       competences: f.competences || [],
       statut_bpf: f.statut_bpf || 'non',
+      type_formateur: f.type_formateur || 'interne',
       adresse: f.adresse || '',
       cout_journalier: f.cout_journalier || '',
       notes: f.notes || '',
@@ -121,6 +122,7 @@ export default function Formateurs() {
         <div className="formateurs-grid">
           {filtres.map(f => {
             const bpf = STATUTS_BPF_FORMATEUR.find(s => s.id === f.statut_bpf)
+            const typeF = TYPES_FORMATEUR.find(t => t.id === f.type_formateur)
             return (
               <div key={f.id} className="formateur-card" onClick={() => openDetail(f)}>
                 <div className="fmt-card-header">
@@ -141,6 +143,9 @@ export default function Formateurs() {
                   </div>
                 )}
                 <div className="fmt-card-footer">
+                  {typeF && (
+                    <span className="fmt-type-badge" style={{ color: typeF.color, background: typeF.bg }}>{typeF.label}</span>
+                  )}
                   {bpf && (
                     <span className="bpf-badge" style={{ color: bpf.color, background: bpf.bg }}>BPF {bpf.label}</span>
                   )}
@@ -207,6 +212,12 @@ export default function Formateurs() {
               </div>
 
               <div className="form-row">
+                <div className="form-group">
+                  <label>Type</label>
+                  <select value={form.type_formateur} onChange={e => setForm(f => ({...f, type_formateur: e.target.value}))}>
+                    {TYPES_FORMATEUR.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                  </select>
+                </div>
                 <div className="form-group">
                   <label>Coût journalier (€ HT)</label>
                   <input type="number" value={form.cout_journalier} onChange={e => setForm(f => ({...f, cout_journalier: e.target.value}))} placeholder="ex. 800" min="0" />
