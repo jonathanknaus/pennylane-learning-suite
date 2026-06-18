@@ -9,24 +9,20 @@ import json
 
 @post("/reponses")
 async def save_reponse_enquete(data: EnqueteReponse, request: Request) -> dict:
-    """Enregistre ou met à jour les réponses à une enquête de satisfaction."""
+    """Enregistre les réponses à une enquête. Endpoint public : l'enquête est
+    identifiée par son token unique (lien email), pas par des IDs fournis par
+    le client. La ligne enquetes a été créée en amont par le scheduler."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         existing = await conn.fetchrow(
-            "SELECT id FROM enquetes WHERE session_id=$1 AND stagiaire_id=$2 AND type=$3",
-            data.session_id, data.stagiaire_id, data.type
+            "SELECT id FROM enquetes WHERE token=$1", data.token
         )
-        if existing:
-            row = await conn.fetchrow(
-                "UPDATE enquetes SET reponses=$1 WHERE id=$2 RETURNING *",
-                json.dumps(data.reponses), existing["id"]
-            )
-        else:
-            row = await conn.fetchrow(
-                """INSERT INTO enquetes (session_id, stagiaire_id, type, reponses)
-                   VALUES ($1,$2,$3,$4) RETURNING *""",
-                data.session_id, data.stagiaire_id, data.type, json.dumps(data.reponses)
-            )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Enquête introuvable")
+        row = await conn.fetchrow(
+            "UPDATE enquetes SET reponses=$1, date_reponse=NOW() WHERE id=$2 RETURNING *",
+            json.dumps(data.reponses), existing["id"]
+        )
     return dict(row)
 
 
