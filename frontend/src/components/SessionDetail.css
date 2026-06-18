@@ -25,7 +25,7 @@
 .presence-summary { color: #059669; font-weight: 600; }
 .absence-summary { color: #EF4444; font-weight: 600; }
 
-.btn-primary { background: var(--vert); color: var(--blanc); padding: 9px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; transition: background 0.15s; }
+.btn-primary { background: var(--vert); color: var(--bg-dark); padding: 9px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; transition: background 0.15s; }
 .btn-primary:hover { background: #00a366; }
 
 /* Ajout panel */

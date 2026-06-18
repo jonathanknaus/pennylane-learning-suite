@@ -12,7 +12,7 @@
 
 .btn-primary {
   background: var(--vert);
-  color: var(--blanc);
+  color: var(--bg-dark);
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 600;

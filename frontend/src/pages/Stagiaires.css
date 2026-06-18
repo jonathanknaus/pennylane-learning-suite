@@ -132,7 +132,7 @@
 .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
 
 /* Boutons réutilisés */
-.btn-primary { background: var(--vert); color: var(--blanc); padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; transition: background 0.15s; }
+.btn-primary { background: var(--vert); color: var(--bg-dark); padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; transition: background 0.15s; }
 .btn-primary:hover { background: #00a366; }
 .btn-secondary { background: var(--gris); color: var(--texte); padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: background 0.15s; }
 .btn-secondary:hover { background: var(--border); }
