@@ -39,19 +39,31 @@ export function enregistrerTraitement({ articleId, articleTitre, articleSource, 
   return trace
 }
 
+// Échappe une cellule CSV : neutralise l'injection de formules (CSV injection)
+// et encadre de guillemets dès qu'un caractère spécial est présent.
+function csvCell(value) {
+  let s = value == null ? '' : String(value)
+  // Une cellule qui commence par = + - @ (ou tab/CR) est interprétée comme
+  // une formule par Excel/Sheets → on la préfixe d'une apostrophe.
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
+  // Guillemets doublés + encadrement si séparateur, guillemet ou saut de ligne.
+  if (/[";\n\r]/.test(s)) s = `"${s.replace(/"/g, '""')}"`
+  return s
+}
+
 export function exportRegistreCSV(traitements) {
   const header = ['ID', 'Date traitement', 'Titre', 'Source', 'Thématique', 'Date article', 'Décision', 'Traité par', 'Commentaire', 'Destinataires']
   const rows = traitements.map(t => [
     t.id,
     new Date(t.traiteAt).toLocaleString('fr-FR'),
-    `"${t.articleTitre.replace(/"/g, '""')}"`,
+    t.articleTitre,
     t.articleSource,
     t.articleThematique,
     t.articleDate,
     DECISIONS[t.decision]?.label || t.decision,
     t.traitePar,
-    `"${(t.commentaire || '').replace(/"/g, '""')}"`,
-    t.destinataires.join(' | '),
-  ])
-  return [header, ...rows].map(r => r.join(';')).join('\n')
+    t.commentaire || '',
+    (t.destinataires || []).join(' | '),
+  ].map(csvCell))
+  return [header.map(csvCell), ...rows].map(r => r.join(';')).join('\n')
 }
