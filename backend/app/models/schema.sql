@@ -190,9 +190,13 @@ CREATE SEQUENCE IF NOT EXISTS factures_seq START 1;
 
 -- ── Paramètres applicatifs ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS parametres (
-    cle     TEXT PRIMARY KEY,
-    valeur  TEXT NOT NULL
+    cle        TEXT PRIMARY KEY,
+    valeur     TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Rattrapage pour les bases déjà créées sans la colonne (init_schema rejoue le fichier)
+ALTER TABLE parametres ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 INSERT INTO parametres (cle, valeur) VALUES
     ('of_nom',        'PENNYLANE'),
