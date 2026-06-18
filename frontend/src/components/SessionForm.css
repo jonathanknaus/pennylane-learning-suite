@@ -100,7 +100,7 @@
 }
 
 .radio-option input { display: none; }
-.radio-option.selected { border-color: var(--vert); background: var(--vert-clair); color: #059669; font-weight: 600; }
+.radio-option.selected { border-color: var(--vert); background: var(--vert-clair); color: var(--bg-dark); font-weight: 600; }
 
 /* Modules picker */
 .modules-picker { display: flex; flex-direction: column; gap: 16px; }
@@ -126,7 +126,7 @@
 }
 
 .module-pick-btn:hover { border-color: var(--vert); color: var(--vert); }
-.module-pick-btn.selected { background: var(--vert-clair); border-color: var(--vert); color: #059669; font-weight: 600; }
+.module-pick-btn.selected { background: var(--vert-clair); border-color: var(--vert); color: var(--bg-dark); font-weight: 600; }
 
 /* Aside recap */
 .form-aside { }
