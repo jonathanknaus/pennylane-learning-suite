@@ -14,6 +14,7 @@ import Facturation from './pages/Facturation'
 import TableauDeBord from './pages/TableauDeBord'
 import VeilleFormateur from './pages/VeilleFormateur'
 import ProductUpdate from './pages/ProductUpdate'
+import AccueilPublic from './pages/AccueilPublic'
 import Parametres from './pages/Parametres'
 import Webinaires from './pages/Webinaires'
 import BilanAnnuel from './pages/BilanAnnuel'
@@ -155,40 +156,14 @@ export default function App() {
   function handleLogout() {
     logout()
     setUser(null)
-    setPage('webinaires')
+    setPage(null)
   }
 
-  const isPublicPage = page === 'webinaires'
-
-  if (!user && !isPublicPage) {
-    return <Login onLogin={handleLogin} onWebinaires={() => setPage('webinaires')} />
-  }
-
-  // Page publique non connectée
   if (!user) {
-    return (
-      <div className="app">
-        <header className="header">
-          <div className="header-inner">
-            <div className="header-logo">
-              <div className="logo-wordmark">
-                <PennylaneLogo />
-                <span className="logo-text">pennylane</span>
-              </div>
-              <div className="logo-sep" />
-              <span className="logo-suite">Learning Suite · AFS</span>
-            </div>
-            <nav className="header-nav">
-              <button className="nav-link active">Webinaires</button>
-            </nav>
-            <div className="header-user">
-              <button className="btn-login" onClick={() => setPage(null)}>Se connecter</button>
-            </div>
-          </div>
-        </header>
-        <main className="main"><Webinaires /></main>
-      </div>
-    )
+    if (page === 'login') {
+      return <Login onLogin={handleLogin} onWebinaires={() => setPage(null)} />
+    }
+    return <AccueilPublic onLogin={() => setPage('login')} />
   }
 
   const isAdmin = user?.role === ROLES.admin

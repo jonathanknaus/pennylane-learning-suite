@@ -8,7 +8,7 @@ import './CatalogueAFS.css'
 
 const ALL_MODULES = THEMATIQUES.flatMap(t => t.modules.map(m => ({ ...m, thematique: t })))
 
-export default function CatalogueAFS() {
+export default function CatalogueAFS({ publicMode = false }) {
   const [selectedModules, setSelectedModules] = useState([])
   const [detailModule, setDetailModule] = useState(null)
   const [detailTab, setDetailTab] = useState('description')
@@ -45,6 +45,7 @@ export default function CatalogueAFS() {
           onClose={() => setDetailModule(null)}
           tab={detailTab}
           onTabChange={setDetailTab}
+          publicMode={publicMode}
         />
       )}
 
@@ -146,7 +147,30 @@ export default function CatalogueAFS() {
   )
 }
 
-function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, onTabChange }) {
+const TYPES_SEQUENCE = [
+  { id: 'intro', label: 'Introduction' },
+  { id: 'demo', label: 'Démonstration' },
+  { id: 'exercice', label: 'Exercice pratique' },
+  { id: 'evaluation', label: 'Évaluation' },
+  { id: 'synthese', label: 'Synthèse' },
+  { id: 'autre', label: 'Autre' },
+]
+
+function parseDuree(str) {
+  if (!str) return 0
+  const n = parseInt(str)
+  return isNaN(n) ? 0 : n
+}
+
+function formatDureeTotal(minutes) {
+  if (minutes <= 0) return null
+  if (minutes < 60) return `${minutes} min`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
+}
+
+function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, onTabChange, publicMode = false }) {
   const questions = getBanqueModule(module.id)
   const [config, setConfig] = useState(() => getModuleConfig(module.id))
 
@@ -162,7 +186,45 @@ function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, o
     saveModuleConfig(module.id, next)
   }
 
+  // Séquences
+  const sequences = config.sequences || []
+
+  function addSequence() {
+    const next = [...sequences, { id: `seq_${Date.now()}`, titre: '', duree: '', type: 'demo' }]
+    updateConfig({ sequences: next })
+  }
+
+  function updateSequence(id, patch) {
+    const next = sequences.map(s => s.id === id ? { ...s, ...patch } : s)
+    updateConfig({ sequences: next })
+  }
+
+  function removeSequence(id) {
+    updateConfig({ sequences: sequences.filter(s => s.id !== id) })
+  }
+
+  function moveSequence(id, dir) {
+    const idx = sequences.findIndex(s => s.id === id)
+    if (idx === -1) return
+    const next = [...sequences]
+    const swap = idx + dir
+    if (swap < 0 || swap >= next.length) return
+    ;[next[idx], next[swap]] = [next[swap], next[idx]]
+    updateConfig({ sequences: next })
+  }
+
+  const totalMinutes = sequences.reduce((acc, s) => acc + parseDuree(s.duree), 0)
   const bpfCount = BPF_ITEMS.filter(i => config.bpf[i.id]).length
+
+  const tabs = [
+    { id: 'description', label: 'Description' },
+    { id: 'objectifs', label: 'Objectifs' },
+    { id: 'contenu', label: `Contenu${sequences.length > 0 ? ` (${sequences.length})` : ''}` },
+    ...(!publicMode ? [
+      { id: 'questionnaire', label: `Questionnaire (${questions.length})` },
+      { id: 'bpf', label: `BPF ${bpfCount > 0 ? `(${bpfCount}/6)` : ''}` },
+    ] : []),
+  ]
 
   return (
     <div className="modal-overlay catalogue-detail-overlay" onClick={onClose}>
@@ -173,28 +235,25 @@ function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, o
             <h2>{module.titre}</h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label className="mise-en-ligne-toggle" title="Formation mise en ligne">
-              <input
-                type="checkbox"
-                checked={!!config.mise_en_ligne}
-                onChange={e => updateConfig({ mise_en_ligne: e.target.checked })}
-              />
-              <span className={`mel-label ${config.mise_en_ligne ? 'mel-active' : ''}`}>
-                {config.mise_en_ligne ? '🟢 En ligne' : '⚪ Hors ligne'}
-              </span>
-            </label>
+            {!publicMode && (
+              <label className="mise-en-ligne-toggle" title="Formation mise en ligne">
+                <input
+                  type="checkbox"
+                  checked={!!config.mise_en_ligne}
+                  onChange={e => updateConfig({ mise_en_ligne: e.target.checked })}
+                />
+                <span className={`mel-label ${config.mise_en_ligne ? 'mel-active' : ''}`}>
+                  {config.mise_en_ligne ? '🟢 En ligne' : '⚪ Hors ligne'}
+                </span>
+              </label>
+            )}
             <button className="modal-close" onClick={onClose}>×</button>
           </div>
         </div>
 
         {/* Onglets */}
         <div className="detail-modal-tabs">
-          {[
-            { id: 'description', label: 'Description' },
-            { id: 'objectifs', label: 'Objectifs' },
-            { id: 'questionnaire', label: `Questionnaire (${questions.length})` },
-            { id: 'bpf', label: `BPF ${bpfCount > 0 ? `(${bpfCount}/6)` : ''}` },
-          ].map(t => (
+          {tabs.map(t => (
             <button
               key={t.id}
               className={`detail-modal-tab ${tab === t.id ? 'active' : ''}`}
@@ -251,6 +310,74 @@ function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, o
                 </ul>
               ) : (
                 <p style={{ color: '#9CA3AF', fontSize: 13 }}>Objectifs à renseigner.</p>
+              )}
+            </div>
+          )}
+
+          {/* Contenu */}
+          {tab === 'contenu' && (
+            <div className="detail-contenu">
+              {sequences.length > 0 && (
+                <div className="detail-contenu-total">
+                  <span>Durée totale</span>
+                  <strong>{formatDureeTotal(totalMinutes) || '—'}</strong>
+                </div>
+              )}
+
+              {sequences.length === 0 && publicMode && (
+                <p className="detail-contenu-empty">Programme détaillé à venir.</p>
+              )}
+
+              {sequences.map((seq, idx) => (
+                <div key={seq.id} className="detail-seq-row">
+                  <div className="detail-seq-num">{idx + 1}</div>
+                  {publicMode ? (
+                    <div className="detail-seq-body">
+                      <div className="detail-seq-titre">{seq.titre || <em style={{ color: '#9CA3AF' }}>Sans titre</em>}</div>
+                      <div className="detail-seq-meta">
+                        <span className="detail-seq-type">{TYPES_SEQUENCE.find(t => t.id === seq.type)?.label || seq.type}</span>
+                        {seq.duree && <span className="detail-seq-duree">{seq.duree} min</span>}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="detail-seq-edit">
+                      <input
+                        className="detail-seq-input-titre"
+                        type="text"
+                        placeholder="Titre de la séquence"
+                        value={seq.titre}
+                        onChange={e => updateSequence(seq.id, { titre: e.target.value })}
+                      />
+                      <select
+                        className="detail-seq-select"
+                        value={seq.type}
+                        onChange={e => updateSequence(seq.id, { type: e.target.value })}
+                      >
+                        {TYPES_SEQUENCE.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                      </select>
+                      <div className="detail-seq-duree-wrap">
+                        <input
+                          className="detail-seq-input-duree"
+                          type="number"
+                          min="0"
+                          placeholder="min"
+                          value={seq.duree}
+                          onChange={e => updateSequence(seq.id, { duree: e.target.value })}
+                        />
+                        <span className="detail-seq-duree-unit">min</span>
+                      </div>
+                      <div className="detail-seq-controls">
+                        <button className="detail-seq-btn" onClick={() => moveSequence(seq.id, -1)} disabled={idx === 0} title="Monter">↑</button>
+                        <button className="detail-seq-btn" onClick={() => moveSequence(seq.id, 1)} disabled={idx === sequences.length - 1} title="Descendre">↓</button>
+                        <button className="detail-seq-btn danger" onClick={() => removeSequence(seq.id)} title="Supprimer">✕</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {!publicMode && (
+                <button className="detail-seq-add" onClick={addSequence}>+ Ajouter une séquence</button>
               )}
             </div>
           )}

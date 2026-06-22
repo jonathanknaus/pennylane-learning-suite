@@ -1,0 +1,86 @@
+.accueil-public {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--gris);
+}
+
+.accueil-header {
+  background: var(--bg-dark);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,61,61,0.3);
+}
+
+.accueil-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.accueil-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.accueil-logo .logo-svg { width: 30px; height: 30px; border-radius: 50%; }
+.accueil-logo-text {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--vert);
+  letter-spacing: -0.04em;
+}
+.accueil-logo-sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.2);
+}
+.accueil-logo-suite {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+}
+
+.accueil-nav {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+}
+.accueil-nav-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.14);
+  transition: all 0.15s;
+}
+.accueil-nav-btn:hover { color: var(--vert); background: rgba(0,248,114,0.1); }
+.accueil-nav-btn.active { background: var(--vert); color: var(--bg-dark); border-color: var(--vert); font-weight: 700; }
+
+.accueil-login-btn {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bg-dark);
+  background: var(--vert);
+  padding: 7px 16px;
+  border-radius: 8px;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.accueil-login-btn:hover { background: #00E066; }
+
+.accueil-main {
+  flex: 1;
+  padding: 32px 28px 48px;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}

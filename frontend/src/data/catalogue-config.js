@@ -30,7 +30,7 @@ function save(data) {
 
 export function getModuleConfig(moduleId) {
   const all = load()
-  return all[moduleId] || { specialite: '', bpf: {}, mise_en_ligne: false }
+  return all[moduleId] || { specialite: '', bpf: {}, mise_en_ligne: false, sequences: [] }
 }
 
 export function saveModuleConfig(moduleId, config) {
