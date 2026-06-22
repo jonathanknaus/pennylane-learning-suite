@@ -16,6 +16,7 @@ const EMPTY = {
   participants_max: 15,
   participants_inscrits: 0,
   qualiopi: 'non',
+  lien_reunion: '',
   notes: '',
 }
 
@@ -154,6 +155,17 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                   </select>
                 </div>
               </div>
+              {(form.modalite === 'visio' || form.modalite === 'mixte') && (
+                <div className="form-group">
+                  <label>Lien de réunion (Meet, Teams…)</label>
+                  <input
+                    type="url"
+                    value={form.lien_reunion}
+                    onChange={e => set('lien_reunion', e.target.value)}
+                    placeholder="https://meet.google.com/..."
+                  />
+                </div>
+              )}
               <div className="form-group">
                 <label>QUALIOPI</label>
                 <div className="radio-group">

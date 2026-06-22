@@ -4,6 +4,7 @@ import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS } from '../d
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
 import { WORKFLOW_STEPS, getWorkflowsForSession, setWorkflowStep } from '../data/workflows'
+import { getTemplate } from '../data/workflow-templates'
 import Passation from '../pages/Passation'
 import EnqueteSatisfaction from './EnqueteSatisfaction'
 import './SessionDetail.css'
@@ -401,9 +402,45 @@ function QuizzStepDetail({ session, inscriptions, stagiaires, type }) {
   )
 }
 
+function TemplatePanel({ stepId, session }) {
+  const tpl = getTemplate(stepId, session)
+  const [copied, setCopied] = useState(null)
+
+  if (!tpl) return null
+
+  function copy(text, key) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(key)
+      setTimeout(() => setCopied(null), 2000)
+    })
+  }
+
+  return (
+    <div className="wf-tpl-panel">
+      <div className="wf-tpl-row">
+        <span className="wf-tpl-label">Objet</span>
+        <span className="wf-tpl-value">{tpl.objet}</span>
+        <button
+          className={`wf-btn wf-btn-copy ${copied === 'objet' ? 'copied' : ''}`}
+          onClick={() => copy(tpl.objet, 'objet')}
+        >{copied === 'objet' ? '✓ Copié' : '🔗 Copier'}</button>
+      </div>
+      <div className="wf-tpl-body">
+        <div className="wf-tpl-label">Corps du mail</div>
+        <pre className="wf-tpl-pre">{tpl.corps}</pre>
+        <button
+          className={`wf-btn wf-btn-copy ${copied === 'corps' ? 'copied' : ''}`}
+          onClick={() => copy(tpl.corps, 'corps')}
+        >{copied === 'corps' ? '✓ Corps copié !' : '📋 Copier le corps'}</button>
+      </div>
+    </div>
+  )
+}
+
 function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires }) {
   const groupes = ['client', 'apprenants']
   const [openQuizz, setOpenQuizz] = useState(null)
+  const [openTpl, setOpenTpl] = useState(null)
 
   const quizzSteps = { quizz_initial: 'pre', quizz_final: 'post' }
 
@@ -468,6 +505,13 @@ function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires }) 
                         </button>
                       ) : (
                         <>
+                          <button
+                            className={`wf-btn wf-btn-tpl ${openTpl === step.id ? 'active' : ''}`}
+                            onClick={() => setOpenTpl(openTpl === step.id ? null : step.id)}
+                            title="Voir le modèle email"
+                          >
+                            {openTpl === step.id ? '▲ Modèle' : '✉️ Modèle'}
+                          </button>
                           <button className="wf-btn wf-btn-send" disabled title="Envoyer (indisponible — AWS requis)">
                             📤 Envoyer
                           </button>
@@ -488,6 +532,11 @@ function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires }) 
                           stagiaires={stagiaires}
                           type={quizzType}
                         />
+                      </div>
+                    )}
+                    {!isQuizz && openTpl === step.id && (
+                      <div className="wf-quizz-panel">
+                        <TemplatePanel stepId={step.id} session={session} />
                       </div>
                     )}
                   </div>

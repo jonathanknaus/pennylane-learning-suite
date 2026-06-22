@@ -13,6 +13,7 @@ import Calendrier from './pages/Calendrier'
 import Facturation from './pages/Facturation'
 import TableauDeBord from './pages/TableauDeBord'
 import VeilleFormateur from './pages/VeilleFormateur'
+import ProductUpdate from './pages/ProductUpdate'
 import Parametres from './pages/Parametres'
 import Webinaires from './pages/Webinaires'
 import BilanAnnuel from './pages/BilanAnnuel'
@@ -56,8 +57,9 @@ const NAV_ADMIN = [
   {
     group: 'Ressources',
     items: [
-      { id: 'veille',    label: 'Veille juridique', icon: '⚖️' },
-      { id: 'webinaires', label: 'Webinaires',      icon: '💻' },
+      { id: 'veille',        label: 'Veille juridique', icon: '⚖️' },
+      { id: 'webinaires',    label: 'Webinaires',      icon: '💻' },
+      { id: 'product-update', label: 'Product Update',  icon: '🆕' },
     ],
   },
 ]
@@ -99,8 +101,9 @@ function PageContent({ currentPage, isAdmin }) {
       {currentPage === 'reclamations'&& <Reclamations />}
       {currentPage === 'documents'   && <Documents />}
       {currentPage === 'parametres'  && <Parametres />}
-      {currentPage === 'veille'      && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}
-      {currentPage === 'webinaires'  && <Webinaires />}
+      {currentPage === 'veille'          && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}
+      {currentPage === 'webinaires'      && <Webinaires />}
+      {currentPage === 'product-update'  && <ProductUpdate />}
     </>
   )
 }

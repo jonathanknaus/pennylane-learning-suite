@@ -405,6 +405,62 @@
 .wf-btn-copy.copied { background: #D1FAE5; border-color: #059669; color: #059669; }
 .wf-btn-open { background: var(--bg-dark); color: var(--vert); text-decoration: none; display: flex; align-items: center; }
 .wf-btn-open:hover { opacity: 0.85; }
+.wf-btn-tpl { background: var(--gris); color: var(--texte-secondaire); border: 1.5px solid var(--border); }
+.wf-btn-tpl:hover { background: #FFF7ED; border-color: #F59E0B; color: #B45309; }
+.wf-btn-tpl.active { background: #FFF7ED; border-color: #F59E0B; color: #B45309; }
+
+/* Template email panel */
+.wf-tpl-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
+.wf-tpl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+}
+.wf-tpl-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--texte-secondaire);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+  min-width: 42px;
+}
+.wf-tpl-value {
+  flex: 1;
+  font-size: 13px;
+  color: var(--texte);
+  font-weight: 500;
+}
+.wf-tpl-body {
+  background: #F9FAFB;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wf-tpl-pre {
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--texte);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin: 0;
+  background: var(--blanc);
+  border-radius: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+}
 
 /* Quizz panel dans workflow */
 .wf-step { flex-wrap: wrap; }
