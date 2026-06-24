@@ -5,11 +5,12 @@ import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
 import { WORKFLOW_STEPS, getWorkflowsForSession, setWorkflowStep } from '../data/workflows'
 import { getTemplate } from '../data/workflow-templates'
+import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
 import Passation from '../pages/Passation'
 import EnqueteSatisfaction from './EnqueteSatisfaction'
 import './SessionDetail.css'
 
-const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows']
+const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification']
 
 export default function SessionDetail({ session, onClose, onEdit }) {
   const [tab, setTab] = useState('participants')
@@ -123,6 +124,9 @@ export default function SessionDetail({ session, onClose, onEdit }) {
             </button>
             <button className={`detail-tab ${tab === 'workflows' ? 'active' : ''}`} onClick={() => setTab('workflows')}>
               ⚡ Workflows
+            </button>
+            <button className={`detail-tab ${tab === 'planification' ? 'active' : ''}`} onClick={() => setTab('planification')}>
+              🗓 Planification
             </button>
           </div>
 
@@ -270,6 +274,10 @@ export default function SessionDetail({ session, onClose, onEdit }) {
                 setWfStatuts(getWorkflowsForSession(session.id))
               }}
             />
+          )}
+
+          {tab === 'planification' && (
+            <PlanificationTab session={session} inscriptions={inscriptions} stagiaires={stagiaires} />
           )}
         </div>
 
@@ -662,6 +670,292 @@ function EvaluationsTab({ session, inscriptions, stagiaires, onStartPassation })
           </tbody>
         </table>
       </div>
+    </div>
+  )
+}
+
+// ====================================================
+// Onglet Planification des envois
+// ====================================================
+
+const PLAN_ITEMS = [
+  {
+    key: 'quizz_pre',
+    label: 'Quizz pré-formation',
+    icon: '📋',
+    desc: 'Envoyé au démarrage de la session (J0)',
+    delaiLabel: 'Au début de la session',
+    lienType: 'quiz_pre',
+    couleur: '#6366F1',
+    bg: '#EEF2FF',
+  },
+  {
+    key: 'eval_post',
+    label: 'Évaluation post-formation + satisfaction à chaud',
+    icon: '📊',
+    desc: 'Envoyé à la fin de la session, avec rappels J+1, J+2, J+3',
+    lienType: 'eval',
+    couleur: '#059669',
+    bg: '#D1FAE5',
+  },
+  {
+    key: 'satisfaction_froid',
+    label: 'Enquête de satisfaction à froid',
+    icon: '❄️',
+    desc: 'Envoyé 30 jours après la fin de la session',
+    lienType: 'quiz_froid',
+    couleur: '#0EA5E9',
+    bg: '#E0F2FE',
+  },
+]
+
+function PlanificationTab({ session, inscriptions, stagiaires }) {
+  const [plan, setPlan] = useState(() => getPlanification(session.id))
+  const [editKey, setEditKey] = useState(null)
+  const [copied, setCopied] = useState(null)
+
+  function updatePlan(key, updates) {
+    const next = { ...plan, [key]: { ...plan[key], ...updates } }
+    setPlan(next)
+    savePlanification(session.id, next)
+  }
+
+  function resetPlan(key) {
+    const next = { ...plan, [key]: { ...DEFAULT_PLANIFICATION[key] } }
+    setPlan(next)
+    savePlanification(session.id, next)
+  }
+
+  function getLien(stagiaireId, lienType) {
+    const base = window.location.origin + window.location.pathname
+    if (lienType === 'quiz_pre') return `${base}#quiz/${session.id}/${stagiaireId}/pre`
+    if (lienType === 'eval') return `${base}#eval/${session.id}/${stagiaireId}`
+    if (lienType === 'quiz_froid') return `${base}#quiz/${session.id}/${stagiaireId}/froid`
+    return base
+  }
+
+  function copyAllLinks(lienType) {
+    const liens = inscriptions.map(ins => {
+      const stag = stagiaires.find(s => s.id === ins.stagiaireId)
+      if (!stag) return null
+      return `${stag.prenom} ${stag.nom} : ${getLien(ins.stagiaireId, lienType)}`
+    }).filter(Boolean).join('\n')
+    navigator.clipboard.writeText(liens).then(() => {
+      setCopied(lienType)
+      setTimeout(() => setCopied(null), 2000)
+    })
+  }
+
+  function formatDateEnvoi(key) {
+    if (!session.date) return null
+    const base = new Date(session.date + 'T' + (session.heure || '09:00') + ':00')
+    if (key === 'quizz_pre') {
+      return base.toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    }
+    if (key === 'eval_post') {
+      return base.toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' (fin de session)'
+    }
+    if (key === 'satisfaction_froid') {
+      const jours = plan.satisfaction_froid.delai_jours || 30
+      const date = new Date(base.getTime() + jours * 24 * 60 * 60 * 1000)
+      return date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    }
+    return null
+  }
+
+  return (
+    <div className="plan-tab">
+      <div className="plan-aws-banner">
+        <span>⚠️</span>
+        <div>
+          <strong>Envois automatiques — disponibles après déploiement AWS</strong>
+          <span>Les règles ci-dessous seront appliquées automatiquement une fois le backend connecté. En attendant, utilisez les liens partageables manuellement.</span>
+        </div>
+      </div>
+
+      {PLAN_ITEMS.map(item => {
+        const conf = plan[item.key]
+        const dateEnvoi = formatDateEnvoi(item.key)
+        const isEdit = editKey === item.key
+
+        return (
+          <div key={item.key} className={`plan-item ${conf.actif ? 'actif' : 'inactif'}`}>
+            <div className="plan-item-header">
+              <div className="plan-item-icon" style={{ background: item.bg, color: item.couleur }}>{item.icon}</div>
+              <div className="plan-item-info">
+                <div className="plan-item-label">{item.label}</div>
+                <div className="plan-item-desc">{item.desc}</div>
+                {dateEnvoi && conf.actif && (
+                  <div className="plan-item-date">📅 {dateEnvoi}</div>
+                )}
+              </div>
+              <div className="plan-item-controls">
+                <label className="plan-toggle" title={conf.actif ? 'Désactiver' : 'Activer'}>
+                  <input
+                    type="checkbox"
+                    checked={!!conf.actif}
+                    onChange={e => updatePlan(item.key, { actif: e.target.checked })}
+                  />
+                  <span className={`plan-toggle-slider ${conf.actif ? 'on' : ''}`} />
+                </label>
+                <button
+                  className={`plan-btn-edit ${isEdit ? 'active' : ''}`}
+                  onClick={() => setEditKey(isEdit ? null : item.key)}
+                  title="Personnaliser le mail"
+                >
+                  {isEdit ? '▲ Fermer' : '✏️ Modifier'}
+                </button>
+              </div>
+            </div>
+
+            {/* Rappels (eval_post uniquement) */}
+            {item.key === 'eval_post' && conf.actif && (
+              <div className="plan-rappels">
+                <span className="plan-rappels-label">Rappels si non répondu :</span>
+                {[1, 2, 3].map(j => {
+                  const actif = (conf.rappels || []).includes(j)
+                  return (
+                    <button
+                      key={j}
+                      className={`plan-rappel-btn ${actif ? 'on' : ''}`}
+                      onClick={() => {
+                        const rappels = conf.rappels || []
+                        updatePlan(item.key, {
+                          rappels: actif ? rappels.filter(r => r !== j) : [...rappels, j].sort()
+                        })
+                      }}
+                    >
+                      J+{j}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Délai satisfaction à froid */}
+            {item.key === 'satisfaction_froid' && conf.actif && (
+              <div className="plan-delai-froid">
+                <span className="plan-delai-label">Délai après fin de session :</span>
+                <div className="plan-delai-input-wrap">
+                  <input
+                    type="number"
+                    min="1"
+                    max="180"
+                    value={conf.delai_jours || 30}
+                    onChange={e => updatePlan(item.key, { delai_jours: parseInt(e.target.value) || 30 })}
+                    className="plan-delai-input"
+                  />
+                  <span className="plan-delai-unit">jours</span>
+                </div>
+              </div>
+            )}
+
+            {/* Éditeur de mail */}
+            {isEdit && (
+              <div className="plan-mail-editor">
+                <div className="plan-mail-field">
+                  <label className="plan-mail-label">Objet du mail</label>
+                  <input
+                    type="text"
+                    value={conf.objet_mail || ''}
+                    onChange={e => updatePlan(item.key, { objet_mail: e.target.value })}
+                    className="plan-mail-input"
+                    placeholder="Objet du mail d'envoi"
+                  />
+                </div>
+                <div className="plan-mail-field">
+                  <label className="plan-mail-label">Corps du mail</label>
+                  <textarea
+                    value={conf.corps_mail || ''}
+                    onChange={e => updatePlan(item.key, { corps_mail: e.target.value })}
+                    className="plan-mail-textarea"
+                    rows={8}
+                    placeholder="Corps du mail..."
+                  />
+                </div>
+                {item.key === 'eval_post' && (
+                  <>
+                    <div className="plan-mail-field">
+                      <label className="plan-mail-label">Objet du mail de rappel</label>
+                      <input
+                        type="text"
+                        value={conf.objet_rappel || ''}
+                        onChange={e => updatePlan(item.key, { objet_rappel: e.target.value })}
+                        className="plan-mail-input"
+                      />
+                    </div>
+                    <div className="plan-mail-field">
+                      <label className="plan-mail-label">Corps du mail de rappel</label>
+                      <textarea
+                        value={conf.corps_rappel || ''}
+                        onChange={e => updatePlan(item.key, { corps_rappel: e.target.value })}
+                        className="plan-mail-textarea"
+                        rows={6}
+                      />
+                    </div>
+                  </>
+                )}
+                <div className="plan-mail-vars">
+                  <span className="plan-mail-vars-label">Variables disponibles :</span>
+                  {['{prenom}', '{nom}', '{titre}', '{date}', '{lien}', '{delai_jours}'].map(v => (
+                    <code key={v} className="plan-mail-var">{v}</code>
+                  ))}
+                </div>
+                <div className="plan-mail-actions">
+                  <button className="plan-btn-reset" onClick={() => { resetPlan(item.key); setEditKey(null) }}>
+                    ↺ Réinitialiser
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Liens partageables */}
+            {conf.actif && inscriptions.length > 0 && (
+              <div className="plan-liens">
+                <div className="plan-liens-header">
+                  <span className="plan-liens-label">Liens partageables ({inscriptions.length} apprenant{inscriptions.length > 1 ? 's' : ''})</span>
+                  <button
+                    className={`plan-btn-copy-all ${copied === item.lienType ? 'copied' : ''}`}
+                    onClick={() => copyAllLinks(item.lienType)}
+                  >
+                    {copied === item.lienType ? '✓ Copié !' : '📋 Copier tous les liens'}
+                  </button>
+                </div>
+                <div className="plan-liens-list">
+                  {inscriptions.map(ins => {
+                    const stag = stagiaires.find(s => s.id === ins.stagiaireId)
+                    if (!stag) return null
+                    const lien = getLien(ins.stagiaireId, item.lienType)
+                    const copKey = item.lienType + ins.stagiaireId
+                    return (
+                      <div key={ins.stagiaireId} className="plan-lien-row">
+                        <div className="plan-lien-avatar">{stag.prenom[0]}{stag.nom[0]}</div>
+                        <div className="plan-lien-nom">{stag.prenom} {stag.nom}</div>
+                        <div className="plan-lien-url">{lien}</div>
+                        <button
+                          className={`plan-btn-copy ${copied === copKey ? 'copied' : ''}`}
+                          onClick={() => {
+                            navigator.clipboard.writeText(lien).then(() => {
+                              setCopied(copKey)
+                              setTimeout(() => setCopied(null), 2000)
+                            })
+                          }}
+                        >
+                          {copied === copKey ? '✓' : '🔗'}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {conf.actif && inscriptions.length === 0 && (
+              <div className="plan-no-inscrits">Aucun participant inscrit — ajoutez des participants pour générer les liens.</div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
