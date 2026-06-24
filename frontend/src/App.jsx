@@ -15,6 +15,7 @@ import TableauDeBord from './pages/TableauDeBord'
 import VeilleFormateur from './pages/VeilleFormateur'
 import ProductUpdate from './pages/ProductUpdate'
 import AccueilPublic from './pages/AccueilPublic'
+import EvalComplete from './pages/EvalComplete'
 import Parametres from './pages/Parametres'
 import Webinaires from './pages/Webinaires'
 import BilanAnnuel from './pages/BilanAnnuel'
@@ -115,14 +116,24 @@ function parseQuizHash() {
   return m ? { sessionId: m[1], stagiaireId: m[2], type: m[3] } : null
 }
 
+function parseEvalHash() {
+  const hash = window.location.hash // e.g. #eval/s_123/stag_456
+  const m = hash.match(/^#eval\/([^/]+)\/([^/]+)$/)
+  return m ? { sessionId: m[1], stagiaireId: m[2] } : null
+}
+
 export default function App() {
   const stored = getSession()
   const [user, setUser] = useState(stored ? getCurrentUser() : null)
   const [page, setPage] = useState(null)
   const [quizParams, setQuizParams] = useState(() => parseQuizHash())
+  const [evalParams, setEvalParams] = useState(() => parseEvalHash())
 
   useEffect(() => {
-    function onHash() { setQuizParams(parseQuizHash()) }
+    function onHash() {
+      setQuizParams(parseQuizHash())
+      setEvalParams(parseEvalHash())
+    }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
@@ -143,6 +154,25 @@ export default function App() {
           stagiaireId={quizParams.stagiaireId}
           type={quizParams.type}
           onDone={() => { window.location.hash = ''; setQuizParams(null) }}
+        />
+      </div>
+    )
+  }
+
+  // Lien évaluation complète post-formation + satisfaction à chaud
+  if (evalParams) {
+    return (
+      <div className="quiz-public-wrap">
+        <div className="quiz-public-header">
+          <div className="logo-wordmark">
+            <PennylaneLogo />
+            <span className="logo-text">pennylane</span>
+          </div>
+          <span className="logo-suite">Learning Suite · AFS</span>
+        </div>
+        <EvalComplete
+          sessionId={evalParams.sessionId}
+          stagiaireId={evalParams.stagiaireId}
         />
       </div>
     )
