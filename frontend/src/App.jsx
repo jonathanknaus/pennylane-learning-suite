@@ -69,12 +69,6 @@ const NAV_ADMIN = [
   },
 ]
 
-const NAV_FORMATEUR = [
-  { id: 'veille',    label: 'Veille juridique' },
-  { id: 'catalogue', label: 'Catalogue AFS' },
-  { id: 'webinaires', label: 'Webinaires' },
-]
-
 function PennylaneLogo() {
   return (
     <svg className="logo-svg" viewBox="-3 0 306 301" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Pennylane">
@@ -90,25 +84,25 @@ function RoleBadge({ role }) {
   return <span className="role-badge role-formateur">Formateur</span>
 }
 
-function PageContent({ currentPage, isAdmin }) {
+function PageContent({ currentPage }) {
   return (
     <>
-      {currentPage === 'catalogue'   && <CatalogueAFS />}
-      {currentPage === 'sessions'    && <Sessions />}
-      {currentPage === 'stagiaires'  && <Stagiaires />}
-      {currentPage === 'entreprises' && <Entreprises />}
-      {currentPage === 'formateurs'  && <Formateurs />}
-      {currentPage === 'financeurs'  && <Financeurs />}
-      {currentPage === 'calendrier'  && <Calendrier />}
-      {currentPage === 'devis'       && <Devis />}
-      {currentPage === 'facturation' && <Facturation />}
-      {currentPage === 'bilan'       && <BilanAnnuel />}
-      {currentPage === 'reclamations'&& <Reclamations />}
-      {currentPage === 'documents'   && <Documents />}
-      {currentPage === 'parametres'  && <Parametres />}
-      {currentPage === 'veille'          && (isAdmin ? <TableauDeBord /> : <VeilleFormateur />)}
-      {currentPage === 'webinaires'      && <Webinaires />}
-      {currentPage === 'product-update'  && <ProductUpdate />}
+      {currentPage === 'catalogue'    && <CatalogueAFS />}
+      {currentPage === 'sessions'     && <Sessions />}
+      {currentPage === 'stagiaires'   && <Stagiaires />}
+      {currentPage === 'entreprises'  && <Entreprises />}
+      {currentPage === 'formateurs'   && <Formateurs />}
+      {currentPage === 'financeurs'   && <Financeurs />}
+      {currentPage === 'calendrier'   && <Calendrier />}
+      {currentPage === 'devis'        && <Devis />}
+      {currentPage === 'facturation'  && <Facturation />}
+      {currentPage === 'bilan'        && <BilanAnnuel />}
+      {currentPage === 'reclamations' && <Reclamations />}
+      {currentPage === 'documents'    && <Documents />}
+      {currentPage === 'parametres'   && <Parametres />}
+      {currentPage === 'veille'       && <TableauDeBord />}
+      {currentPage === 'webinaires'   && <Webinaires />}
+      {currentPage === 'product-update' && <ProductUpdate />}
     </>
   )
 }
@@ -241,8 +235,14 @@ export default function App() {
   }
 
   function handleLogin(role) {
+    if (role === ROLES.formateur) {
+      const u = getCurrentUser()
+      localStorage.setItem('pls_portail_fmt_session', JSON.stringify(u))
+      window.location.hash = '#portail-formateur'
+      return
+    }
     setUser(getCurrentUser())
-    setPage(role === ROLES.admin ? 'catalogue' : 'veille')
+    setPage('catalogue')
   }
 
   function handleLogout() {
@@ -258,46 +258,7 @@ export default function App() {
     return <AccueilPublic onLogin={() => setPage('login')} />
   }
 
-  const isAdmin = user?.role === ROLES.admin
-  const currentPage = page || (isAdmin ? 'catalogue' : 'veille')
-
-  // Formateur : layout header simple (3 items seulement)
-  if (!isAdmin) {
-    return (
-      <div className="app">
-        <header className="header">
-          <div className="header-inner">
-            <div className="header-logo">
-              <div className="logo-wordmark">
-                <PennylaneLogo />
-                <span className="logo-text">pennylane</span>
-              </div>
-              <div className="logo-sep" />
-              <span className="logo-suite">Learning Suite · AFS</span>
-            </div>
-            <nav className="header-nav">
-              {NAV_FORMATEUR.map(p => (
-                <button
-                  key={p.id}
-                  className={`nav-link ${currentPage === p.id ? 'active' : ''}`}
-                  onClick={() => setPage(p.id)}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </nav>
-            <div className="header-user">
-              <RoleBadge role={user?.role} />
-              <button className="btn-logout" onClick={handleLogout}>Déconnexion</button>
-            </div>
-          </div>
-        </header>
-        <main className="main">
-          <PageContent currentPage={currentPage} isAdmin={false} />
-        </main>
-      </div>
-    )
-  }
+  const currentPage = page || 'catalogue'
 
   // Admin : layout sidebar
   return (
@@ -359,7 +320,7 @@ export default function App() {
           </div>
         </header>
         <div className="sidebar-content-inner">
-          <PageContent currentPage={currentPage} isAdmin={true} />
+          <PageContent currentPage={currentPage} />
         </div>
       </div>
     </div>

@@ -84,7 +84,6 @@ export default function Login({ onLogin, onWebinaires }) {
         </div>
 
         <div className="login-portails">
-          <a href="#portail-formateur" className="login-portail-link">🧑‍🏫 Portail formateur</a>
           <a href="#portail-apprenant" className="login-portail-link">👤 Espace apprenant</a>
         </div>
 
