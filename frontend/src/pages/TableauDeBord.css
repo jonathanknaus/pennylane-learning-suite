@@ -429,7 +429,9 @@
 }
 
 .ligne-manuelle td { background: #FAFAFE; }
-.td-actions { display: flex; gap: 6px; align-items: center; }
+.tdb-table th:last-child { text-align: right; }
+.td-actions { text-align: right; white-space: nowrap; }
+.td-actions .btn-traiter { display: inline-block; }
 
 /* Modale ajout article */
 .modale-ajout { max-width: 560px; }
