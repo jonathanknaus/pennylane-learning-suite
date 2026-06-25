@@ -27,7 +27,7 @@ export default function TarifsTable({ tarifs }) {
         ))}
       </div>
       <div className="tarifs-contact">
-        <a href="mailto:afs@pennylane.com" className="contact-btn">
+        <a href="mailto:afs-training@pennylane.com" className="contact-btn">
           Contacter l'équipe AFS
         </a>
       </div>

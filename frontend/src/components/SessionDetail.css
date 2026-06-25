@@ -1170,6 +1170,214 @@
 .page-break { page-break-after: always; break-after: page; }
 .docs-empty { padding: 24px; text-align: center; color: var(--texte-secondaire); }
 
+/* ── Finance tab ──────────────────────────────────────── */
+.finance-tab { display: flex; flex-direction: column; gap: 28px; }
+
+.finance-section { display: flex; flex-direction: column; gap: 12px; }
+
+.finance-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.finance-section-header h3 { font-size: 15px; font-weight: 700; color: var(--bg-dark); margin: 0; }
+
+.finance-empty { padding: 20px; text-align: center; color: var(--texte-secondaire); font-size: 14px; }
+
+.finance-table-wrap {
+  background: var(--blanc);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: auto;
+}
+.finance-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.finance-table th {
+  background: var(--gris);
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--texte-secondaire);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.finance-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--texte);
+}
+.finance-table tr:last-child td { border-bottom: none; }
+.finance-table tr:hover td { background: var(--gris); }
+
+.finance-num { font-weight: 700; white-space: nowrap; }
+.finance-objet { max-width: 200px; }
+.finance-montant { font-weight: 700; white-space: nowrap; text-align: right; }
+
+.finance-statut-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.finance-actions { display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+
+.finance-btn {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--gris);
+  color: var(--texte);
+  border: 1px solid var(--border);
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.finance-btn:hover { background: var(--border); }
+.finance-btn-convert { background: var(--vert-clair); color: var(--bg-dark); border-color: transparent; }
+.finance-btn-convert:hover { background: #b0f3e0; }
+.finance-btn-delete { color: #C53030; }
+.finance-btn-delete:hover { background: #FFF5F5; }
+
+/* Preview mode */
+.finance-preview-mode { display: flex; flex-direction: column; gap: 16px; }
+.finance-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.finance-preview-title { font-size: 15px; font-weight: 700; flex: 1; }
+.finance-api-note {
+  font-size: 12px;
+  color: var(--texte-secondaire);
+  font-style: italic;
+}
+
+/* API banner */
+.finance-api-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #EFF6FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #1E40AF;
+}
+.finance-api-banner strong { display: block; font-size: 13px; margin-bottom: 2px; }
+.finance-api-banner p { margin: 0; opacity: 0.8; }
+
+/* Form wrapper */
+.finance-form-wrap { display: flex; flex-direction: column; gap: 20px; }
+
+.finance-form-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.finance-form-topbar h3 { font-size: 16px; font-weight: 700; color: var(--bg-dark); flex: 1; margin: 0; }
+
+.finance-form { display: flex; flex-direction: column; gap: 0; }
+
+.finance-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 280px;
+  gap: 24px;
+  align-items: start;
+}
+
+.finance-form-section { display: flex; flex-direction: column; gap: 14px; }
+.finance-form-section h4 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--texte-secondaire);
+  margin: 0 0 4px;
+}
+
+.finance-row { display: flex; gap: 10px; }
+.finance-row .finance-field { flex: 1; }
+
+.finance-field { display: flex; flex-direction: column; gap: 4px; }
+.finance-field label { font-size: 12px; font-weight: 600; color: var(--texte-secondaire); }
+.finance-field input,
+.finance-field select,
+.finance-field textarea {
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--texte);
+  background: var(--gris);
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.finance-field input:focus,
+.finance-field select:focus,
+.finance-field textarea:focus { border-color: var(--bg-dark); outline: none; background: var(--blanc); }
+.finance-field textarea { resize: vertical; min-height: 72px; }
+
+/* Recap sidebar */
+.finance-recap-section {
+  background: var(--bg-dark);
+  border-radius: 12px;
+  padding: 20px;
+  color: var(--blanc);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 20px;
+}
+.finance-recap-section h4 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--vert);
+  margin: 0;
+}
+.finance-recap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  gap: 8px;
+}
+.finance-recap-row span:first-child { opacity: 0.7; }
+.finance-recap-row span:last-child { font-weight: 700; }
+.finance-recap-divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 0; }
+.finance-recap-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.finance-recap-total span:first-child { font-size: 14px; font-weight: 700; }
+.finance-recap-total span:last-child { font-size: 20px; font-weight: 800; color: var(--vert); }
+.finance-recap-acompte { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+
+.finance-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
 @media (max-width: 900px) {
   .docs-types-grid { grid-template-columns: repeat(2, 1fr); }
 }

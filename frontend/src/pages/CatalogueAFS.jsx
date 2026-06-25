@@ -54,7 +54,7 @@ export default function CatalogueAFS({ publicMode = false }) {
         <h1 className="hero-title">Catalogue AFS — Formations Premium</h1>
         <p className="hero-sub">
           Formations personnalisées pour maîtriser tous les aspects de la gestion et comptabilité sur Pennylane.
-          <br />Max 15 participants · Visio ou présentiel · <strong>afs@pennylane.com</strong>
+          <br />Max 15 participants · Visio ou présentiel · <strong>afs-training@pennylane.com</strong>
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export default function CatalogueAFS({ publicMode = false }) {
                     </div>
                   </div>
                 )}
-                <a href="mailto:afs@pennylane.com" className="devis-cta">
+                <a href="mailto:afs-training@pennylane.com" className="devis-cta">
                   Demander un devis
                 </a>
                 <button className="devis-reset" onClick={() => setSelectedModules([])}>
@@ -293,7 +293,7 @@ function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, o
                 <button className="btn-primary" onClick={onToggle}>
                   {isSelected ? '✓ Sélectionné' : '+ Ajouter à ma sélection'}
                 </button>
-                <a href="mailto:afs@pennylane.com?subject=Demande%20de%20devis%20—%20Formation%20Pennylane" className="btn-secondary catalogue-devis-link">
+                <a href="mailto:afs-training@pennylane.com?subject=Demande%20de%20devis%20—%20Formation%20Pennylane" className="btn-secondary catalogue-devis-link">
                   Demander un devis
                 </a>
               </div>

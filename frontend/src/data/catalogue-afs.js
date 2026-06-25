@@ -354,6 +354,6 @@ export const WEBINAIRES_EMBARQUEMENT = [
     prix: "Sur devis",
     apprenants: "Sans limite",
     contenu: ["Embarquement selon plan d'abonnement", "Présentation exclusive à votre cabinet", "Accès limité à vos clients", "Adaptation possible à votre demande"],
-    url: "mailto:afs@pennylane.com?subject=Demande%20webinar%20privatif",
+    url: "mailto:afs-training@pennylane.com?subject=Demande%20webinar%20privatif",
   },
 ]
