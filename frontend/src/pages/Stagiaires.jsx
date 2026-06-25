@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react'
 import { getStagiaires, saveStagiaire, deleteStagiaire, seedDemoStagiaires, getInscriptionsByStagiaire, FONCTIONS } from '../data/stagiaires'
 import { getSessions } from '../data/sessions'
 import { getEntreprises } from '../data/entreprises'
-import { getLienPortailStagiaire } from '../data/portails'
 import './Stagiaires.css'
 
-const EMPTY_FORM = { prenom: '', nom: '', email: '', telephone: '', fonction: '', cabinet: '' }
+const EMPTY_FORM = { prenom: '', nom: '', email: '', telephone: '', fonction: '', cabinet: '', code_acces: '' }
 
 export default function Stagiaires() {
   const [stagiaires, setStagiaires] = useState([])
@@ -39,7 +38,7 @@ export default function Stagiaires() {
 
   function openEdit(s) {
     setSelected(s)
-    setForm({ prenom: s.prenom, nom: s.nom, email: s.email, telephone: s.telephone || '', fonction: s.fonction || '', cabinet: s.cabinet || '' })
+    setForm({ prenom: s.prenom, nom: s.nom, email: s.email, telephone: s.telephone || '', fonction: s.fonction || '', cabinet: s.cabinet || '', code_acces: s.code_acces || '' })
     setErrors({})
     setModal('form')
   }
@@ -156,7 +155,7 @@ export default function Stagiaires() {
                     </td>
                     <td onClick={e => e.stopPropagation()}>
                       <div className="row-actions">
-                        <PortailApprenantBtn stagiaireId={s.id} />
+                        <PortailApprenantBtn />
                         <button className="btn-icon" onClick={() => openEdit(s)} title="Modifier">✏️</button>
                         <button className="btn-icon btn-danger" onClick={() => handleDelete(s.id)} title="Supprimer">🗑</button>
                       </div>
@@ -220,6 +219,11 @@ export default function Stagiaires() {
                 ) : (
                   <input value={form.cabinet} onChange={e => setForm(f => ({...f, cabinet: e.target.value}))} placeholder="Nom du cabinet" />
                 )}
+              </div>
+              <div className="form-group">
+                <label>Code d'accès — Espace apprenant</label>
+                <input value={form.code_acces} onChange={e => setForm(f => ({...f, code_acces: e.target.value}))} placeholder="Ex. AFS2026 (communiqué à l'apprenant)" />
+                <span className="form-hint">Ce code, combiné à l'email, permet d'accéder à l'espace apprenant.</span>
               </div>
               <div className="modal-actions">
                 <button type="submit" className="btn-primary">{selected ? 'Enregistrer' : 'Ajouter'}</button>
@@ -302,8 +306,16 @@ function DetailModal({ stagiaire, sessions, onClose, onEdit }) {
           <div className="detail-section">
             <h3>Espace apprenant</h3>
             <div className="portail-section">
-              <p className="portail-desc">Lien personnel donnant accès aux sessions, évaluations et informations de formation, sans connexion requise.</p>
-              <PortailApprenantBtn stagiaireId={selected?.id} showUrl />
+              <p className="portail-desc">L'apprenant se connecte avec son email + code d'accès à l'adresse ci-dessous.</p>
+              {stagiaire.code_acces ? (
+                <div className="portail-code-acces">
+                  <span className="portail-code-label">Code d'accès :</span>
+                  <strong className="portail-code-val">{stagiaire.code_acces}</strong>
+                </div>
+              ) : (
+                <p className="portail-code-missing">⚠ Aucun code d'accès défini — modifiez la fiche pour en ajouter un.</p>
+              )}
+              <PortailApprenantBtn showUrl />
             </div>
           </div>
         </div>
@@ -312,10 +324,9 @@ function DetailModal({ stagiaire, sessions, onClose, onEdit }) {
   )
 }
 
-function PortailApprenantBtn({ stagiaireId, showUrl = false }) {
+function PortailApprenantBtn({ showUrl = false }) {
   const [copied, setCopied] = useState(false)
-  if (!stagiaireId) return null
-  const lien = getLienPortailStagiaire(stagiaireId)
+  const lien = window.location.origin + window.location.pathname + '#portail-apprenant'
 
   function copy(e) {
     e.stopPropagation()
@@ -331,7 +342,7 @@ function PortailApprenantBtn({ stagiaireId, showUrl = false }) {
       <button className={`portail-copy-btn ${copied ? 'copied' : ''}`} onClick={copy} title="Copier le lien de l'espace apprenant">
         {copied ? '✓ Lien copié !' : '🔗 Espace apprenant'}
       </button>
-      <a href={lien} target="_blank" rel="noopener noreferrer" className="portail-open-btn" onClick={e => e.stopPropagation()}>
+      <a href="#portail-apprenant" target="_blank" rel="noopener noreferrer" className="portail-open-btn" onClick={e => e.stopPropagation()}>
         ↗ Ouvrir
       </a>
     </div>

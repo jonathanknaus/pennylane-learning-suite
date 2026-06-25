@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getFormateurs, saveFormateur, deleteFormateur, CIVILITES, STATUTS_BPF_FORMATEUR, TYPES_FORMATEUR } from '../data/formateurs'
-import { getLienPortailFormateur, setFormateurLocked, isFormateurLocked } from '../data/portails'
+import { setFormateurLocked, isFormateurLocked } from '../data/portails'
 import { THEMATIQUES } from '../data/catalogue-afs'
 import './Formateurs.css'
 
@@ -155,7 +155,7 @@ export default function Formateurs() {
                   )}
                 </div>
                 <div className="fmt-card-actions" onClick={e => e.stopPropagation()}>
-                  <PortailFormateurBtn formateurId={f.id} />
+                  <PortailFormateurBtn />
                   <button className="btn-icon" onClick={() => openEdit(f)} title="Modifier">✏️</button>
                   <button className="btn-icon btn-danger" onClick={() => handleDelete(f.id)} title="Supprimer">🗑</button>
                 </div>
@@ -339,7 +339,7 @@ function DetailModal({ formateur, onClose, onEdit }) {
           <h3>Portail formateur</h3>
           <div className="portail-section">
             <p className="portail-desc">Lien personnel donnant accès à toutes les sessions de ce formateur, sans connexion requise.</p>
-            <PortailFormateurBtn formateurId={f.id} showUrl />
+            <PortailFormateurBtn showUrl />
             <div className="portail-lock-row">
               <label className="portail-lock-label">
                 <input
@@ -357,9 +357,9 @@ function DetailModal({ formateur, onClose, onEdit }) {
   )
 }
 
-function PortailFormateurBtn({ formateurId, showUrl = false }) {
+function PortailFormateurBtn({ showUrl = false }) {
   const [copied, setCopied] = useState(false)
-  const lien = getLienPortailFormateur(formateurId)
+  const lien = window.location.origin + window.location.pathname + '#portail-formateur'
 
   function copy(e) {
     e.stopPropagation()
@@ -373,9 +373,9 @@ function PortailFormateurBtn({ formateurId, showUrl = false }) {
     <div className="portail-btn-wrap" onClick={e => e.stopPropagation()}>
       {showUrl && <div className="portail-url">{lien}</div>}
       <button className={`portail-copy-btn ${copied ? 'copied' : ''}`} onClick={copy}>
-        {copied ? '✓ Lien copié !' : '🔗 Copier le lien portail'}
+        {copied ? '✓ Lien copié !' : '🔗 Portail formateur'}
       </button>
-      <a href={lien} target="_blank" rel="noopener noreferrer" className="portail-open-btn" onClick={e => e.stopPropagation()}>
+      <a href="#portail-formateur" target="_blank" rel="noopener noreferrer" className="portail-open-btn" onClick={e => e.stopPropagation()}>
         ↗ Ouvrir
       </a>
     </div>

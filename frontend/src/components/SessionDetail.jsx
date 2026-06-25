@@ -6,11 +6,12 @@ import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from
 import { WORKFLOW_STEPS, getWorkflowsForSession, setWorkflowStep } from '../data/workflows'
 import { getTemplate } from '../data/workflow-templates'
 import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
+import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken } from '../data/questionnaire-besoin'
 import Passation from '../pages/Passation'
 import EnqueteSatisfaction from './EnqueteSatisfaction'
 import './SessionDetail.css'
 
-const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification']
+const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification', 'besoin']
 
 export default function SessionDetail({ session, onClose, onEdit }) {
   const [tab, setTab] = useState('participants')
@@ -127,6 +128,9 @@ export default function SessionDetail({ session, onClose, onEdit }) {
             </button>
             <button className={`detail-tab ${tab === 'planification' ? 'active' : ''}`} onClick={() => setTab('planification')}>
               🗓 Planification
+            </button>
+            <button className={`detail-tab ${tab === 'besoin' ? 'active' : ''}`} onClick={() => setTab('besoin')}>
+              📋 Besoin
             </button>
           </div>
 
@@ -278,6 +282,10 @@ export default function SessionDetail({ session, onClose, onEdit }) {
 
           {tab === 'planification' && (
             <PlanificationTab session={session} inscriptions={inscriptions} stagiaires={stagiaires} />
+          )}
+
+          {tab === 'besoin' && (
+            <BesoinTab session={session} />
           )}
         </div>
 
@@ -1041,6 +1049,128 @@ function SatisfactionTab({ session, inscriptions, stagiaires, onStartEnquete }) 
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const BESOIN_LABELS = {
+  contexte: 'Contexte',
+  objectifs: 'Objectifs visés',
+  public: 'Public concerné',
+  niveau_depart: 'Niveau de départ',
+  contraintes: 'Contraintes pratiques',
+  attentes_specifiques: 'Attentes spécifiques',
+  indicateurs_succes: 'Indicateurs de succès',
+}
+
+function BesoinTab({ session }) {
+  const [besoin, setBesoin] = useState(() => getBesoin(session.id))
+  const [lien, setLien] = useState(() => getLienBesoin(session.id))
+  const [copied, setCopied] = useState(false)
+
+  function refresh() {
+    setBesoin(getBesoin(session.id))
+    setLien(getLienBesoin(session.id))
+  }
+
+  function copyLien() {
+    navigator.clipboard.writeText(lien).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  function handleVerrouiller() {
+    verrouillerBesoin(session.id)
+    refresh()
+  }
+
+  function handleDeverrouiller() {
+    if (!confirm('Déverrouiller les réponses ? Le commanditaire pourra les modifier.')) return
+    deverrouillerBesoin(session.id)
+    refresh()
+  }
+
+  function handleRegenerer() {
+    if (!confirm('Générer un nouveau lien ? L\'ancien lien ne fonctionnera plus.')) return
+    regenererBesoinToken(session.id)
+    refresh()
+  }
+
+  const hasReponses = besoin?.reponses && Object.keys(besoin.reponses).length > 0
+
+  return (
+    <div className="besoin-tab">
+      <div className="besoin-lien-section">
+        <h3 className="besoin-section-title">Lien à envoyer au commanditaire</h3>
+        <p className="besoin-lien-desc">Partagez ce lien avec le commanditaire de la formation. Il pourra remplir le questionnaire sans se connecter.</p>
+        <div className="besoin-lien-row">
+          <div className="besoin-lien-url">{lien}</div>
+          <button className={`besoin-copy-btn ${copied ? 'copied' : ''}`} onClick={copyLien}>
+            {copied ? '✓ Copié !' : '🔗 Copier'}
+          </button>
+          <a href={lien} target="_blank" rel="noopener noreferrer" className="besoin-open-btn">↗ Ouvrir</a>
+        </div>
+        <button className="besoin-regen-btn" onClick={handleRegenerer}>↺ Nouveau lien (invalider l'ancien)</button>
+      </div>
+
+      {!hasReponses && (
+        <div className="besoin-empty">
+          <div className="besoin-empty-icon">📋</div>
+          <p>Aucune réponse reçue pour le moment.</p>
+          <p className="besoin-empty-sub">Envoyez le lien ci-dessus au commanditaire.</p>
+        </div>
+      )}
+
+      {hasReponses && (
+        <div className="besoin-reponses">
+          <div className="besoin-reponses-header">
+            <h3 className="besoin-section-title">
+              Réponses du commanditaire
+              {besoin.verrouille && <span className="besoin-badge-lock">🔒 Verrouillées</span>}
+            </h3>
+            <div className="besoin-reponses-meta">
+              {besoin.soumisAt && <span>Reçues le {new Date(besoin.soumisAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
+            </div>
+          </div>
+
+          <div className="besoin-reponses-list">
+            {Object.entries(besoin.reponses).map(([key, val]) => (
+              <div key={key} className="besoin-reponse-item">
+                <div className="besoin-reponse-label">{BESOIN_LABELS[key] || key}</div>
+                <div className="besoin-reponse-val">{val}</div>
+              </div>
+            ))}
+          </div>
+
+          {(besoin.precisions || []).length > 0 && (
+            <div className="besoin-precisions">
+              <div className="besoin-precisions-title">Précisions complémentaires</div>
+              {besoin.precisions.map((p, i) => (
+                <div key={i} className="besoin-precision-item">
+                  <div className="besoin-precision-texte">{p.texte}</div>
+                  <div className="besoin-precision-meta">
+                    {p.verrouille ? '🔒 Validé · ' : ''}
+                    {new Date(p.ajoutAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="besoin-actions">
+            {!besoin.verrouille ? (
+              <button className="besoin-btn-verrouiller" onClick={handleVerrouiller}>
+                🔒 Valider et verrouiller les réponses
+              </button>
+            ) : (
+              <button className="besoin-btn-deverrouiller" onClick={handleDeverrouiller}>
+                🔓 Déverrouiller
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

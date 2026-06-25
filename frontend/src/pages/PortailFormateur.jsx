@@ -1,11 +1,71 @@
 import { useState, useEffect } from 'react'
-import { verifyPortailFormateur } from '../data/portails'
+import { login, logout, getSession, getCurrentUser, ROLES } from '../data/auth'
 import { getFormateurs } from '../data/formateurs'
 import { getSessions, STATUTS, MODALITES, FORMATS, ALL_MODULES } from '../data/sessions'
 import { getInscriptionsBySession, getStagiaires } from '../data/stagiaires'
 import { getResultat } from '../data/questionnaires'
 import { getReponsesChaud } from '../data/satisfaction'
 import './PortailFormateur.css'
+
+const SESSION_KEY = 'pls_portail_fmt_session'
+
+function savePortailSession(user) { localStorage.setItem(SESSION_KEY, JSON.stringify(user)) }
+function getPortailSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)) } catch { return null } }
+function clearPortailSession() { localStorage.removeItem(SESSION_KEY) }
+
+function LoginFormateur({ onLogin }) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const role = await login(email, password)
+      if (role !== ROLES.formateur && role !== ROLES.admin) {
+        logout()
+        setError('Accès réservé aux formateurs.')
+        setLoading(false)
+        return
+      }
+      const user = getCurrentUser()
+      savePortailSession(user)
+      onLogin(user)
+    } catch {
+      setError('Email ou mot de passe incorrect.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="pf-login-wrap">
+      <div className="pf-login-card">
+        <div className="pf-login-icon">🧑‍🏫</div>
+        <h2 className="pf-login-title">Portail formateur</h2>
+        <p className="pf-login-sub">Connectez-vous avec vos identifiants AFS pour accéder à vos formations.</p>
+        <form onSubmit={handleSubmit} className="pf-login-form">
+          <div className="pf-login-field">
+            <label>Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="votre@email.com" autoComplete="email" required />
+          </div>
+          <div className="pf-login-field">
+            <label>Mot de passe</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" required />
+          </div>
+          {error && <div className="pf-login-error">{error}</div>}
+          <button type="submit" className="pf-login-btn" disabled={loading || !email || !password}>
+            {loading ? 'Connexion…' : 'Accéder à mon espace →'}
+          </button>
+        </form>
+        <div className="pf-login-footer">AFS Pennylane Learning Suite · Accès formateurs</div>
+      </div>
+    </div>
+  )
+}
 
 function SessionCard({ session, formateur }) {
   const [open, setOpen] = useState(false)
@@ -42,7 +102,6 @@ function SessionCard({ session, formateur }) {
 
       {open && (
         <div className="pf-session-body">
-          {/* Modalité & lien */}
           <div className="pf-session-row">
             <span className="pf-row-label">Modalité</span>
             <span>{MODALITES.find(m => m.id === session.modalite)?.label || session.modalite}</span>
@@ -53,7 +112,6 @@ function SessionCard({ session, formateur }) {
             )}
           </div>
 
-          {/* Modules */}
           {modules.length > 0 && (
             <div className="pf-session-row">
               <span className="pf-row-label">Programme</span>
@@ -68,7 +126,6 @@ function SessionCard({ session, formateur }) {
             </div>
           )}
 
-          {/* Participants */}
           {inscriptions.length > 0 && (
             <div className="pf-session-row">
               <span className="pf-row-label">Participants</span>
@@ -112,54 +169,39 @@ function SessionCard({ session, formateur }) {
   )
 }
 
-export default function PortailFormateur({ formateurId, token }) {
+export default function PortailFormateur() {
+  const [user, setUser] = useState(() => getPortailSession())
   const [formateur, setFormateur] = useState(null)
   const [sessions, setSessions] = useState([])
-  const [valid, setValid] = useState(null)
   const [filtre, setFiltre] = useState('all')
 
   useEffect(() => {
-    const ok = verifyPortailFormateur(formateurId, token)
-    setValid(ok)
-    if (!ok) return
-
-    const fmt = getFormateurs().find(f => f.id === formateurId)
+    if (!user) return
+    const formateurs = getFormateurs()
+    const fmt = formateurs.find(f =>
+      f.email?.toLowerCase() === user.email?.toLowerCase() ||
+      (user.prenom && f.prenom?.toLowerCase() === user.prenom?.toLowerCase() && f.nom?.toLowerCase() === user.nom?.toLowerCase())
+    ) || (user.role === ROLES.admin ? formateurs[0] : null)
     setFormateur(fmt || null)
 
-    // Sessions où ce formateur est assigné (par id ou par email/nom)
+    if (!fmt) return
     const toutes = getSessions()
-    const siennes = toutes.filter(s => {
-      if (!fmt) return false
-      const nomComplet = `${fmt.prenom} ${fmt.nom}`.toLowerCase()
-      return (
-        s.formateurId === formateurId ||
-        (s.formateur && s.formateur.toLowerCase().includes(fmt.nom.toLowerCase()))
-      )
-    })
-    setSessions(siennes)
-  }, [formateurId, token])
-
-  if (valid === null) return <div className="pf-loading">Chargement…</div>
-
-  if (!valid) {
-    return (
-      <div className="pf-error">
-        <div className="pf-error-icon">🔒</div>
-        <h2>Accès refusé</h2>
-        <p>Ce lien est invalide ou a expiré. Contactez l'équipe AFS pour obtenir un nouveau lien.</p>
-      </div>
+    const siennes = toutes.filter(s =>
+      s.formateurId === fmt?.id ||
+      (s.formateur && s.formateur.toLowerCase().includes(fmt.nom.toLowerCase()))
     )
+    setSessions(user.role === ROLES.admin ? toutes : siennes)
+  }, [user])
+
+  function handleLogout() {
+    clearPortailSession()
+    logout()
+    setUser(null)
+    setFormateur(null)
+    setSessions([])
   }
 
-  if (!formateur) {
-    return (
-      <div className="pf-error">
-        <div className="pf-error-icon">❓</div>
-        <h2>Formateur introuvable</h2>
-        <p>Aucun profil ne correspond à cet identifiant.</p>
-      </div>
-    )
-  }
+  if (!user) return <LoginFormateur onLogin={u => setUser(u)} />
 
   const FILTRES = [
     { id: 'all', label: 'Toutes' },
@@ -180,27 +222,30 @@ export default function PortailFormateur({ formateurId, token }) {
     .filter(s => s.date && ['confirme', 'en_cours'].includes(s.statut))
     .sort((a, b) => a.date.localeCompare(b.date))[0]
 
+  const nomFormateur = formateur ? `${formateur.prenom} ${formateur.nom}` : `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email
+
   return (
     <div className="pf-wrap">
       <div className="pf-header">
         <div className="pf-header-identity">
-          <div className="pf-avatar">{formateur.prenom[0]}{formateur.nom[0]}</div>
+          <div className="pf-avatar">{(user.prenom?.[0] || user.email?.[0] || '?').toUpperCase()}{(user.nom?.[0] || '').toUpperCase()}</div>
           <div>
-            <div className="pf-name">{formateur.prenom} {formateur.nom}</div>
-            <div className="pf-role">Formateur · AFS Pennylane</div>
+            <div className="pf-name">{nomFormateur}</div>
+            <div className="pf-role">{user.role === ROLES.admin ? 'Administrateur' : 'Formateur'} · AFS Pennylane</div>
           </div>
         </div>
-        <div className="pf-header-stats">
-          <div className="pf-stat">
-            <span className="pf-stat-val">{sessions.length}</span>
-            <span className="pf-stat-label">Formation{sessions.length > 1 ? 's' : ''}</span>
+        <div className="pf-header-right">
+          <div className="pf-header-stats">
+            <div className="pf-stat">
+              <span className="pf-stat-val">{sessions.length}</span>
+              <span className="pf-stat-label">Formation{sessions.length > 1 ? 's' : ''}</span>
+            </div>
+            <div className="pf-stat">
+              <span className="pf-stat-val">{sessions.filter(s => ['confirme', 'en_cours'].includes(s.statut)).length}</span>
+              <span className="pf-stat-label">À venir</span>
+            </div>
           </div>
-          <div className="pf-stat">
-            <span className="pf-stat-val">
-              {sessions.filter(s => ['confirme', 'en_cours'].includes(s.statut)).length}
-            </span>
-            <span className="pf-stat-label">À venir</span>
-          </div>
+          <button className="pf-logout-btn" onClick={handleLogout}>Déconnexion</button>
         </div>
       </div>
 
@@ -222,11 +267,7 @@ export default function PortailFormateur({ formateurId, token }) {
 
       <div className="pf-filtres">
         {FILTRES.map(f => (
-          <button
-            key={f.id}
-            className={`pf-filtre-btn ${filtre === f.id ? 'active' : ''}`}
-            onClick={() => setFiltre(f.id)}
-          >
+          <button key={f.id} className={`pf-filtre-btn ${filtre === f.id ? 'active' : ''}`} onClick={() => setFiltre(f.id)}>
             {f.label}
           </button>
         ))}

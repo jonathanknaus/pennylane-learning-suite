@@ -1,11 +1,62 @@
 import { useState, useEffect } from 'react'
-import { verifyPortailStagiaire } from '../data/portails'
 import { getStagiaires, getInscriptionsByStagiaire } from '../data/stagiaires'
 import { getSessions, STATUTS, MODALITES, FORMATS, ALL_MODULES } from '../data/sessions'
 import { getFormateurs } from '../data/formateurs'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid } from '../data/satisfaction'
 import './PortailApprenant.css'
+
+const SESSION_KEY = 'pls_portail_app_session'
+
+function savePortailSession(stagiaireId) { localStorage.setItem(SESSION_KEY, stagiaireId) }
+function getPortailSession() { return localStorage.getItem(SESSION_KEY) || null }
+function clearPortailSession() { localStorage.removeItem(SESSION_KEY) }
+
+function LoginApprenant({ onLogin }) {
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    const stagiaires = getStagiaires()
+    const stag = stagiaires.find(s => s.email?.toLowerCase() === email.toLowerCase())
+    if (!stag) { setError('Aucun compte trouvé pour cet email.'); setLoading(false); return }
+    if (!stag.code_acces) { setError('Aucun code d\'accès défini. Contactez l\'équipe AFS.'); setLoading(false); return }
+    if (stag.code_acces.trim() !== code.trim()) { setError('Code d\'accès incorrect.'); setLoading(false); return }
+    savePortailSession(stag.id)
+    onLogin(stag.id)
+    setLoading(false)
+  }
+
+  return (
+    <div className="pa-login-wrap">
+      <div className="pa-login-card">
+        <div className="pa-login-icon">👤</div>
+        <h2 className="pa-login-title">Espace apprenant</h2>
+        <p className="pa-login-sub">Connectez-vous avec votre email et le code d'accès communiqué par votre formateur.</p>
+        <form onSubmit={handleSubmit} className="pa-login-form">
+          <div className="pa-login-field">
+            <label>Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="votre@email.com" autoComplete="email" required />
+          </div>
+          <div className="pa-login-field">
+            <label>Code d'accès</label>
+            <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder="ex. AFS2026" autoComplete="off" required />
+          </div>
+          {error && <div className="pa-login-error">{error}</div>}
+          <button type="submit" className="pa-login-btn" disabled={loading || !email || !code}>
+            {loading ? 'Connexion…' : 'Accéder à mon espace →'}
+          </button>
+        </form>
+        <div className="pa-login-footer">AFS Pennylane Learning Suite · Espace apprenants</div>
+      </div>
+    </div>
+  )
+}
 
 function ScoreBadge({ label, score, max = 100, unit = '%' }) {
   const color = max === 10
@@ -62,7 +113,6 @@ function SessionCard({ session, inscription, stagiaire }) {
         </div>
       </div>
 
-      {/* Lien réunion */}
       {session.lien_reunion && (
         <div className="pa-reunion-block">
           <a href={session.lien_reunion} target="_blank" rel="noopener noreferrer" className="pa-reunion-btn">
@@ -71,7 +121,6 @@ function SessionCard({ session, inscription, stagiaire }) {
         </div>
       )}
 
-      {/* Formateur */}
       {formateur && (
         <div className="pa-formateur-block">
           <div className="pa-formateur-avatar">{formateur.prenom[0]}{formateur.nom[0]}</div>
@@ -82,7 +131,6 @@ function SessionCard({ session, inscription, stagiaire }) {
         </div>
       )}
 
-      {/* Programme */}
       {modules.length > 0 && (
         <div className="pa-programme">
           <div className="pa-programme-label">Programme · {modules.length} module{modules.length > 1 ? 's' : ''}</div>
@@ -97,18 +145,15 @@ function SessionCard({ session, inscription, stagiaire }) {
         </div>
       )}
 
-      {/* Évaluations */}
       <div className="pa-evals-block">
         <div className="pa-evals-label">Mes évaluations</div>
         <div className="pa-evals-row">
-          {/* Quizz pré */}
           {pre ? (
             <ScoreBadge label="Pré-formation" score={pre.score} />
           ) : (
             <a href={lienQuizPre} className="pa-eval-link pre">▶ Quizz pré-formation</a>
           )}
 
-          {/* Évaluation post + satisfaction chaud */}
           {post || chaud ? (
             <>
               {post && <ScoreBadge label="Post-formation" score={post.score} />}
@@ -121,7 +166,6 @@ function SessionCard({ session, inscription, stagiaire }) {
             pre && <a href={lienEval} className="pa-eval-link post">▶ Évaluation de fin de formation</a>
           )}
 
-          {/* Satisfaction à froid */}
           {froid && <ScoreBadge label="À froid (30j)" score={froid.moyenne} max={10} unit="/10" />}
         </div>
       </div>
@@ -129,49 +173,34 @@ function SessionCard({ session, inscription, stagiaire }) {
   )
 }
 
-export default function PortailApprenant({ stagiaireId, token }) {
+export default function PortailApprenant() {
+  const [stagiaireId, setStagiaireId] = useState(() => getPortailSession())
   const [stagiaire, setStagiaire] = useState(null)
   const [sessions, setSessions] = useState([])
   const [inscriptions, setInscriptions] = useState([])
-  const [valid, setValid] = useState(null)
 
   useEffect(() => {
-    const ok = verifyPortailStagiaire(stagiaireId, token)
-    setValid(ok)
-    if (!ok) return
-
+    if (!stagiaireId) return
     const stag = getStagiaires().find(s => s.id === stagiaireId)
-    setStagiaire(stag || null)
-    if (!stag) return
-
+    if (!stag) { clearPortailSession(); setStagiaireId(null); return }
+    setStagiaire(stag)
     const ins = getInscriptionsByStagiaire(stagiaireId)
     setInscriptions(ins)
     const toutes = getSessions()
     const siennes = ins.map(i => toutes.find(s => s.id === i.sessionId)).filter(Boolean)
     setSessions(siennes.sort((a, b) => (b.date || '').localeCompare(a.date || '')))
-  }, [stagiaireId, token])
+  }, [stagiaireId])
 
-  if (valid === null) return <div className="pa-loading">Chargement…</div>
-
-  if (!valid) {
-    return (
-      <div className="pa-error">
-        <div className="pa-error-icon">🔒</div>
-        <h2>Accès refusé</h2>
-        <p>Ce lien est invalide ou a expiré. Contactez l'équipe AFS pour obtenir un nouveau lien.</p>
-      </div>
-    )
+  function handleLogout() {
+    clearPortailSession()
+    setStagiaireId(null)
+    setStagiaire(null)
+    setSessions([])
   }
 
-  if (!stagiaire) {
-    return (
-      <div className="pa-error">
-        <div className="pa-error-icon">❓</div>
-        <h2>Apprenant introuvable</h2>
-        <p>Aucun profil ne correspond à cet identifiant.</p>
-      </div>
-    )
-  }
+  if (!stagiaireId) return <LoginApprenant onLogin={id => setStagiaireId(id)} />
+
+  if (!stagiaire) return <div className="pa-loading">Chargement…</div>
 
   const sessionsAVenir = sessions.filter(s => ['brouillon', 'confirme', 'en_cours'].includes(s.statut))
   const sessionsPassees = sessions.filter(s => s.statut === 'termine')
@@ -186,15 +215,18 @@ export default function PortailApprenant({ stagiaireId, token }) {
             <div className="pa-cabinet">{stagiaire.cabinet || stagiaire.email}</div>
           </div>
         </div>
-        <div className="pa-header-stats">
-          <div className="pa-stat">
-            <span className="pa-stat-val">{sessions.length}</span>
-            <span className="pa-stat-label">Formation{sessions.length > 1 ? 's' : ''}</span>
+        <div className="pa-header-right">
+          <div className="pa-header-stats">
+            <div className="pa-stat">
+              <span className="pa-stat-val">{sessions.length}</span>
+              <span className="pa-stat-label">Formation{sessions.length > 1 ? 's' : ''}</span>
+            </div>
+            <div className="pa-stat">
+              <span className="pa-stat-val">{sessionsAVenir.length}</span>
+              <span className="pa-stat-label">À venir</span>
+            </div>
           </div>
-          <div className="pa-stat">
-            <span className="pa-stat-val">{sessionsAVenir.length}</span>
-            <span className="pa-stat-label">À venir</span>
-          </div>
+          <button className="pa-logout-btn" onClick={handleLogout}>Déconnexion</button>
         </div>
       </div>
 
