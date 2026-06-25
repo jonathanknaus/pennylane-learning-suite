@@ -14,6 +14,13 @@ export const ALL_MODULES = THEMATIQUES.flatMap(t =>
 
 const STORAGE_KEY = 'pls_sessions'
 
+export function formatDateLong(dateStr) {
+  if (!dateStr) return '—'
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  })
+}
+
 export function getSessions() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')

@@ -1002,3 +1002,172 @@
   transition: all 0.15s;
 }
 .besoin-btn-deverrouiller:hover { border-color: #EF4444; color: #EF4444; }
+
+/* ========================
+   ONGLET DOCUMENTS
+   ======================== */
+
+.docs-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.docs-types-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.docs-type-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--blanc);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.docs-type-btn:hover { border-color: var(--vert); }
+.docs-type-btn.active { border-color: var(--vert); background: var(--vert-clair); }
+
+.docs-type-icon { font-size: 22px; }
+.docs-type-label { font-size: 13px; font-weight: 700; color: var(--texte); }
+.docs-type-desc { font-size: 11px; color: var(--texte-secondaire); line-height: 1.4; }
+
+.docs-options {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--blanc);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+}
+
+.docs-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.docs-option-group label { font-size: 12px; font-weight: 600; color: var(--texte-secondaire); text-transform: uppercase; letter-spacing: 0.4px; }
+
+.docs-select {
+  background: var(--blanc);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--texte);
+}
+.docs-select:focus { outline: none; border-color: var(--vert); }
+
+.docs-warn {
+  background: #FFFBEB;
+  border: 1px solid #F59E0B;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #92400E;
+}
+
+.docs-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.docs-count-info { font-size: 12px; color: var(--texte-secondaire); }
+
+.docs-occurrences-info {
+  background: var(--blanc);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.docs-occ-title {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--texte-secondaire);
+  background: var(--gris);
+  border-bottom: 1px solid var(--border);
+}
+
+.docs-occ-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.docs-occ-row:last-child { border-bottom: none; }
+
+.docs-occ-badge {
+  background: var(--bg-dark);
+  color: var(--vert);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.docs-occ-heure { color: var(--texte-secondaire); font-size: 12px; margin-left: auto; }
+
+.docs-occ-btn {
+  background: var(--blanc);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.docs-occ-btn:hover { border-color: var(--vert); color: var(--vert); }
+
+/* Preview mode */
+.docs-preview-mode { display: flex; flex-direction: column; gap: 16px; }
+
+.docs-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.docs-preview-title { font-size: 15px; font-weight: 700; flex: 1; }
+
+/* Aside — occurrences */
+.info-row-occurrence { opacity: 0.85; }
+.info-row-occurrence .occurrence-label {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--bg-dark);
+  color: var(--vert);
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+/* page-break pour impression multi-docs */
+.page-break { page-break-after: always; break-after: page; }
+.docs-empty { padding: 24px; text-align: center; color: var(--texte-secondaire); }
+
+@media (max-width: 900px) {
+  .docs-types-grid { grid-template-columns: repeat(2, 1fr); }
+}

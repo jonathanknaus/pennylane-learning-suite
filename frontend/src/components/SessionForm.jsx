@@ -12,6 +12,7 @@ const EMPTY = {
   statut: 'brouillon',
   date: '',
   heure: '09:00',
+  occurrences: [],
   formateur: 'Équipe AFS',
   participants_max: 15,
   participants_inscrits: 0,
@@ -21,8 +22,30 @@ const EMPTY = {
 }
 
 export default function SessionForm({ session, onSaved, onCancel }) {
-  const [form, setForm] = useState(session ? { qualiopi: 'non', ...session } : { ...EMPTY })
+  const [form, setForm] = useState(session ? { qualiopi: 'non', occurrences: [], ...session } : { ...EMPTY })
   const [errors, setErrors] = useState({})
+
+  function addOccurrence() {
+    setForm(f => ({
+      ...f,
+      occurrences: [...(f.occurrences || []), { id: `occ_${Date.now()}`, date: '', heure: f.heure }]
+    }))
+  }
+
+  function updateOccurrence(idx, key, value) {
+    setForm(f => {
+      const updated = [...(f.occurrences || [])]
+      updated[idx] = { ...updated[idx], [key]: value }
+      return { ...f, occurrences: updated }
+    })
+  }
+
+  function removeOccurrence(idx) {
+    setForm(f => ({
+      ...f,
+      occurrences: (f.occurrences || []).filter((_, i) => i !== idx)
+    }))
+  }
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))
@@ -178,6 +201,49 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Occurrences / dates supplémentaires */}
+            <div className="form-section">
+              <h2 className="form-section-title">
+                Dates supplémentaires
+                {(form.occurrences || []).length > 0 && (
+                  <span className="modules-count">{form.occurrences.length} occurrence{form.occurrences.length > 1 ? 's' : ''}</span>
+                )}
+              </h2>
+              <p className="form-hint" style={{ fontSize: 13, color: 'var(--texte-secondaire)', marginTop: -4 }}>
+                Pour une formation sur plusieurs jours ou plusieurs créneaux. Chaque occurrence génère sa propre feuille d'émargement.
+              </p>
+              {(form.occurrences || []).map((occ, idx) => (
+                <div key={occ.id || idx} className="occurrence-row">
+                  <div className="occurrence-num">{idx + 2}</div>
+                  <div className="form-group" style={{ flex: 2 }}>
+                    <label>Date</label>
+                    <input
+                      type="date"
+                      value={occ.date}
+                      onChange={e => updateOccurrence(idx, 'date', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Heure</label>
+                    <input
+                      type="time"
+                      value={occ.heure || form.heure}
+                      onChange={e => updateOccurrence(idx, 'heure', e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="occurrence-remove"
+                    onClick={() => removeOccurrence(idx)}
+                    title="Supprimer cette occurrence"
+                  >✕</button>
+                </div>
+              ))}
+              <button type="button" className="btn-add-occurrence" onClick={addOccurrence}>
+                + Ajouter une date supplémentaire
+              </button>
             </div>
 
             {/* Participants */}

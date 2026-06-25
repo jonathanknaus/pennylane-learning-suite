@@ -1,17 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getStagiaires, getInscriptionsBySession, inscrire, desinscrire, updatePresence, updateStatutInscription, STATUTS_INSCRIPTION } from '../data/stagiaires'
-import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS } from '../data/sessions'
+import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
 import { WORKFLOW_STEPS, getWorkflowsForSession, setWorkflowStep } from '../data/workflows'
 import { getTemplate } from '../data/workflow-templates'
 import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
 import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken } from '../data/questionnaire-besoin'
+import { getSessionData } from '../data/documents'
+import Convocation from './documents/Convocation'
+import Convention from './documents/Convention'
+import Emargement from './documents/Emargement'
+import Attestation from './documents/Attestation'
 import Passation from '../pages/Passation'
 import EnqueteSatisfaction from './EnqueteSatisfaction'
 import './SessionDetail.css'
 
-const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification', 'besoin']
+const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification', 'besoin', 'documents']
 
 export default function SessionDetail({ session, onClose, onEdit }) {
   const [tab, setTab] = useState('participants')
@@ -131,6 +136,9 @@ export default function SessionDetail({ session, onClose, onEdit }) {
             </button>
             <button className={`detail-tab ${tab === 'besoin' ? 'active' : ''}`} onClick={() => setTab('besoin')}>
               📋 Besoin
+            </button>
+            <button className={`detail-tab ${tab === 'documents' ? 'active' : ''}`} onClick={() => setTab('documents')}>
+              🗂 Documents
             </button>
           </div>
 
@@ -287,6 +295,10 @@ export default function SessionDetail({ session, onClose, onEdit }) {
           {tab === 'besoin' && (
             <BesoinTab session={session} />
           )}
+
+          {tab === 'documents' && (
+            <DocumentsTab session={session} inscriptions={inscriptions} stagiaires={stagiaires} />
+          )}
         </div>
 
         {/* Aside — infos session */}
@@ -300,6 +312,13 @@ export default function SessionDetail({ session, onClose, onEdit }) {
 
             <div className="session-info-rows">
               <div className="info-row"><span>📅</span><span>{dateFormatee}{session.heure ? ` · ${session.heure}` : ''}</span></div>
+              {(session.occurrences || []).filter(o => o.date).map((occ, idx) => (
+                <div key={idx} className="info-row info-row-occurrence">
+                  <span>📅</span>
+                  <span className="occurrence-label">J{idx + 2} &nbsp;</span>
+                  <span>{formatDateLong(occ.date)}{occ.heure ? ` · ${occ.heure}` : ''}</span>
+                </div>
+              ))}
               <div className="info-row">
                 <span>📡</span>
                 <span>{MODALITES.find(m => m.id === session.modalite)?.label || session.modalite}</span>
@@ -1049,6 +1068,177 @@ function SatisfactionTab({ session, inscriptions, stagiaires, onStartEnquete }) 
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ====================================================
+// Onglet Documents Qualiopi
+// ====================================================
+
+const TYPES_DOCS = [
+  { id: 'convocation',  label: 'Convocation',             icon: '✉️',  desc: 'Envoyée avant la session à chaque participant', perParticipant: true },
+  { id: 'convention',   label: 'Convention de formation', icon: '📄',  desc: '10 clauses légales, liste participants, prix, signatures', perParticipant: false },
+  { id: 'emargement',   label: "Feuille d'émargement",   icon: '✍️',  desc: 'Preuve de présence — 1 feuille par occurrence', perParticipant: false },
+  { id: 'attestation',  label: 'Attestation',             icon: '🎓',  desc: 'Remise à chaque participant après la session', perParticipant: true },
+]
+
+function DocumentsTab({ session, inscriptions, stagiaires }) {
+  const [typeDoc, setTypeDoc] = useState('convocation')
+  const [stagiaireId, setStagiaireId] = useState('tous')
+  const [occurrenceIdx, setOccurrenceIdx] = useState(0)
+  const [preview, setPreview] = useState(false)
+  const printRef = useRef()
+
+  const data = getSessionData(session.id)
+  if (!data) return <div className="docs-empty">Impossible de charger les données de la session.</div>
+
+  const participants = data.participants
+  const typeInfo = TYPES_DOCS.find(t => t.id === typeDoc)
+
+  const allOccurrences = [
+    { date: session.date, heure: session.heure, label: 'J1 — Session principale' },
+    ...(session.occurrences || []).filter(o => o.date).map((o, i) => ({
+      date: o.date, heure: o.heure, label: `J${i + 2} — ${formatDateLong(o.date)}`
+    }))
+  ]
+
+  function buildDataForOccurrence(idx) {
+    if (idx === 0 || typeDoc !== 'emargement') return data
+    const occ = allOccurrences[idx]
+    const occDateFormatee = formatDateLong(occ.date)
+    return {
+      ...data,
+      dateFormatee: occDateFormatee,
+      session: { ...data.session, date: occ.date, heure: occ.heure || data.session.heure }
+    }
+  }
+
+  function renderDoc() {
+    const d = buildDataForOccurrence(occurrenceIdx)
+    if (typeDoc === 'emargement') return <Emargement data={d} />
+    if (typeDoc === 'convention') return <Convention data={d} />
+    if (typeDoc === 'convocation') {
+      const targets = stagiaireId === 'tous'
+        ? participants
+        : participants.filter(p => p.stagiaire.id === stagiaireId)
+      return targets.map(p => (
+        <div key={p.stagiaire.id}>
+          <Convocation data={d} stagiaire={p.stagiaire} />
+          <div className="page-break" />
+        </div>
+      ))
+    }
+    if (typeDoc === 'attestation') {
+      const targets = stagiaireId === 'tous'
+        ? participants
+        : participants.filter(p => p.stagiaire.id === stagiaireId)
+      return targets.map(p => (
+        <div key={p.stagiaire.id}>
+          <Attestation data={d} stagiaire={p.stagiaire} />
+          <div className="page-break" />
+        </div>
+      ))
+    }
+  }
+
+  if (preview) {
+    return (
+      <div className="docs-preview-mode">
+        <div className="docs-preview-bar no-print">
+          <button className="btn-back" onClick={() => setPreview(false)}>← Retour</button>
+          <span className="docs-preview-title">{typeInfo?.icon} {typeInfo?.label}</span>
+          <button className="btn-primary" onClick={() => window.print()}>🖨 Imprimer / PDF</button>
+        </div>
+        <div ref={printRef}>
+          {renderDoc()}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="docs-tab">
+      <div className="docs-types-grid">
+        {TYPES_DOCS.map(t => (
+          <button
+            key={t.id}
+            className={`docs-type-btn ${typeDoc === t.id ? 'active' : ''}`}
+            onClick={() => { setTypeDoc(t.id); setStagiaireId('tous'); setOccurrenceIdx(0) }}
+          >
+            <span className="docs-type-icon">{t.icon}</span>
+            <span className="docs-type-label">{t.label}</span>
+            <span className="docs-type-desc">{t.desc}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="docs-options">
+        {typeInfo?.perParticipant && (
+          <div className="docs-option-group">
+            <label>Participant</label>
+            <select value={stagiaireId} onChange={e => setStagiaireId(e.target.value)} className="docs-select">
+              <option value="tous">Tous les participants ({participants.length})</option>
+              {participants.map(p => (
+                <option key={p.stagiaire.id} value={p.stagiaire.id}>
+                  {p.stagiaire.prenom} {p.stagiaire.nom}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {typeDoc === 'emargement' && allOccurrences.length > 1 && (
+          <div className="docs-option-group">
+            <label>Occurrence</label>
+            <select value={occurrenceIdx} onChange={e => setOccurrenceIdx(+e.target.value)} className="docs-select">
+              {allOccurrences.map((occ, i) => (
+                <option key={i} value={i}>{occ.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {participants.length === 0 && (
+        <div className="docs-warn">
+          ⚠️ Aucun participant inscrit à cette session — les documents nominatifs seront vides.
+        </div>
+      )}
+
+      <div className="docs-actions">
+        <button className="btn-primary" onClick={() => setPreview(true)}>
+          👁 Prévisualiser et imprimer
+        </button>
+        <span className="docs-count-info">
+          {typeInfo?.perParticipant
+            ? stagiaireId === 'tous'
+              ? `${participants.length} document${participants.length > 1 ? 's' : ''} (un par participant)`
+              : '1 document'
+            : typeDoc === 'emargement' && allOccurrences.length > 1
+              ? `${allOccurrences.length} feuilles disponibles (1 par occurrence)`
+              : '1 document'}
+        </span>
+      </div>
+
+      {allOccurrences.length > 1 && typeDoc === 'emargement' && (
+        <div className="docs-occurrences-info">
+          <div className="docs-occ-title">Feuilles d'émargement disponibles</div>
+          {allOccurrences.map((occ, i) => (
+            <div key={i} className="docs-occ-row">
+              <span className="docs-occ-badge">J{i + 1}</span>
+              <span>{occ.label.replace(/^J\d+ — /, '')}</span>
+              <span className="docs-occ-heure">{occ.heure || '—'}</span>
+              <button
+                className="docs-occ-btn"
+                onClick={() => { setOccurrenceIdx(i); setPreview(true) }}
+              >
+                👁 Ouvrir
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>
