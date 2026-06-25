@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getStagiaires, saveStagiaire, deleteStagiaire, seedDemoStagiaires, getInscriptionsByStagiaire, FONCTIONS } from '../data/stagiaires'
 import { getSessions } from '../data/sessions'
 import { getEntreprises } from '../data/entreprises'
+import { getLienPortailStagiaire } from '../data/portails'
 import './Stagiaires.css'
 
 const EMPTY_FORM = { prenom: '', nom: '', email: '', telephone: '', fonction: '', cabinet: '' }
@@ -155,6 +156,7 @@ export default function Stagiaires() {
                     </td>
                     <td onClick={e => e.stopPropagation()}>
                       <div className="row-actions">
+                        <PortailApprenantBtn stagiaireId={s.id} />
                         <button className="btn-icon" onClick={() => openEdit(s)} title="Modifier">✏️</button>
                         <button className="btn-icon btn-danger" onClick={() => handleDelete(s.id)} title="Supprimer">🗑</button>
                       </div>
@@ -296,8 +298,42 @@ function DetailModal({ stagiaire, sessions, onClose, onEdit }) {
               ))}
             </div>
           )}
+
+          <div className="detail-section">
+            <h3>Espace apprenant</h3>
+            <div className="portail-section">
+              <p className="portail-desc">Lien personnel donnant accès aux sessions, évaluations et informations de formation, sans connexion requise.</p>
+              <PortailApprenantBtn stagiaireId={selected?.id} showUrl />
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function PortailApprenantBtn({ stagiaireId, showUrl = false }) {
+  const [copied, setCopied] = useState(false)
+  if (!stagiaireId) return null
+  const lien = getLienPortailStagiaire(stagiaireId)
+
+  function copy(e) {
+    e.stopPropagation()
+    navigator.clipboard.writeText(lien).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="portail-btn-wrap" onClick={e => e.stopPropagation()}>
+      {showUrl && <div className="portail-url">{lien}</div>}
+      <button className={`portail-copy-btn ${copied ? 'copied' : ''}`} onClick={copy} title="Copier le lien de l'espace apprenant">
+        {copied ? '✓ Lien copié !' : '🔗 Espace apprenant'}
+      </button>
+      <a href={lien} target="_blank" rel="noopener noreferrer" className="portail-open-btn" onClick={e => e.stopPropagation()}>
+        ↗ Ouvrir
+      </a>
     </div>
   )
 }

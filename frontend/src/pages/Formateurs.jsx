@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getFormateurs, saveFormateur, deleteFormateur, CIVILITES, STATUTS_BPF_FORMATEUR, TYPES_FORMATEUR } from '../data/formateurs'
+import { getLienPortailFormateur, setFormateurLocked, isFormateurLocked } from '../data/portails'
 import { THEMATIQUES } from '../data/catalogue-afs'
 import './Formateurs.css'
 
@@ -154,6 +155,7 @@ export default function Formateurs() {
                   )}
                 </div>
                 <div className="fmt-card-actions" onClick={e => e.stopPropagation()}>
+                  <PortailFormateurBtn formateurId={f.id} />
                   <button className="btn-icon" onClick={() => openEdit(f)} title="Modifier">✏️</button>
                   <button className="btn-icon btn-danger" onClick={() => handleDelete(f.id)} title="Supprimer">🗑</button>
                 </div>
@@ -332,7 +334,50 @@ function DetailModal({ formateur, onClose, onEdit }) {
             <p className="detail-notes">{f.notes}</p>
           </div>
         )}
+
+        <div className="detail-section">
+          <h3>Portail formateur</h3>
+          <div className="portail-section">
+            <p className="portail-desc">Lien personnel donnant accès à toutes les sessions de ce formateur, sans connexion requise.</p>
+            <PortailFormateurBtn formateurId={f.id} showUrl />
+            <div className="portail-lock-row">
+              <label className="portail-lock-label">
+                <input
+                  type="checkbox"
+                  checked={isFormateurLocked(f.id)}
+                  onChange={e => { setFormateurLocked(f.id, e.target.checked); refresh() }}
+                />
+                Verrouiller la modification des données (lecture seule)
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+  )
+}
+
+function PortailFormateurBtn({ formateurId, showUrl = false }) {
+  const [copied, setCopied] = useState(false)
+  const lien = getLienPortailFormateur(formateurId)
+
+  function copy(e) {
+    e.stopPropagation()
+    navigator.clipboard.writeText(lien).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="portail-btn-wrap" onClick={e => e.stopPropagation()}>
+      {showUrl && <div className="portail-url">{lien}</div>}
+      <button className={`portail-copy-btn ${copied ? 'copied' : ''}`} onClick={copy}>
+        {copied ? '✓ Lien copié !' : '🔗 Copier le lien portail'}
+      </button>
+      <a href={lien} target="_blank" rel="noopener noreferrer" className="portail-open-btn" onClick={e => e.stopPropagation()}>
+        ↗ Ouvrir
+      </a>
     </div>
   )
 }

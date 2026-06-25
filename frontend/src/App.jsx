@@ -16,6 +16,8 @@ import VeilleFormateur from './pages/VeilleFormateur'
 import ProductUpdate from './pages/ProductUpdate'
 import AccueilPublic from './pages/AccueilPublic'
 import EvalComplete from './pages/EvalComplete'
+import PortailFormateur from './pages/PortailFormateur'
+import PortailApprenant from './pages/PortailApprenant'
 import Parametres from './pages/Parametres'
 import Webinaires from './pages/Webinaires'
 import BilanAnnuel from './pages/BilanAnnuel'
@@ -122,17 +124,33 @@ function parseEvalHash() {
   return m ? { sessionId: m[1], stagiaireId: m[2] } : null
 }
 
+function parsePortailFormateurHash() {
+  const hash = window.location.hash // e.g. #portail-formateur/f1/abc123
+  const m = hash.match(/^#portail-formateur\/([^/]+)\/([^/]+)$/)
+  return m ? { formateurId: m[1], token: m[2] } : null
+}
+
+function parsePortailApprenantHash() {
+  const hash = window.location.hash // e.g. #portail-apprenant/stag_123/abc123
+  const m = hash.match(/^#portail-apprenant\/([^/]+)\/([^/]+)$/)
+  return m ? { stagiaireId: m[1], token: m[2] } : null
+}
+
 export default function App() {
   const stored = getSession()
   const [user, setUser] = useState(stored ? getCurrentUser() : null)
   const [page, setPage] = useState(null)
   const [quizParams, setQuizParams] = useState(() => parseQuizHash())
   const [evalParams, setEvalParams] = useState(() => parseEvalHash())
+  const [portailFmtParams, setPortailFmtParams] = useState(() => parsePortailFormateurHash())
+  const [portailAppParams, setPortailAppParams] = useState(() => parsePortailApprenantHash())
 
   useEffect(() => {
     function onHash() {
       setQuizParams(parseQuizHash())
       setEvalParams(parseEvalHash())
+      setPortailFmtParams(parsePortailFormateurHash())
+      setPortailAppParams(parsePortailApprenantHash())
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
@@ -155,6 +173,32 @@ export default function App() {
           type={quizParams.type}
           onDone={() => { window.location.hash = ''; setQuizParams(null) }}
         />
+      </div>
+    )
+  }
+
+  // Portail formateur
+  if (portailFmtParams) {
+    return (
+      <div className="quiz-public-wrap">
+        <div className="quiz-public-header">
+          <div className="logo-wordmark"><PennylaneLogo /><span className="logo-text">pennylane</span></div>
+          <span className="logo-suite">Learning Suite · AFS</span>
+        </div>
+        <PortailFormateur formateurId={portailFmtParams.formateurId} token={portailFmtParams.token} />
+      </div>
+    )
+  }
+
+  // Portail apprenant
+  if (portailAppParams) {
+    return (
+      <div className="quiz-public-wrap">
+        <div className="quiz-public-header">
+          <div className="logo-wordmark"><PennylaneLogo /><span className="logo-text">pennylane</span></div>
+          <span className="logo-suite">Learning Suite · AFS</span>
+        </div>
+        <PortailApprenant stagiaireId={portailAppParams.stagiaireId} token={portailAppParams.token} />
       </div>
     )
   }

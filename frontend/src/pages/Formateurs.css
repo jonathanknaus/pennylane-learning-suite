@@ -303,3 +303,16 @@
   line-height: 1.55;
   margin: 0;
 }
+
+/* Portail formateur */
+.portail-section { display: flex; flex-direction: column; gap: 10px; }
+.portail-desc { font-size: 13px; color: var(--texte-secondaire); margin: 0; line-height: 1.5; }
+.portail-btn-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.portail-url { font-size: 11px; color: var(--texte-secondaire); font-family: monospace; background: var(--gris); padding: 6px 10px; border-radius: 6px; width: 100%; word-break: break-all; }
+.portail-copy-btn { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; background: var(--vert-clair); border: 1.5px solid var(--vert); color: var(--bg-dark); transition: all 0.15s; }
+.portail-copy-btn:hover { background: var(--vert); }
+.portail-copy-btn.copied { background: #059669; border-color: #059669; color: white; }
+.portail-open-btn { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; background: var(--bg-dark); color: var(--vert); text-decoration: none; transition: opacity 0.15s; }
+.portail-open-btn:hover { opacity: 0.85; }
+.portail-lock-row { margin-top: 4px; }
+.portail-lock-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--texte); cursor: pointer; }
