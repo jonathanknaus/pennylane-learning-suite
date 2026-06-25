@@ -215,7 +215,7 @@
   color: var(--blanc);
   font-weight: 700;
 }
-.detail-tab.active .tab-icon { opacity: 1; filter: brightness(0) invert(1); }
+.detail-tab.active .tab-icon { opacity: 1; }
 
 /* Évaluations */
 .eval-tab { display: flex; flex-direction: column; gap: 16px; }
