@@ -41,20 +41,24 @@ export function enregistrerTraitement({ articleId, articleTitre, articleSource, 
 }
 
 export function exportRegistreCSV(traitements) {
-  const header = ['ID', 'Date traitement', 'Titre', 'Source', 'Thématique', 'Date article', 'Décision', 'Traité par', 'Commentaire', 'Destinataires']
-  const rows = traitements.map(t => [
-    t.id,
-    new Date(t.traiteAt).toLocaleString('fr-FR'),
-    `"${t.articleTitre.replace(/"/g, '""')}"`,
-    t.articleSource,
-    t.articleThematique,
-    t.articleDate,
-    DECISIONS[t.decision]?.label || t.decision,
-    t.traitePar,
-    `"${(t.commentaire || '').replace(/"/g, '""')}"`,
-    t.destinataires.join(' | '),
-  ])
-  return [header, ...rows].map(r => r.join(';')).join('\n')
+  const SEP = ';'
+  const q = v => `"${String(v || '').replace(/"/g, '""')}"`
+  const header = ['ID', 'Date traitement', 'Titre', 'Source', 'Thematique', 'Date article', 'Decision', 'Traite par', 'Commentaire', 'Destinataires']
+  const rows = [...traitements]
+    .sort((a, b) => new Date(b.traiteAt) - new Date(a.traiteAt))
+    .map(t => [
+      t.id,
+      new Date(t.traiteAt).toLocaleString('fr-FR'),
+      q(t.articleTitre),
+      q(t.articleSource),
+      t.articleThematique,
+      t.articleDate,
+      DECISIONS[t.decision]?.label || t.decision,
+      t.traitePar,
+      q(t.commentaire),
+      q(t.destinataires.join(' | ')),
+    ])
+  return 'sep=' + SEP + '\n' + [header, ...rows].map(r => r.join(SEP)).join('\r\n')
 }
 
 export function exportRegistrePDF(traitements) {
