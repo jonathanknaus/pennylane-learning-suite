@@ -125,28 +125,36 @@ export default function SessionDetail({ session, onClose, onEdit }) {
         <div className="detail-main">
           <div className="detail-tabs">
             <button className={`detail-tab ${tab === 'participants' ? 'active' : ''}`} onClick={() => setTab('participants')}>
-              👥 Participants
+              <img src="/pennylane-learning-suite/illustrations/team-xs.png" alt="" className="tab-icon" />
+              Participants
             </button>
             <button className={`detail-tab ${tab === 'evaluations' ? 'active' : ''}`} onClick={() => setTab('evaluations')}>
-              📊 Évaluations Qualiopi
+              <img src="/pennylane-learning-suite/illustrations/cashplan-xs.png" alt="" className="tab-icon" />
+              Évaluations
             </button>
             <button className={`detail-tab ${tab === 'satisfaction' ? 'active' : ''}`} onClick={() => setTab('satisfaction')}>
-              ⭐ Satisfaction
+              <img src="/pennylane-learning-suite/illustrations/chatting-sm.png" alt="" className="tab-icon" />
+              Satisfaction
             </button>
             <button className={`detail-tab ${tab === 'workflows' ? 'active' : ''}`} onClick={() => setTab('workflows')}>
-              ⚡ Workflows
+              <img src="/pennylane-learning-suite/illustrations/automation-sm.png" alt="" className="tab-icon" />
+              Workflows
             </button>
             <button className={`detail-tab ${tab === 'planification' ? 'active' : ''}`} onClick={() => setTab('planification')}>
-              🗓 Planification
+              <img src="/pennylane-learning-suite/illustrations/computation-md.png" alt="" className="tab-icon" />
+              Planification
             </button>
             <button className={`detail-tab ${tab === 'besoin' ? 'active' : ''}`} onClick={() => setTab('besoin')}>
-              📋 Besoin
+              <img src="/pennylane-learning-suite/illustrations/mail-sm.png" alt="" className="tab-icon" />
+              Besoin
             </button>
             <button className={`detail-tab ${tab === 'documents' ? 'active' : ''}`} onClick={() => setTab('documents')}>
-              🗂 Documents
+              <img src="/pennylane-learning-suite/illustrations/file-xs.png" alt="" className="tab-icon" />
+              Documents
             </button>
             <button className={`detail-tab ${tab === 'finance' ? 'active' : ''}`} onClick={() => setTab('finance')}>
-              💶 Devis & Factures
+              <img src="/pennylane-learning-suite/illustrations/invoice-xs.png" alt="" className="tab-icon" />
+              Devis & Factures
             </button>
           </div>
 
