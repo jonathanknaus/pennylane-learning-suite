@@ -27,6 +27,28 @@ export function getDevisById(id) {
   return getDevis().find(d => d.id === id) || null
 }
 
+export function getDevisBySession(sessionId) {
+  return getDevis().filter(d => d.session_id === sessionId)
+}
+
+export function createDevisFromSession(session, format, prix) {
+  return {
+    ...EMPTY_DEVIS,
+    session_id: session.id,
+    objet: session.titre,
+    client_nom: session.client || '',
+    formateur: session.formateur || '',
+    format_duree: format?.duree || '',
+    modalite: session.modalite || 'visio',
+    montant_ht: prix ? String(prix) : '',
+    date_emission: new Date().toISOString().split('T')[0],
+    date_validite: (() => {
+      const d = new Date(); d.setDate(d.getDate() + 30)
+      return d.toISOString().split('T')[0]
+    })(),
+  }
+}
+
 export function saveDevis(devis) {
   const list = getDevis()
   const idx = list.findIndex(d => d.id === devis.id)
