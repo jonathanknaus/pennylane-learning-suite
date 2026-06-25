@@ -1124,7 +1124,9 @@
   white-space: nowrap;
 }
 
-.docs-occ-heure { color: var(--texte-secondaire); font-size: 12px; margin-left: auto; }
+.docs-occ-heure { color: var(--texte-secondaire); font-size: 12px; }
+.docs-occ-meta { color: var(--texte-secondaire); font-size: 12px; margin-left: auto; }
+.docs-occ-row.active { background: var(--vert-clair); }
 
 .docs-occ-btn {
   background: var(--blanc);

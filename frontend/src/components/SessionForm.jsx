@@ -28,7 +28,16 @@ export default function SessionForm({ session, onSaved, onCancel }) {
   function addOccurrence() {
     setForm(f => ({
       ...f,
-      occurrences: [...(f.occurrences || []), { id: `occ_${Date.now()}`, date: '', heure: f.heure }]
+      occurrences: [...(f.occurrences || []), {
+        id: `occ_${Date.now()}`,
+        date: '',
+        heure: f.heure,
+        modalite: f.modalite,
+        format: f.format,
+        lien_reunion: f.lien_reunion || '',
+        qualiopi: f.qualiopi,
+        formateur: f.formateur,
+      }]
     }))
   }
 
@@ -215,30 +224,102 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                 Pour une formation sur plusieurs jours ou plusieurs créneaux. Chaque occurrence génère sa propre feuille d'émargement.
               </p>
               {(form.occurrences || []).map((occ, idx) => (
-                <div key={occ.id || idx} className="occurrence-row">
-                  <div className="occurrence-num">{idx + 2}</div>
-                  <div className="form-group" style={{ flex: 2 }}>
-                    <label>Date</label>
-                    <input
-                      type="date"
-                      value={occ.date}
-                      onChange={e => updateOccurrence(idx, 'date', e.target.value)}
-                    />
+                <div key={occ.id || idx} className="occurrence-card">
+                  <div className="occurrence-card-header">
+                    <div className="occurrence-num">{idx + 2}</div>
+                    <span className="occurrence-card-title">
+                      Occurrence {idx + 2}{occ.date ? ` — ${new Date(occ.date + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}
+                    </span>
+                    <button
+                      type="button"
+                      className="occurrence-remove"
+                      onClick={() => removeOccurrence(idx)}
+                      title="Supprimer cette occurrence"
+                    >✕</button>
                   </div>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label>Heure</label>
-                    <input
-                      type="time"
-                      value={occ.heure || form.heure}
-                      onChange={e => updateOccurrence(idx, 'heure', e.target.value)}
-                    />
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Date</label>
+                      <input
+                        type="date"
+                        value={occ.date}
+                        onChange={e => updateOccurrence(idx, 'date', e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Heure de début</label>
+                      <input
+                        type="time"
+                        value={occ.heure ?? form.heure}
+                        onChange={e => updateOccurrence(idx, 'heure', e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    className="occurrence-remove"
-                    onClick={() => removeOccurrence(idx)}
-                    title="Supprimer cette occurrence"
-                  >✕</button>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Modalité</label>
+                      <div className="radio-group">
+                        {MODALITES.map(m => (
+                          <label key={m.id} className={`radio-option ${(occ.modalite ?? form.modalite) === m.id ? 'selected' : ''}`}>
+                            <input type="radio" name={`modalite_occ_${idx}`} value={m.id}
+                              checked={(occ.modalite ?? form.modalite) === m.id}
+                              onChange={() => updateOccurrence(idx, 'modalite', m.id)} />
+                            {m.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Format</label>
+                      <select value={occ.format ?? form.format} onChange={e => updateOccurrence(idx, 'format', e.target.value)}>
+                        {FORMATS.map(f => (
+                          <option key={f.id} value={f.id}>{f.label} — {f.duree}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {((occ.modalite ?? form.modalite) === 'visio' || (occ.modalite ?? form.modalite) === 'mixte') && (
+                    <div className="form-group">
+                      <label>Lien de réunion (Meet, Teams…)</label>
+                      <input
+                        type="url"
+                        value={occ.lien_reunion ?? form.lien_reunion}
+                        onChange={e => updateOccurrence(idx, 'lien_reunion', e.target.value)}
+                        placeholder="https://meet.google.com/..."
+                      />
+                    </div>
+                  )}
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Formateur</label>
+                      <input
+                        type="text"
+                        value={occ.formateur ?? form.formateur}
+                        onChange={e => updateOccurrence(idx, 'formateur', e.target.value)}
+                        placeholder="Nom du formateur"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>QUALIOPI</label>
+                    <div className="radio-group">
+                      {QUALIOPI_OPTIONS.map(q => (
+                        <label key={q.id}
+                          className={`radio-option ${(occ.qualiopi ?? form.qualiopi) === q.id ? 'selected' : ''}`}
+                          style={(occ.qualiopi ?? form.qualiopi) === q.id ? { borderColor: q.color, color: q.color, background: q.bg } : {}}>
+                          <input type="radio" name={`qualiopi_occ_${idx}`} value={q.id}
+                            checked={(occ.qualiopi ?? form.qualiopi) === q.id}
+                            onChange={() => updateOccurrence(idx, 'qualiopi', q.id)} />
+                          {q.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ))}
               <button type="button" className="btn-add-occurrence" onClick={addOccurrence}>

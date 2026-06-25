@@ -1098,21 +1098,39 @@ function DocumentsTab({ session, inscriptions, stagiaires }) {
   const participants = data.participants
   const typeInfo = TYPES_DOCS.find(t => t.id === typeDoc)
 
+  const rawOccurrences = session.occurrences || []
   const allOccurrences = [
-    { date: session.date, heure: session.heure, label: 'J1 — Session principale' },
-    ...(session.occurrences || []).filter(o => o.date).map((o, i) => ({
-      date: o.date, heure: o.heure, label: `J${i + 2} — ${formatDateLong(o.date)}`
+    { date: session.date, heure: session.heure, modalite: session.modalite, format: session.format, formateur: session.formateur, lien_reunion: session.lien_reunion, qualiopi: session.qualiopi, label: 'J1 — Session principale' },
+    ...rawOccurrences.filter(o => o.date).map((o, i) => ({
+      date: o.date,
+      heure: o.heure ?? session.heure,
+      modalite: o.modalite ?? session.modalite,
+      format: o.format ?? session.format,
+      formateur: o.formateur ?? session.formateur,
+      lien_reunion: o.lien_reunion ?? session.lien_reunion,
+      qualiopi: o.qualiopi ?? session.qualiopi,
+      label: `J${i + 2} — ${formatDateLong(o.date)}`,
     }))
   ]
 
   function buildDataForOccurrence(idx) {
-    if (idx === 0 || typeDoc !== 'emargement') return data
+    if (idx === 0) return data
     const occ = allOccurrences[idx]
-    const occDateFormatee = formatDateLong(occ.date)
+    const format = FORMATS.find(f => f.id === occ.format) || data.format
     return {
       ...data,
-      dateFormatee: occDateFormatee,
-      session: { ...data.session, date: occ.date, heure: occ.heure || data.session.heure }
+      dateFormatee: formatDateLong(occ.date),
+      format,
+      session: {
+        ...data.session,
+        date: occ.date,
+        heure: occ.heure,
+        modalite: occ.modalite,
+        format: occ.format,
+        formateur: occ.formateur,
+        lien_reunion: occ.lien_reunion,
+        qualiopi: occ.qualiopi,
+      }
     }
   }
 
@@ -1190,7 +1208,7 @@ function DocumentsTab({ session, inscriptions, stagiaires }) {
           </div>
         )}
 
-        {typeDoc === 'emargement' && allOccurrences.length > 1 && (
+        {allOccurrences.length > 1 && (
           <div className="docs-option-group">
             <label>Occurrence</label>
             <select value={occurrenceIdx} onChange={e => setOccurrenceIdx(+e.target.value)} className="docs-select">
@@ -1217,20 +1235,20 @@ function DocumentsTab({ session, inscriptions, stagiaires }) {
             ? stagiaireId === 'tous'
               ? `${participants.length} document${participants.length > 1 ? 's' : ''} (un par participant)`
               : '1 document'
-            : typeDoc === 'emargement' && allOccurrences.length > 1
-              ? `${allOccurrences.length} feuilles disponibles (1 par occurrence)`
-              : '1 document'}
+            : '1 document'}
+          {allOccurrences.length > 1 && ` · Occurrence J${occurrenceIdx + 1}`}
         </span>
       </div>
 
-      {allOccurrences.length > 1 && typeDoc === 'emargement' && (
+      {allOccurrences.length > 1 && (
         <div className="docs-occurrences-info">
-          <div className="docs-occ-title">Feuilles d'émargement disponibles</div>
+          <div className="docs-occ-title">Occurrences — accès rapide</div>
           {allOccurrences.map((occ, i) => (
-            <div key={i} className="docs-occ-row">
+            <div key={i} className={`docs-occ-row ${occurrenceIdx === i ? 'active' : ''}`}>
               <span className="docs-occ-badge">J{i + 1}</span>
               <span>{occ.label.replace(/^J\d+ — /, '')}</span>
               <span className="docs-occ-heure">{occ.heure || '—'}</span>
+              <span className="docs-occ-meta">{MODALITES.find(m => m.id === occ.modalite)?.label || ''}</span>
               <button
                 className="docs-occ-btn"
                 onClick={() => { setOccurrenceIdx(i); setPreview(true) }}
