@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getStagiaires, getInscriptionsBySession, inscrire, desinscrire, updatePresence, updateStatutInscription, STATUTS_INSCRIPTION, createStagiaire } from '../data/stagiaires'
+import * as XLSX from 'xlsx'
 import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
@@ -32,6 +33,9 @@ export default function SessionDetail({ session, onClose, onEdit }) {
   const [showAjout, setShowAjout] = useState(false)
   const [showCreer, setShowCreer] = useState(false)
   const [formCreer, setFormCreer] = useState({ prenom: '', nom: '', email: '', cabinet: '', poste: '' })
+  const [importRows, setImportRows] = useState(null) // null | { rows, mapping, errors }
+  const [importMapping, setImportMapping] = useState({})
+  const fileInputRef = useRef()
   const [passation, setPassation] = useState(null) // { stagiaireId, type }
   const [enquete, setEnquete] = useState(null) // { stagiaireId, type: 'chaud'|'froid' }
 
@@ -61,6 +65,80 @@ export default function SessionDetail({ session, onClose, onEdit }) {
     setFormCreer({ prenom: '', nom: '', email: '', cabinet: '', poste: '' })
     setShowCreer(false)
     setShowAjout(false)
+  }
+
+  const CHAMPS_IMPORT = ['prenom', 'nom', 'email', 'cabinet', 'poste']
+  const ALIASES = {
+    prenom: ['prenom', 'prénom', 'firstname', 'first name', 'first_name', 'prénom'],
+    nom: ['nom', 'lastname', 'last name', 'last_name', 'name', 'surname'],
+    email: ['email', 'e-mail', 'mail', 'courriel', 'adresse mail', 'adresse email'],
+    cabinet: ['cabinet', 'entreprise', 'société', 'company', 'organization', 'organisation', 'structure'],
+    poste: ['poste', 'fonction', 'titre', 'job', 'role', 'rôle', 'position'],
+  }
+
+  function detectMapping(headers) {
+    const mapping = {}
+    headers.forEach(h => {
+      const hn = h.toLowerCase().trim()
+      for (const [champ, aliases] of Object.entries(ALIASES)) {
+        if (!mapping[champ] && aliases.some(a => hn.includes(a))) {
+          mapping[champ] = h
+        }
+      }
+    })
+    return mapping
+  }
+
+  function parseFile(file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result)
+        const wb = XLSX.read(data, { type: 'array' })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' })
+        if (rows.length === 0) return
+        const headers = Object.keys(rows[0])
+        const mapping = detectMapping(headers)
+        setImportMapping(mapping)
+        setImportRows({ rows: rows.slice(0, 200), headers })
+        setShowCreer(false)
+      } catch {
+        alert('Impossible de lire le fichier. Vérifiez le format.')
+      }
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    e.target.value = ''
+    parseFile(file)
+  }
+
+  function applyImport() {
+    const { rows } = importRows
+    let count = 0
+    rows.forEach(row => {
+      const prenom = (importMapping.prenom ? row[importMapping.prenom] : '') + ''
+      const nom = (importMapping.nom ? row[importMapping.nom] : '') + ''
+      if (!prenom.trim() && !nom.trim()) return
+      const data = {
+        prenom: prenom.trim(),
+        nom: nom.trim(),
+        email: (importMapping.email ? row[importMapping.email] : '') + '',
+        cabinet: (importMapping.cabinet ? row[importMapping.cabinet] : '') + '',
+        poste: (importMapping.poste ? row[importMapping.poste] : '') + '',
+      }
+      const nouveau = createStagiaire(data)
+      inscrire(session.id, nouveau.id)
+      count++
+    })
+    refresh()
+    setImportRows(null)
+    setShowAjout(false)
+    return count
   }
 
   function handleDesinscrire(stagiaireId) {
@@ -215,13 +293,37 @@ export default function SessionDetail({ session, onClose, onEdit }) {
                           ))
                         )}
                       </div>
-                      <button className="ajout-creer-btn" onClick={() => setShowCreer(true)}>
-                        + Créer un nouveau participant
-                      </button>
+                      <div className="ajout-bottom-btns">
+                        <button className="ajout-creer-btn" onClick={() => setShowCreer(true)}>
+                          + Créer un nouveau participant
+                        </button>
+                        <button className="ajout-import-btn" onClick={() => fileInputRef.current?.click()}>
+                          ⬆ Importer CSV / Excel
+                        </button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".csv,.xlsx,.xls,.ods"
+                          style={{ display: 'none' }}
+                          onChange={handleImportFile}
+                        />
+                      </div>
                     </>
                   )}
 
-                  {showCreer && (
+                  {importRows && (
+                    <ImportPreview
+                      rows={importRows.rows}
+                      headers={importRows.headers}
+                      mapping={importMapping}
+                      champs={CHAMPS_IMPORT}
+                      onMappingChange={(champ, col) => setImportMapping(m => ({ ...m, [champ]: col }))}
+                      onConfirm={applyImport}
+                      onCancel={() => setImportRows(null)}
+                    />
+                  )}
+
+                  {!importRows && showCreer && (
                     <form className="ajout-creer-form" onSubmit={handleCreerEtInscrire}>
                       <div className="ajout-creer-title">Nouveau participant</div>
                       <div className="ajout-creer-row">
@@ -1906,6 +2008,87 @@ function BesoinTab({ session }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ====================================================
+// Composant import CSV / Excel
+// ====================================================
+
+const CHAMPS_LABELS = { prenom: 'Prénom', nom: 'Nom', email: 'Email', cabinet: 'Cabinet / Entreprise', poste: 'Poste' }
+
+function ImportPreview({ rows, headers, mapping, champs, onMappingChange, onConfirm, onCancel }) {
+  const [done, setDone] = useState(false)
+  const [count, setCount] = useState(0)
+  const preview = rows.slice(0, 5)
+
+  function handleConfirm() {
+    const n = onConfirm()
+    setCount(n)
+    setDone(true)
+  }
+
+  if (done) {
+    return (
+      <div className="import-done">
+        <div className="import-done-icon">✓</div>
+        <div className="import-done-msg">{count} participant{count > 1 ? 's' : ''} importé{count > 1 ? 's' : ''} et inscrit{count > 1 ? 's' : ''}</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="import-preview">
+      <div className="import-preview-title">Import — {rows.length} ligne{rows.length > 1 ? 's' : ''} détectée{rows.length > 1 ? 's' : ''}</div>
+
+      <div className="import-mapping">
+        <div className="import-mapping-title">Correspondance des colonnes</div>
+        <div className="import-mapping-grid">
+          {champs.map(champ => (
+            <div key={champ} className="import-mapping-row">
+              <span className="import-champ-label">{CHAMPS_LABELS[champ]}</span>
+              <select
+                className="import-col-select"
+                value={mapping[champ] || ''}
+                onChange={e => onMappingChange(champ, e.target.value || null)}
+              >
+                <option value="">— Ignorer —</option>
+                {headers.map(h => <option key={h} value={h}>{h}</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="import-apercu">
+        <div className="import-mapping-title">Aperçu ({Math.min(5, rows.length)} premières lignes)</div>
+        <div className="import-apercu-table-wrap">
+          <table className="import-apercu-table">
+            <thead>
+              <tr>
+                {champs.filter(c => mapping[c]).map(c => <th key={c}>{CHAMPS_LABELS[c]}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {preview.map((row, i) => (
+                <tr key={i}>
+                  {champs.filter(c => mapping[c]).map(c => (
+                    <td key={c}>{row[mapping[c]] || '—'}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="import-actions">
+        <button className="btn-primary" onClick={handleConfirm} disabled={!mapping.prenom && !mapping.nom}>
+          Importer {rows.length} participant{rows.length > 1 ? 's' : ''}
+        </button>
+        <button className="btn-secondary-sm" onClick={onCancel}>Annuler</button>
+      </div>
     </div>
   )
 }
