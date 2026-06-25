@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getStagiaires, getInscriptionsBySession, inscrire, desinscrire, updatePresence, updateStatutInscription, STATUTS_INSCRIPTION } from '../data/stagiaires'
+import { getStagiaires, getInscriptionsBySession, inscrire, desinscrire, updatePresence, updateStatutInscription, STATUTS_INSCRIPTION, createStagiaire } from '../data/stagiaires'
 import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
@@ -30,6 +30,8 @@ export default function SessionDetail({ session, onClose, onEdit }) {
   const [stagiaires, setStagiaires] = useState([])
   const [searchAjout, setSearchAjout] = useState('')
   const [showAjout, setShowAjout] = useState(false)
+  const [showCreer, setShowCreer] = useState(false)
+  const [formCreer, setFormCreer] = useState({ prenom: '', nom: '', email: '', cabinet: '', poste: '' })
   const [passation, setPassation] = useState(null) // { stagiaireId, type }
   const [enquete, setEnquete] = useState(null) // { stagiaireId, type: 'chaud'|'froid' }
 
@@ -47,6 +49,17 @@ export default function SessionDetail({ session, onClose, onEdit }) {
     inscrire(session.id, stagiaireId)
     refresh()
     setSearchAjout('')
+    setShowAjout(false)
+  }
+
+  function handleCreerEtInscrire(e) {
+    e.preventDefault()
+    if (!formCreer.prenom.trim() || !formCreer.nom.trim()) return
+    const nouveau = createStagiaire(formCreer)
+    inscrire(session.id, nouveau.id)
+    refresh()
+    setFormCreer({ prenom: '', nom: '', email: '', cabinet: '', poste: '' })
+    setShowCreer(false)
     setShowAjout(false)
   }
 
@@ -175,31 +188,81 @@ export default function SessionDetail({ session, onClose, onEdit }) {
 
               {showAjout && (
                 <div className="ajout-panel">
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Rechercher un apprenant par nom, cabinet, email…"
-                    value={searchAjout}
-                    onChange={e => setSearchAjout(e.target.value)}
-                  />
-                  <div className="ajout-list">
-                    {filtresAjout.length === 0 ? (
-                      <div className="ajout-empty">
-                        {nonInscrits.length === 0 ? 'Tous les apprenants sont déjà inscrits' : 'Aucun résultat'}
-                      </div>
-                    ) : (
-                      filtresAjout.slice(0, 8).map(s => (
-                        <button key={s.id} className="ajout-item" onClick={() => handleInscrire(s.id)}>
-                          <div className="ajout-avatar">{s.prenom[0]}{s.nom[0]}</div>
-                          <div className="ajout-info">
-                            <span className="ajout-nom">{s.prenom} {s.nom}</span>
-                            <span className="ajout-cabinet">{s.cabinet || s.email}</span>
+                  {!showCreer && (
+                    <>
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder="Rechercher un apprenant par nom, cabinet, email…"
+                        value={searchAjout}
+                        onChange={e => setSearchAjout(e.target.value)}
+                      />
+                      <div className="ajout-list">
+                        {filtresAjout.length === 0 ? (
+                          <div className="ajout-empty">
+                            {nonInscrits.length === 0 ? 'Tous les apprenants sont déjà inscrits' : 'Aucun résultat'}
                           </div>
-                          <span className="ajout-plus">+</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
+                        ) : (
+                          filtresAjout.slice(0, 8).map(s => (
+                            <button key={s.id} className="ajout-item" onClick={() => handleInscrire(s.id)}>
+                              <div className="ajout-avatar">{s.prenom[0]}{s.nom[0]}</div>
+                              <div className="ajout-info">
+                                <span className="ajout-nom">{s.prenom} {s.nom}</span>
+                                <span className="ajout-cabinet">{s.cabinet || s.email}</span>
+                              </div>
+                              <span className="ajout-plus">+</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      <button className="ajout-creer-btn" onClick={() => setShowCreer(true)}>
+                        + Créer un nouveau participant
+                      </button>
+                    </>
+                  )}
+
+                  {showCreer && (
+                    <form className="ajout-creer-form" onSubmit={handleCreerEtInscrire}>
+                      <div className="ajout-creer-title">Nouveau participant</div>
+                      <div className="ajout-creer-row">
+                        <input
+                          autoFocus
+                          required
+                          placeholder="Prénom *"
+                          value={formCreer.prenom}
+                          onChange={e => setFormCreer(f => ({ ...f, prenom: e.target.value }))}
+                        />
+                        <input
+                          required
+                          placeholder="Nom *"
+                          value={formCreer.nom}
+                          onChange={e => setFormCreer(f => ({ ...f, nom: e.target.value }))}
+                        />
+                      </div>
+                      <input
+                        type="email"
+                        placeholder="Email"
+                        value={formCreer.email}
+                        onChange={e => setFormCreer(f => ({ ...f, email: e.target.value }))}
+                      />
+                      <div className="ajout-creer-row">
+                        <input
+                          placeholder="Cabinet / Entreprise"
+                          value={formCreer.cabinet}
+                          onChange={e => setFormCreer(f => ({ ...f, cabinet: e.target.value }))}
+                        />
+                        <input
+                          placeholder="Poste"
+                          value={formCreer.poste}
+                          onChange={e => setFormCreer(f => ({ ...f, poste: e.target.value }))}
+                        />
+                      </div>
+                      <div className="ajout-creer-actions">
+                        <button type="submit" className="btn-primary">Créer et inscrire</button>
+                        <button type="button" className="btn-secondary-sm" onClick={() => setShowCreer(false)}>← Retour</button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               )}
 

@@ -20,6 +20,13 @@ export function saveStagiaire(stagiaire) {
   return list
 }
 
+export function createStagiaire(data) {
+  const nouveau = { ...data, id: `stag_${Date.now()}`, createdAt: new Date().toISOString() }
+  const list = [...getStagiaires(), nouveau]
+  localStorage.setItem(STAGIAIRES_KEY, JSON.stringify(list))
+  return nouveau
+}
+
 export function deleteStagiaire(id) {
   const list = getStagiaires().filter(s => s.id !== id)
   localStorage.setItem(STAGIAIRES_KEY, JSON.stringify(list))
