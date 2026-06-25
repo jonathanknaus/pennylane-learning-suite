@@ -8,6 +8,11 @@ import { getTemplate } from '../data/workflow-templates'
 import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
 import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken } from '../data/questionnaire-besoin'
 import { getSessionData } from '../data/documents'
+import { getDevisBySession, saveDevis, deleteDevis, calculerDevis, STATUTS_DEVIS, createDevisFromSession, convertirEnFacture, nextNumeroDevis } from '../data/devis'
+import { getFacturesBySession, saveFacture, deleteFacture, calculerFacture, STATUTS_FACTURE, TYPES_FACTURE, createFactureFromSession } from '../data/factures'
+import DevisDoc from './documents/DevisDoc'
+import Facture from './documents/Facture'
+import { getParametres } from '../data/parametres'
 import Convocation from './documents/Convocation'
 import Convention from './documents/Convention'
 import Emargement from './documents/Emargement'
@@ -16,7 +21,7 @@ import Passation from '../pages/Passation'
 import EnqueteSatisfaction from './EnqueteSatisfaction'
 import './SessionDetail.css'
 
-const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification', 'besoin', 'documents']
+const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification', 'besoin', 'documents', 'finance']
 
 export default function SessionDetail({ session, onClose, onEdit }) {
   const [tab, setTab] = useState('participants')
@@ -139,6 +144,9 @@ export default function SessionDetail({ session, onClose, onEdit }) {
             </button>
             <button className={`detail-tab ${tab === 'documents' ? 'active' : ''}`} onClick={() => setTab('documents')}>
               🗂 Documents
+            </button>
+            <button className={`detail-tab ${tab === 'finance' ? 'active' : ''}`} onClick={() => setTab('finance')}>
+              💶 Devis & Factures
             </button>
           </div>
 
@@ -298,6 +306,10 @@ export default function SessionDetail({ session, onClose, onEdit }) {
 
           {tab === 'documents' && (
             <DocumentsTab session={session} inscriptions={inscriptions} stagiaires={stagiaires} />
+          )}
+
+          {tab === 'finance' && (
+            <FinanceTab session={session} />
           )}
         </div>
 
@@ -1070,6 +1082,448 @@ function SatisfactionTab({ session, inscriptions, stagiaires, onStartEnquete }) 
           </table>
         </div>
       )}
+    </div>
+  )
+}
+
+// ====================================================
+// Onglet Devis & Factures
+// ====================================================
+
+function FinanceTab({ session }) {
+  const format = FORMATS.find(f => f.id === session.format)
+  const prix = format ? (session.modalite === 'visio' ? format.visio : format.presentiel) : null
+
+  const [devis, setDevis] = useState(() => getDevisBySession(session.id))
+  const [factures, setFactures] = useState(() => getFacturesBySession(session.id))
+  const [view, setView] = useState('liste') // 'liste' | 'devis-form' | 'facture-form' | 'devis-preview' | 'facture-preview'
+  const [editingDevis, setEditingDevis] = useState(null)
+  const [editingFacture, setEditingFacture] = useState(null)
+  const [previewItem, setPreviewItem] = useState(null)
+  const [previewType, setPreviewType] = useState(null)
+
+  function refresh() {
+    setDevis(getDevisBySession(session.id))
+    setFactures(getFacturesBySession(session.id))
+  }
+
+  function handleNewDevis() {
+    setEditingDevis(createDevisFromSession(session, format, prix))
+    setView('devis-form')
+  }
+
+  function handleNewFacture() {
+    setEditingFacture(createFactureFromSession(session, format, prix))
+    setView('facture-form')
+  }
+
+  function handleConvertirDevis(dev) {
+    const base = convertirEnFacture(dev)
+    setEditingFacture(base)
+    setView('facture-form')
+  }
+
+  function handleSaveDevis(form) {
+    saveDevis(form)
+    refresh()
+    setView('liste')
+  }
+
+  function handleSaveFacture(form) {
+    saveFacture(form)
+    refresh()
+    setView('liste')
+  }
+
+  function handleDeleteDevis(id) {
+    if (!confirm('Supprimer ce devis ?')) return
+    deleteDevis(id)
+    refresh()
+  }
+
+  function handleDeleteFacture(id) {
+    if (!confirm('Supprimer cette facture ?')) return
+    deleteFacture(id)
+    refresh()
+  }
+
+  function openPreview(item, type) {
+    setPreviewItem(item)
+    setPreviewType(type)
+    setView('preview')
+  }
+
+  if (view === 'devis-form') {
+    return <DevisForm devis={editingDevis} session={session} onSave={handleSaveDevis} onCancel={() => setView('liste')} />
+  }
+
+  if (view === 'facture-form') {
+    return <FactureForm facture={editingFacture} session={session} onSave={handleSaveFacture} onCancel={() => setView('liste')} />
+  }
+
+  if (view === 'preview' && previewItem) {
+    const params = getParametres()
+    return (
+      <div className="finance-preview-mode">
+        <div className="finance-preview-bar no-print">
+          <button className="btn-back" onClick={() => setView('liste')}>← Retour</button>
+          <span className="finance-preview-title">{previewType === 'devis' ? '📝 Devis' : '🧾 Facture'} {previewItem.numero}</span>
+          <button className="btn-primary" onClick={() => window.print()}>🖨 Imprimer / PDF</button>
+          <span className="finance-api-note" title="Disponible après intégration API Pennylane">
+            🔗 Générer sur Pennylane — <em>API à venir</em>
+          </span>
+        </div>
+        <div>
+          {previewType === 'devis'
+            ? <DevisDoc devis={previewItem} of={params} />
+            : <Facture facture={previewItem} of={params} />
+          }
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="finance-tab">
+
+      {/* Devis */}
+      <div className="finance-section">
+        <div className="finance-section-header">
+          <h3>📝 Devis</h3>
+          <button className="btn-primary" onClick={handleNewDevis}>+ Nouveau devis</button>
+        </div>
+
+        {devis.length === 0 ? (
+          <div className="finance-empty">Aucun devis pour cette session.</div>
+        ) : (
+          <div className="finance-table-wrap">
+            <table className="finance-table">
+              <thead>
+                <tr><th>N°</th><th>Date</th><th>Client</th><th>Montant HT</th><th>Statut</th><th></th></tr>
+              </thead>
+              <tbody>
+                {devis.map(d => {
+                  const statut = STATUTS_DEVIS.find(s => s.id === d.statut)
+                  const calc = calculerDevis(d)
+                  return (
+                    <tr key={d.id}>
+                      <td className="finance-num">{d.numero}</td>
+                      <td>{d.date_emission ? new Date(d.date_emission).toLocaleDateString('fr-FR') : '—'}</td>
+                      <td>{d.client_nom || '—'}</td>
+                      <td><strong>{calc.ht > 0 ? `${calc.ht.toLocaleString('fr-FR')} €` : '—'}</strong></td>
+                      <td>
+                        <span className="finance-statut-badge" style={{ color: statut?.color, background: statut?.bg }}>
+                          {statut?.label}
+                        </span>
+                      </td>
+                      <td className="finance-actions">
+                        <button className="finance-btn" onClick={() => openPreview(d, 'devis')} title="Prévisualiser">👁</button>
+                        <button className="finance-btn" onClick={() => { setEditingDevis(d); setView('devis-form') }} title="Modifier">✏️</button>
+                        <button className="finance-btn finance-btn-convert" onClick={() => handleConvertirDevis(d)} title="Convertir en facture">→ Facture</button>
+                        <button className="finance-btn finance-btn-delete" onClick={() => handleDeleteDevis(d.id)} title="Supprimer">🗑</button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Factures */}
+      <div className="finance-section">
+        <div className="finance-section-header">
+          <h3>🧾 Factures</h3>
+          <button className="btn-primary" onClick={handleNewFacture}>+ Nouvelle facture</button>
+        </div>
+
+        {factures.length === 0 ? (
+          <div className="finance-empty">Aucune facture pour cette session.</div>
+        ) : (
+          <div className="finance-table-wrap">
+            <table className="finance-table">
+              <thead>
+                <tr><th>N°</th><th>Date</th><th>Type</th><th>Montant HT</th><th>Statut</th><th></th></tr>
+              </thead>
+              <tbody>
+                {factures.map(f => {
+                  const statut = STATUTS_FACTURE.find(s => s.id === f.statut)
+                  const type = TYPES_FACTURE.find(t => t.id === f.type)
+                  const calc = calculerFacture(f)
+                  return (
+                    <tr key={f.id}>
+                      <td className="finance-num">{f.numero}</td>
+                      <td>{f.date_emission ? new Date(f.date_emission).toLocaleDateString('fr-FR') : '—'}</td>
+                      <td>{type?.label || f.type}</td>
+                      <td><strong>{calc.ht > 0 ? `${calc.ht.toLocaleString('fr-FR')} €` : '—'}</strong></td>
+                      <td>
+                        <span className="finance-statut-badge" style={{ color: statut?.color, background: statut?.bg }}>
+                          {statut?.label}
+                        </span>
+                      </td>
+                      <td className="finance-actions">
+                        <button className="finance-btn" onClick={() => openPreview(f, 'facture')} title="Prévisualiser">👁</button>
+                        <button className="finance-btn" onClick={() => { setEditingFacture(f); setView('facture-form') }} title="Modifier">✏️</button>
+                        <button className="finance-btn finance-btn-delete" onClick={() => handleDeleteFacture(f.id)} title="Supprimer">🗑</button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Bannière API future */}
+      <div className="finance-api-banner">
+        <span>🔗</span>
+        <div>
+          <strong>Intégration API Pennylane — à venir</strong>
+          <span>Les devis et factures pourront être générés directement dans Pennylane via l'API. Les boutons d'envoi seront activés lors de l'intégration.</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Formulaire devis inline ───────────────────────────────────────────────────
+function DevisForm({ devis, session, onSave, onCancel }) {
+  const [form, setForm] = useState({ ...devis })
+
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    onSave(form)
+  }
+
+  const calc = calculerDevis(form)
+
+  return (
+    <div className="finance-form-wrap">
+      <div className="finance-form-topbar">
+        <button className="btn-back" onClick={onCancel}>← Retour</button>
+        <h3>{form.id ? `Modifier devis ${form.numero || ''}` : 'Nouveau devis'}</h3>
+      </div>
+      <form onSubmit={handleSubmit} className="finance-form">
+        <div className="finance-form-grid">
+
+          <div className="finance-form-section">
+            <div className="ffs-title">Client</div>
+            <div className="finance-field">
+              <label>Nom / Raison sociale</label>
+              <input value={form.client_nom} onChange={e => set('client_nom', e.target.value)} placeholder="Cabinet Martin & Associés" />
+            </div>
+            <div className="finance-field">
+              <label>Adresse</label>
+              <textarea rows={2} value={form.client_adresse} onChange={e => set('client_adresse', e.target.value)} placeholder="10 rue de la Paix, 75001 Paris" />
+            </div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>SIRET</label>
+                <input value={form.client_siret} onChange={e => set('client_siret', e.target.value)} placeholder="123 456 789 00010" />
+              </div>
+            </div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>Contact</label>
+                <input value={form.contact_nom} onChange={e => set('contact_nom', e.target.value)} placeholder="Nom du contact" />
+              </div>
+              <div className="finance-field">
+                <label>Email</label>
+                <input type="email" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} placeholder="contact@cabinet.fr" />
+              </div>
+            </div>
+          </div>
+
+          <div className="finance-form-section">
+            <div className="ffs-title">Devis</div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>Date d'émission</label>
+                <input type="date" value={form.date_emission} onChange={e => set('date_emission', e.target.value)} />
+              </div>
+              <div className="finance-field">
+                <label>Valide jusqu'au</label>
+                <input type="date" value={form.date_validite} onChange={e => set('date_validite', e.target.value)} />
+              </div>
+            </div>
+            <div className="finance-field">
+              <label>Objet</label>
+              <input value={form.objet} onChange={e => set('objet', e.target.value)} placeholder="Formation Pennylane — …" />
+            </div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>Statut</label>
+                <select value={form.statut} onChange={e => set('statut', e.target.value)}>
+                  {STATUTS_DEVIS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+              </div>
+              <div className="finance-field">
+                <label>Montant HT (€)</label>
+                <input type="number" value={form.montant_ht} onChange={e => set('montant_ht', e.target.value)} placeholder="0" />
+              </div>
+            </div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>TVA (%)</label>
+                <input type="number" value={form.tva_taux} onChange={e => set('tva_taux', e.target.value)} />
+              </div>
+              <div className="finance-field">
+                <label>Acompte (%)</label>
+                <input type="number" min="0" max="100" value={form.acompte_pct} onChange={e => set('acompte_pct', e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <div className="finance-form-section">
+            <div className="ffs-title">Financement</div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>Financeur (OPCO…)</label>
+                <input value={form.financeur_nom} onChange={e => set('financeur_nom', e.target.value)} placeholder="OPCO EP" />
+              </div>
+              <div className="finance-field">
+                <label>N° dossier</label>
+                <input value={form.financeur_dossier} onChange={e => set('financeur_dossier', e.target.value)} />
+              </div>
+            </div>
+            <div className="finance-field">
+              <label>Notes internes</label>
+              <textarea rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="finance-form-section finance-recap-section">
+            <div className="ffs-title">Récapitulatif</div>
+            <div className="finance-recap-row"><span>HT</span><strong>{calc.ht.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong></div>
+            <div className="finance-recap-row"><span>TVA {form.tva_taux}%</span><strong>{calc.tva.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong></div>
+            <div className="finance-recap-row finance-total"><span>TTC</span><strong>{calc.ttc.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong></div>
+            {calc.acompte_ht > 0 && (
+              <div className="finance-recap-row"><span>Acompte {form.acompte_pct}%</span><strong>{calc.acompte_ttc.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € TTC</strong></div>
+            )}
+            <div className="finance-form-actions">
+              <button type="submit" className="btn-submit">Enregistrer</button>
+              <button type="button" className="btn-cancel" onClick={onCancel}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// ── Formulaire facture inline ─────────────────────────────────────────────────
+function FactureForm({ facture, session, onSave, onCancel }) {
+  const [form, setForm] = useState({ ...facture })
+
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    onSave(form)
+  }
+
+  const calc = calculerFacture(form)
+
+  return (
+    <div className="finance-form-wrap">
+      <div className="finance-form-topbar">
+        <button className="btn-back" onClick={onCancel}>← Retour</button>
+        <h3>{form.id ? `Modifier facture ${form.numero || ''}` : 'Nouvelle facture'}</h3>
+      </div>
+      <form onSubmit={handleSubmit} className="finance-form">
+        <div className="finance-form-grid">
+
+          <div className="finance-form-section">
+            <div className="ffs-title">Client</div>
+            <div className="finance-field">
+              <label>Nom / Raison sociale</label>
+              <input value={form.client_nom} onChange={e => set('client_nom', e.target.value)} placeholder="Cabinet Martin & Associés" />
+            </div>
+            <div className="finance-field">
+              <label>Adresse</label>
+              <textarea rows={2} value={form.client_adresse} onChange={e => set('client_adresse', e.target.value)} />
+            </div>
+            <div className="finance-field">
+              <label>SIRET</label>
+              <input value={form.client_siret} onChange={e => set('client_siret', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="finance-form-section">
+            <div className="ffs-title">Facture</div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>Date d'émission</label>
+                <input type="date" value={form.date_emission} onChange={e => set('date_emission', e.target.value)} />
+              </div>
+              <div className="finance-field">
+                <label>Date d'échéance</label>
+                <input type="date" value={form.date_echeance} onChange={e => set('date_echeance', e.target.value)} />
+              </div>
+            </div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>Type</label>
+                <select value={form.type} onChange={e => set('type', e.target.value)}>
+                  {TYPES_FACTURE.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                </select>
+              </div>
+              <div className="finance-field">
+                <label>Statut</label>
+                <select value={form.statut} onChange={e => set('statut', e.target.value)}>
+                  {STATUTS_FACTURE.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="finance-field">
+              <label>Objet</label>
+              <input value={form.objet} onChange={e => set('objet', e.target.value)} />
+            </div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>Montant HT (€)</label>
+                <input type="number" value={form.montant_ht} onChange={e => set('montant_ht', e.target.value)} />
+              </div>
+              <div className="finance-field">
+                <label>TVA (%)</label>
+                <input type="number" value={form.tva_taux} onChange={e => set('tva_taux', e.target.value)} />
+              </div>
+            </div>
+            <div className="finance-row">
+              <div className="finance-field">
+                <label>Acompte (%)</label>
+                <input type="number" min="0" max="100" value={form.acompte_pct} onChange={e => set('acompte_pct', e.target.value)} />
+              </div>
+              <div className="finance-field">
+                <label>Financeur (OPCO…)</label>
+                <input value={form.financeur_nom} onChange={e => set('financeur_nom', e.target.value)} />
+              </div>
+            </div>
+            <div className="finance-field">
+              <label>Notes</label>
+              <textarea rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="finance-form-section finance-recap-section">
+            <div className="ffs-title">Récapitulatif</div>
+            <div className="finance-recap-row"><span>HT</span><strong>{calc.ht.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong></div>
+            <div className="finance-recap-row"><span>TVA {form.tva_taux}%</span><strong>{calc.tva.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong></div>
+            <div className="finance-recap-row finance-total"><span>TTC</span><strong>{calc.ttc.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong></div>
+            {calc.acompte_ht > 0 && (
+              <div className="finance-recap-row"><span>Acompte {form.acompte_pct}%</span><strong>{calc.acompte_ttc.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € TTC</strong></div>
+            )}
+            <div className="finance-form-actions">
+              <button type="submit" className="btn-submit">Enregistrer</button>
+              <button type="button" className="btn-cancel" onClick={onCancel}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
   )
 }
