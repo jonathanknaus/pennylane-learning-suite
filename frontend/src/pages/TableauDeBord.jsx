@@ -1,18 +1,21 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ARTICLES, SOURCES, NIVEAUX } from '../data/veille'
-import { getTraitements, getTraitement, enregistrerTraitement, DECISIONS, exportRegistreCSV } from '../data/traitement'
-import { getFormateurs, addFormateur, updateFormateur, removeFormateur } from '../data/formateurs'
-import { RESPONSABLE } from '../data/formateurs'
+import { SOURCES, NIVEAUX } from '../data/veille'
+import { chargerArticles, getArticlesCache, getDateDerniereFetch } from '../data/articles-store'
+import { getTraitements, getTraitement, enregistrerTraitement, DECISIONS, exportRegistreCSV, exportRegistrePDF } from '../data/traitement'
+import { getFormateursVeille, addFormateurVeille, updateFormateurVeille, removeFormateurVeille } from '../data/veille-formateurs'
+import { RESPONSABLE } from '../data/veille-formateurs'
 import { chargerDepuisGitHub, sauvegarderSurGitHub } from '../data/github-storage'
 import './TableauDeBord.css'
 
 // ── Modale de traitement ──────────────────────────────────────────────────────
 function ModaleTraitement({ article, onClose, onSave }) {
   const source = SOURCES.find(s => s.id === article.source_id)
-  const [decision, setDecision] = useState('')
-  const [commentaire, setCommentaire] = useState('')
-  const [destinataires, setDestinataires] = useState([])
-  const formateurs = getFormateurs()
+  const trace = getTraitement(article.id)
+  const [decision, setDecision] = useState(trace?.decision || '')
+  const [commentaire, setCommentaire] = useState(trace?.commentaire || '')
+  const [destinataires, setDestinataires] = useState(trace?.destinataires || [])
+  const [urlArticle, setUrlArticle] = useState(trace?.urlArticle || '')
+  const formateurs = getFormateursVeille()
 
   function toggleDestinataire(email) {
     setDestinataires(prev => prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email])
@@ -29,6 +32,7 @@ function ModaleTraitement({ article, onClose, onSave }) {
       decision,
       commentaire,
       destinataires: decision === 'diffuser' ? destinataires : [],
+      urlArticle,
     })
     onClose()
   }
@@ -86,6 +90,17 @@ function ModaleTraitement({ article, onClose, onSave }) {
         )}
 
         <div className="modale-section">
+          <p className="modale-label">Lien direct vers l'article</p>
+          <input
+            className="modale-input"
+            type="url"
+            placeholder="https://…"
+            value={urlArticle}
+            onChange={e => setUrlArticle(e.target.value)}
+          />
+        </div>
+
+        <div className="modale-section">
           <p className="modale-label">
             {decision === 'diffuser' ? 'Message à l\'équipe (visible par les formateurs)' : 'Commentaire (optionnel)'}
           </p>
@@ -111,7 +126,7 @@ function ModaleTraitement({ article, onClose, onSave }) {
 
 // ── Section gestion formateurs ────────────────────────────────────────────────
 function GestionFormateurs() {
-  const [formateurs, setFormateurs] = useState(getFormateurs())
+  const [formateurs, setFormateurs] = useState(getFormateursVeille())
   const [form, setForm] = useState({ prenom: '', nom: '', email: '' })
   const [erreur, setErreur] = useState('')
 
@@ -119,19 +134,19 @@ function GestionFormateurs() {
     e.preventDefault()
     if (!form.prenom || !form.nom || !form.email) { setErreur('Tous les champs sont requis.'); return }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setErreur('Email invalide.'); return }
-    setFormateurs(addFormateur(form.prenom, form.nom, form.email))
+    setFormateurs(addFormateurVeille(form.prenom, form.nom, form.email))
     setForm({ prenom: '', nom: '', email: '' })
     setErreur('')
   }
 
   function handleToggle(id) {
     const f = formateurs.find(f => f.id === id)
-    setFormateurs(updateFormateur(id, { actif: !f.actif }))
+    setFormateurs(updateFormateurVeille(id, { actif: !f.actif }))
   }
 
   function handleRemove(id) {
     if (!window.confirm('Supprimer ce formateur ?')) return
-    setFormateurs(removeFormateur(id))
+    setFormateurs(removeFormateurVeille(id))
   }
 
   return (
@@ -201,14 +216,19 @@ function shouldWarnBackup(traitements) {
 
 // ── Tableau de bord principal ─────────────────────────────────────────────────
 export default function TableauDeBord() {
+  const [articles, setArticles] = useState(getArticlesCache())
   const [traitements, setTraitements] = useState(getTraitements())
   const [modaleArticle, setModaleArticle] = useState(null)
   const [onglet, setOnglet] = useState('veille')
+  const [filtreStatut, setFiltreStatut] = useState('tous')
   const [banniereVisible, setBanniereVisible] = useState(() => shouldWarnBackup(getTraitements()))
   const [syncStatus, setSyncStatus] = useState(null) // null | 'saving' | 'ok' | 'error'
+  const [syncArticles, setSyncArticles] = useState(null) // null | 'loading' | 'ok' | 'error'
+  const dateFetch = getDateDerniereFetch()
 
-  // Charger depuis GitHub au démarrage
+  // Charger les articles RSS + traces GitHub au démarrage
   useEffect(() => {
+    chargerArticles().then(data => { if (data?.length) setArticles(data) })
     chargerDepuisGitHub().then(data => {
       if (Array.isArray(data) && data.length > 0) {
         localStorage.setItem('pls_traitements', JSON.stringify(data))
@@ -217,6 +237,19 @@ export default function TableauDeBord() {
       }
     })
   }, [])
+
+  async function handleSync() {
+    setSyncArticles('loading')
+    try {
+      const data = await chargerArticles()
+      if (data?.length) { setArticles(data); setSyncArticles('ok') }
+      else setSyncArticles('error')
+      setTimeout(() => setSyncArticles(null), 3000)
+    } catch {
+      setSyncArticles('error')
+      setTimeout(() => setSyncArticles(null), 3000)
+    }
+  }
 
   async function handleSaveTraitement(data) {
     enregistrerTraitement(data)
@@ -293,12 +326,16 @@ export default function TableauDeBord() {
     e.target.value = ''
   }
 
-  const stats = useMemo(() => ({
-    total: ARTICLES.length,
-    traites: traitements.length,
-    diffuses: traitements.filter(t => t.decision === 'diffuser').length,
-    enAttente: ARTICLES.length - traitements.length,
-  }), [traitements])
+  const stats = useMemo(() => {
+    const traitesIds = new Set(traitements.map(t => t.articleId))
+    const traites = articles.filter(a => traitesIds.has(a.id)).length
+    return {
+      total: articles.length,
+      traites,
+      diffuses: traitements.filter(t => t.decision === 'diffuser').length,
+      enAttente: articles.length - traites,
+    }
+  }, [articles, traitements])
 
   return (
     <div className="tdb-page">
@@ -306,12 +343,21 @@ export default function TableauDeBord() {
         <div className="tdb-head">
           <div>
             <h1 className="tdb-title">Veille juridique</h1>
-            <p className="tdb-subtitle">Responsable : {RESPONSABLE.prenom} {RESPONSABLE.nom} · {RESPONSABLE.email}</p>
+            <p className="tdb-subtitle">
+              Responsable : {RESPONSABLE.prenom} {RESPONSABLE.nom} · {RESPONSABLE.email}
+              {dateFetch && <span className="tdb-fetch-date"> · Dernière sync RSS : {dateFetch.toLocaleDateString('fr-FR')}</span>}
+            </p>
           </div>
           <div className="tdb-head-actions">
+            {syncArticles === 'loading' && <span className="sync-status sync-saving">⏳ Récupération RSS…</span>}
+            {syncArticles === 'ok'      && <span className="sync-status sync-ok">✓ Articles mis à jour</span>}
+            {syncArticles === 'error'   && <span className="sync-status sync-error">⚠️ Erreur RSS</span>}
             {syncStatus === 'saving' && <span className="sync-status sync-saving">⏳ Sync GitHub…</span>}
             {syncStatus === 'ok'     && <span className="sync-status sync-ok">✓ Sauvegardé sur GitHub</span>}
             {syncStatus === 'error'  && <span className="sync-status sync-error">⚠️ Erreur sync GitHub</span>}
+            <button className="btn-sync-rss" onClick={handleSync} title="Récupérer les nouveaux articles">
+              ↻ Actualiser les articles
+            </button>
             <button className="btn-sauvegarder" onClick={handleSauvegarder} title="Sauvegarder toutes les traces en JSON">
               ↓ Sauvegarder
             </button>
@@ -319,8 +365,11 @@ export default function TableauDeBord() {
               ↑ Restaurer
               <input type="file" accept=".json" onChange={handleRestaurer} style={{ display: 'none' }} />
             </label>
-            <button className="btn-export" onClick={handleExport} title="Exporter le registre Qualiopi">
-              ↓ Registre Qualiopi (CSV)
+            <button className="btn-export" onClick={handleExport} title="Exporter le registre Qualiopi en CSV">
+              ↓ Registre CSV
+            </button>
+            <button className="btn-export btn-export-pdf" onClick={() => exportRegistrePDF(traitements)} title="Exporter le registre Qualiopi en PDF imprimable">
+              ↓ Registre PDF
             </button>
           </div>
         </div>
@@ -350,6 +399,24 @@ export default function TableauDeBord() {
 
         {/* Veille à traiter */}
         {onglet === 'veille' && (
+          <div>
+            <div className="filtre-statut">
+              {[
+                { id: 'tous', label: 'Tous' },
+                { id: 'en-attente', label: '⏳ En attente' },
+                { id: 'diffuser', label: '📢 Diffusé' },
+                { id: 'archiver', label: '📁 Archivé' },
+                { id: 'noter', label: '📝 Note interne' },
+              ].map(f => (
+                <button
+                  key={f.id}
+                  className={`filtre-btn ${filtreStatut === f.id ? 'actif' : ''}`}
+                  onClick={() => setFiltreStatut(f.id)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           <div className="tdb-table-wrap">
             <table className="tdb-table">
               <thead>
@@ -358,15 +425,21 @@ export default function TableauDeBord() {
                 </tr>
               </thead>
               <tbody>
-                {ARTICLES.sort((a, b) => new Date(b.date) - new Date(a.date)).map(article => {
+                {[...articles].sort((a, b) => new Date(b.date) - new Date(a.date)).filter(article => {
+                  if (filtreStatut === 'tous') return true
+                  const trace = getTraitement(article.id)
+                  if (filtreStatut === 'en-attente') return !trace
+                  return trace?.decision === filtreStatut
+                }).map(article => {
                   const source = SOURCES.find(s => s.id === article.source_id)
                   const trace = getTraitement(article.id)
                   const decision = trace ? DECISIONS[trace.decision] : null
+                  const lien = trace?.urlArticle || article.url
                   return (
                     <tr key={article.id} className={trace ? 'ligne-traitee' : ''}>
                       <td className="td-source">{source?.nom}</td>
                       <td className="td-date">{new Date(article.date).toLocaleDateString('fr-FR')}</td>
-                      <td className="td-titre"><a href={article.url} target="_blank" rel="noopener noreferrer" className="lien-titre">{article.titre}</a></td>
+                      <td className="td-titre"><a href={lien} target="_blank" rel="noopener noreferrer" className="lien-titre">{article.titre}</a></td>
                       <td><span className={`thematique-badge thematique-${article.thematique}`}>{article.thematique}</span></td>
                       <td><span className={`niveau-badge niveau-${article.niveau}`}>{NIVEAUX[article.niveau].label}</span></td>
                       <td>
@@ -385,6 +458,7 @@ export default function TableauDeBord() {
                 })}
               </tbody>
             </table>
+          </div>
           </div>
         )}
 

@@ -1,19 +1,25 @@
-import { useMemo } from 'react'
-import { ARTICLES, SOURCES, NIVEAUX, THEMATIQUES } from '../data/veille'
+import { useState, useEffect, useMemo } from 'react'
+import { SOURCES, NIVEAUX } from '../data/veille'
+import { chargerArticles, getArticlesCache } from '../data/articles-store'
 import { getTraitements, DECISIONS } from '../data/traitement'
 import './VeilleFormateur.css'
 
 export default function VeilleFormateur() {
+  const [articles, setArticles] = useState(getArticlesCache())
   const traitements = getTraitements()
+
+  useEffect(() => {
+    chargerArticles().then(data => { if (data?.length) setArticles(data) })
+  }, [])
 
   const articlesDiffuses = useMemo(() => {
     const diffuses = new Set(
       traitements.filter(t => t.decision === 'diffuser').map(t => t.articleId)
     )
-    return ARTICLES
+    return articles
       .filter(a => diffuses.has(a.id))
       .sort((a, b) => new Date(b.date) - new Date(a.date))
-  }, [traitements])
+  }, [articles, traitements])
 
   return (
     <div className="vf-page">
@@ -33,6 +39,7 @@ export default function VeilleFormateur() {
             {articlesDiffuses.map(article => {
               const source = SOURCES.find(s => s.id === article.source_id)
               const trace = traitements.find(t => t.articleId === article.id)
+              const lien = trace?.urlArticle || article.url
               return (
                 <article key={article.id} className="vf-card">
                   <div className="vf-card-header">
@@ -42,7 +49,7 @@ export default function VeilleFormateur() {
                     </div>
                     <span className="vf-diffuse-badge">📢 Diffusé</span>
                   </div>
-                  <h2 className="vf-titre"><a href={article.url} target="_blank" rel="noopener noreferrer" className="lien-titre">{article.titre}</a></h2>
+                  <h2 className="vf-titre"><a href={lien} target="_blank" rel="noopener noreferrer" className="lien-titre">{article.titre}</a></h2>
                   <p className="vf-resume">{article.resume}</p>
                   <div className="vf-note">
                     <span className="vf-note-label">Message de la responsable</span>
@@ -51,7 +58,7 @@ export default function VeilleFormateur() {
                   <div className="vf-footer">
                     <span className="vf-source">{source?.nom}</span>
                     <span className="vf-date">{new Date(article.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                    <a className="vf-lien" href={article.url} target="_blank" rel="noopener noreferrer">Lire l'article →</a>
+                    <a className="vf-lien" href={lien} target="_blank" rel="noopener noreferrer">Lire l'article →</a>
                   </div>
                 </article>
               )
