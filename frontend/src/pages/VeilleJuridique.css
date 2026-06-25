@@ -302,15 +302,15 @@
 .article-footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
 
 .article-source { font-size: 13px; font-weight: 600; color: var(--bg-medium); }
-.article-date   { font-size: 13px; color: var(--texte-secondaire); margin-left: auto; }
-.article-lien   { font-size: 13px; font-weight: 600; color: var(--bg-dark); text-decoration: underline; text-underline-offset: 3px; }
+.article-date   { font-size: 13px; color: var(--texte-secondaire); }
+.article-lien   { font-size: 13px; font-weight: 600; color: var(--bg-dark); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 .article-lien:hover { color: var(--vert-fonce); }
 
 /* Empty state */
