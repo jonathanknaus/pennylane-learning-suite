@@ -161,6 +161,31 @@
 }
 .login-demo-btn:hover { opacity: 0.85; }
 
+.login-portails {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.login-portail-link {
+  flex: 1;
+  text-align: center;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texte);
+  text-decoration: none;
+  transition: all 0.15s;
+  background: #F9FAFB;
+}
+.login-portail-link:hover {
+  border-color: var(--bg-dark);
+  background: var(--vert-clair);
+}
+
 .login-webinaires-link {
   margin-top: 4px;
   font-size: 13px;
