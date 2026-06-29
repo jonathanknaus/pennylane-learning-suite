@@ -7,7 +7,7 @@ import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from
 import { WORKFLOW_STEPS, getWorkflowsForSession, setWorkflowStep } from '../data/workflows'
 import { getTemplate } from '../data/workflow-templates'
 import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
-import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken } from '../data/questionnaire-besoin'
+import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken, getCodeCabinet, regenererCodeCabinet } from '../data/questionnaire-besoin'
 import { getSessionData } from '../data/documents'
 import { getDevisBySession, saveDevis, deleteDevis, calculerDevis, STATUTS_DEVIS, createDevisFromSession, convertirEnFacture, nextNumeroDevis } from '../data/devis'
 import { getFacturesBySession, saveFacture, deleteFacture, calculerFacture, STATUTS_FACTURE, TYPES_FACTURE, createFactureFromSession } from '../data/factures'
@@ -1904,6 +1904,12 @@ function BesoinTab({ session }) {
   const [besoin, setBesoin] = useState(() => getBesoin(session.id))
   const [lien, setLien] = useState(() => getLienBesoin(session.id))
   const [copied, setCopied] = useState(false)
+  const [codeCopied, setCodeCopied] = useState(false)
+  const [lienCabCopied, setLienCabCopied] = useState(false)
+
+  const contactEmail = session.contact_email || ''
+  const codeCabinet = contactEmail ? getCodeCabinet(contactEmail) : null
+  const lienPortailCabinet = window.location.origin + window.location.pathname + '#portail-cabinet'
 
   function refresh() {
     setBesoin(getBesoin(session.id))
@@ -1934,6 +1940,27 @@ function BesoinTab({ session }) {
     refresh()
   }
 
+  function handleRegenererCode() {
+    if (!confirm('Générer un nouveau code cabinet ? L\'ancien code ne fonctionnera plus.')) return
+    regenererCodeCabinet(contactEmail)
+    refresh()
+  }
+
+  function copyCode() {
+    if (!codeCabinet) return
+    navigator.clipboard.writeText(codeCabinet).then(() => {
+      setCodeCopied(true)
+      setTimeout(() => setCodeCopied(false), 2000)
+    })
+  }
+
+  function copyLienCab() {
+    navigator.clipboard.writeText(lienPortailCabinet).then(() => {
+      setLienCabCopied(true)
+      setTimeout(() => setLienCabCopied(false), 2000)
+    })
+  }
+
   const hasReponses = besoin?.reponses && Object.keys(besoin.reponses).length > 0
 
   return (
@@ -1950,6 +1977,34 @@ function BesoinTab({ session }) {
         </div>
         <button className="besoin-regen-btn" onClick={handleRegenerer}>↺ Nouveau lien (invalider l'ancien)</button>
       </div>
+
+      {contactEmail && (
+        <div className="besoin-portail-section">
+          <h3 className="besoin-section-title">Accès portail cabinet</h3>
+          <p className="besoin-lien-desc">Le commanditaire peut se connecter à son espace personnel avec son email et ce code d'accès pour retrouver toutes ses sessions.</p>
+          <div className="besoin-portail-row">
+            <div className="besoin-portail-email"><span className="besoin-portail-label">Email</span>{contactEmail}</div>
+            <div className="besoin-portail-code-block">
+              <span className="besoin-portail-label">Code d'accès</span>
+              <div className="besoin-portail-code-row">
+                <span className="besoin-portail-code">{codeCabinet}</span>
+                <button className={`besoin-copy-btn ${codeCopied ? 'copied' : ''}`} onClick={copyCode}>{codeCopied ? '✓ Copié !' : '🔗 Copier'}</button>
+              </div>
+            </div>
+          </div>
+          <div className="besoin-lien-row" style={{ marginTop: 8 }}>
+            <div className="besoin-lien-url">{lienPortailCabinet}</div>
+            <button className={`besoin-copy-btn ${lienCabCopied ? 'copied' : ''}`} onClick={copyLienCab}>{lienCabCopied ? '✓ Copié !' : '🔗 Copier'}</button>
+            <a href={lienPortailCabinet} target="_blank" rel="noopener noreferrer" className="besoin-open-btn">↗ Ouvrir</a>
+          </div>
+          <button className="besoin-regen-btn" onClick={handleRegenererCode}>↺ Nouveau code (invalider l'ancien)</button>
+        </div>
+      )}
+      {!contactEmail && (
+        <div className="besoin-portail-warning">
+          ⚠️ Ajoutez un email de contact dans les infos de la session pour activer l'accès portail cabinet.
+        </div>
+      )}
 
       {!hasReponses && (
         <div className="besoin-empty">

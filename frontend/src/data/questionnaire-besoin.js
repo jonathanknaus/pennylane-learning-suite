@@ -76,6 +76,47 @@ export function resetQuestionsQB() {
   localStorage.removeItem(KEY_QUESTIONS)
 }
 
+// ── Codes d'accès portail cabinet ────────────────────────────────────────────
+const KEY_CABINET_CODES = 'pls_cabinet_codes'
+
+function genCodeCabinet() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  return code
+}
+
+export function getCodeCabinet(email) {
+  if (!email) return null
+  try {
+    const codes = JSON.parse(localStorage.getItem(KEY_CABINET_CODES) || '{}')
+    const key = email.toLowerCase()
+    if (!codes[key]) {
+      codes[key] = genCodeCabinet()
+      localStorage.setItem(KEY_CABINET_CODES, JSON.stringify(codes))
+    }
+    return codes[key]
+  } catch { return null }
+}
+
+export function verifyCodeCabinet(email, code) {
+  if (!email || !code) return false
+  try {
+    const codes = JSON.parse(localStorage.getItem(KEY_CABINET_CODES) || '{}')
+    return codes[email.toLowerCase()] === code.toUpperCase().trim()
+  } catch { return false }
+}
+
+export function regenererCodeCabinet(email) {
+  if (!email) return null
+  try {
+    const codes = JSON.parse(localStorage.getItem(KEY_CABINET_CODES) || '{}')
+    codes[email.toLowerCase()] = genCodeCabinet()
+    localStorage.setItem(KEY_CABINET_CODES, JSON.stringify(codes))
+    return codes[email.toLowerCase()]
+  } catch { return null }
+}
+
 function genToken() {
   return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10)
 }

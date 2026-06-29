@@ -18,6 +18,7 @@ import AccueilPublic from './pages/AccueilPublic'
 import EvalComplete from './pages/EvalComplete'
 import PortailFormateur from './pages/PortailFormateur'
 import PortailApprenant from './pages/PortailApprenant'
+import PortailCabinet from './pages/PortailCabinet'
 import QuestionnaireBesoin from './pages/QuestionnaireBesoin'
 import Parametres from './pages/Parametres'
 import Webinaires from './pages/Webinaires'
@@ -127,6 +128,10 @@ function isPortailApprenantHash() {
   return window.location.hash === '#portail-apprenant'
 }
 
+function isPortailCabinetHash() {
+  return window.location.hash === '#portail-cabinet'
+}
+
 function parseBesoinHash() {
   const hash = window.location.hash // e.g. #questionnaire-besoin/s_123/abc123
   const m = hash.match(/^#questionnaire-besoin\/([^/]+)\/([^/]+)$/)
@@ -141,6 +146,7 @@ export default function App() {
   const [evalParams, setEvalParams] = useState(() => parseEvalHash())
   const [portailFmt, setPortailFmt] = useState(() => isPortailFormateurHash())
   const [portailApp, setPortailApp] = useState(() => isPortailApprenantHash())
+  const [portailCab, setPortailCab] = useState(() => isPortailCabinetHash())
   const [besoinParams, setBesoinParams] = useState(() => parseBesoinHash())
 
   useEffect(() => {
@@ -149,6 +155,7 @@ export default function App() {
       setEvalParams(parseEvalHash())
       setPortailFmt(isPortailFormateurHash())
       setPortailApp(isPortailApprenantHash())
+      setPortailCab(isPortailCabinetHash())
       setBesoinParams(parseBesoinHash())
     }
     window.addEventListener('hashchange', onHash)
@@ -185,6 +192,19 @@ export default function App() {
           <span className="logo-suite">Learning Suite · AFS</span>
         </div>
         <PortailFormateur />
+      </div>
+    )
+  }
+
+  // Portail cabinet commanditaire
+  if (portailCab) {
+    return (
+      <div className="quiz-public-wrap">
+        <div className="quiz-public-header">
+          <div className="logo-wordmark"><PennylaneLogo /><span className="logo-text">pennylane</span></div>
+          <span className="logo-suite">Learning Suite · AFS</span>
+        </div>
+        <PortailCabinet />
       </div>
     )
   }

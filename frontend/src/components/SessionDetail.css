@@ -1088,6 +1088,27 @@
 }
 .besoin-regen-btn:hover { color: #EF4444; }
 
+/* Portail cabinet */
+.besoin-portail-section {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px; background: #EEF2FF;
+  border: 1.5px solid #C7D2FE; border-radius: var(--radius);
+}
+.besoin-portail-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.besoin-portail-email, .besoin-portail-code-block {
+  display: flex; flex-direction: column; gap: 4px;
+  background: var(--blanc); border: 1px solid #C7D2FE;
+  border-radius: 8px; padding: 10px 14px; flex: 1; min-width: 160px;
+  font-size: 14px; font-weight: 600; color: var(--texte);
+}
+.besoin-portail-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #4338CA; }
+.besoin-portail-code-row { display: flex; align-items: center; gap: 8px; }
+.besoin-portail-code { font-size: 20px; font-weight: 800; letter-spacing: 0.15em; color: var(--bg-dark); font-family: monospace; }
+.besoin-portail-warning {
+  font-size: 13px; color: #92400E; background: #FFFBEB;
+  border: 1px solid #FCD34D; border-radius: 8px; padding: 10px 14px;
+}
+
 /* Empty */
 .besoin-empty {
   text-align: center;
