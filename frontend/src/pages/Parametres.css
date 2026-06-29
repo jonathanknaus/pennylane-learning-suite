@@ -118,7 +118,140 @@
 /* ── Banque de questions (réutilise les classes de BanqueQuestions.css) ──── */
 /* Les styles banque-* sont déjà dans BanqueQuestions.css et restent actifs   */
 
+/* ── Éditeur questionnaire de besoin ─────────────────────────────────────── */
+.qb-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.qb-editor-count { font-size: 13px; color: var(--texte-secondaire); }
+.qb-editor-badge-custom {
+  font-size: 11px; font-weight: 700; padding: 3px 9px;
+  border-radius: 20px; background: #EEF2FF; color: #4338CA;
+}
+
+.qb-editor-list { display: flex; flex-direction: column; gap: 8px; }
+
+.qb-editor-card {
+  background: var(--blanc);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.qb-editor-card.open { border-color: var(--bg-dark); }
+
+.qb-editor-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.qb-editor-card-header:hover { background: var(--gris); }
+.qb-editor-card.open .qb-editor-card-header { background: var(--gris); }
+
+.qb-editor-num {
+  width: 26px; height: 26px;
+  background: var(--bg-dark); color: var(--blanc);
+  border-radius: 50%; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.qb-editor-card-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.qb-editor-card-label { font-size: 13px; font-weight: 700; color: var(--texte); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qb-editor-card-question { font-size: 12px; color: var(--texte-secondaire); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qb-editor-placeholder { color: var(--border); font-style: italic; }
+
+.qb-editor-card-badges { display: flex; gap: 6px; flex-shrink: 0; }
+.qb-type-badge {
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 20px;
+}
+.qb-type-badge.textarea { background: #EBF8FF; color: #2B6CB0; }
+.qb-type-badge.radio { background: #FEF3C7; color: #92400E; }
+.qb-required-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #FEE2E2; color: #991B1B; }
+
+.qb-editor-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.qb-move-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  font-size: 13px; color: var(--texte-secondaire);
+  background: none; transition: background 0.1s;
+}
+.qb-move-btn:hover:not(:disabled) { background: var(--border); color: var(--texte); }
+.qb-move-btn:disabled { opacity: 0.3; cursor: default; }
+.qb-remove-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  font-size: 13px; color: #EF4444; background: none; transition: background 0.1s;
+}
+.qb-remove-btn:hover { background: #FEF2F2; }
+
+.qb-editor-card-body {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 14px;
+  background: var(--blanc);
+}
+
+.qb-editor-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.qb-editor-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px; }
+.qb-editor-field-type { max-width: 160px; }
+.qb-editor-field-required { max-width: 110px; }
+.qb-editor-field label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texte-secondaire); }
+.qb-required-star { color: #EF4444; }
+.qb-editor-field input[type="text"],
+.qb-editor-field textarea,
+.qb-editor-field select {
+  padding: 8px 10px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: var(--texte);
+  background: var(--gris);
+  transition: border-color 0.15s;
+}
+.qb-editor-field input[type="text"]:focus,
+.qb-editor-field textarea:focus,
+.qb-editor-field select:focus { outline: none; border-color: var(--bg-dark); background: var(--blanc); }
+
+/* Toggle obligatoire */
+.qb-toggle { display: flex; align-items: center; cursor: pointer; width: fit-content; }
+.qb-toggle input { display: none; }
+.qb-toggle-slider {
+  width: 40px; height: 22px; border-radius: 11px;
+  background: var(--border); position: relative; transition: background 0.2s;
+}
+.qb-toggle-slider::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blanc); transition: left 0.2s;
+}
+.qb-toggle input:checked + .qb-toggle-slider { background: var(--bg-dark); }
+.qb-toggle input:checked + .qb-toggle-slider::after { left: 21px; }
+
+/* Options radio */
+.qb-options-list { display: flex; flex-direction: column; gap: 6px; }
+.qb-option-row { display: flex; align-items: center; gap: 8px; }
+.qb-option-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--bg-dark); flex-shrink: 0; }
+.qb-option-row input { flex: 1; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.qb-option-row input:focus { outline: none; border-color: var(--bg-dark); }
+.qb-remove-option { color: #EF4444; background: none; font-size: 13px; padding: 4px 6px; border-radius: 4px; }
+.qb-remove-option:hover { background: #FEF2F2; }
+.qb-add-option { font-size: 12px; font-weight: 600; color: var(--bg-medium); background: none; text-decoration: underline; margin-top: 2px; align-self: flex-start; }
+
+.qb-add-question-btn {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px; border: 2px dashed var(--border);
+  border-radius: 10px; font-size: 14px; font-weight: 600;
+  color: var(--texte-secondaire); background: none;
+  transition: all 0.15s; margin-top: 4px;
+}
+.qb-add-question-btn:hover { border-color: var(--bg-dark); color: var(--bg-dark); background: var(--gris); }
+
 @media (max-width: 768px) {
   .param-fields { grid-template-columns: 1fr; }
   .param-tabs { flex-wrap: wrap; }
+  .qb-editor-card-badges { display: none; }
 }

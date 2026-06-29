@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getParametres, saveParametres, CHAMPS_OF } from '../data/parametres'
 import { THEMATIQUES } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
+import { getQuestionsQB, saveQuestionsQB, resetQuestionsQB, DEFAULT_QUESTIONS_QB } from '../data/questionnaire-besoin'
 import './Parametres.css'
 import './BanqueQuestions.css'
 
@@ -287,10 +288,194 @@ function BanqueQuestions() {
   )
 }
 
+// ── Éditeur questionnaire de besoin ──────────────────────────────────────────
+function emptyQBQuestion() {
+  return { id: `qb_${Date.now()}_${Math.floor(Math.random() * 9999)}`, label: '', question: '', type: 'textarea', placeholder: '', options: ['', '', ''], required: false }
+}
+
+function QuestionnaireBesoinEditor() {
+  const [questions, setQuestions] = useState(getQuestionsQB())
+  const [saved, setSaved] = useState(false)
+  const [editing, setEditing] = useState(null) // index | null
+
+  function update(idx, field, value) {
+    setQuestions(qs => qs.map((q, i) => i === idx ? { ...q, [field]: value } : q))
+    setSaved(false)
+  }
+
+  function updateOption(qIdx, optIdx, value) {
+    setQuestions(qs => qs.map((q, i) => {
+      if (i !== qIdx) return q
+      const options = [...(q.options || [])]
+      options[optIdx] = value
+      return { ...q, options }
+    }))
+    setSaved(false)
+  }
+
+  function addOption(qIdx) {
+    setQuestions(qs => qs.map((q, i) => i === qIdx ? { ...q, options: [...(q.options || []), ''] } : q))
+  }
+
+  function removeOption(qIdx, optIdx) {
+    setQuestions(qs => qs.map((q, i) => {
+      if (i !== qIdx) return q
+      const options = (q.options || []).filter((_, oi) => oi !== optIdx)
+      return { ...q, options }
+    }))
+  }
+
+  function addQuestion() {
+    setQuestions(qs => [...qs, emptyQBQuestion()])
+    setEditing(questions.length)
+    setSaved(false)
+  }
+
+  function removeQuestion(idx) {
+    if (!confirm('Supprimer cette question ?')) return
+    setQuestions(qs => qs.filter((_, i) => i !== idx))
+    if (editing === idx) setEditing(null)
+    setSaved(false)
+  }
+
+  function moveQuestion(idx, dir) {
+    const newQs = [...questions]
+    const target = idx + dir
+    if (target < 0 || target >= newQs.length) return
+    ;[newQs[idx], newQs[target]] = [newQs[target], newQs[idx]]
+    setQuestions(newQs)
+    setEditing(target)
+    setSaved(false)
+  }
+
+  function handleSave() {
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i]
+      if (!q.question.trim()) { alert(`Question ${i + 1} : le texte de la question est vide.`); return }
+      if (!q.label.trim()) { alert(`Question ${i + 1} : le libellé est vide.`); return }
+      if (q.type === 'radio' && (q.options || []).filter(o => o.trim()).length < 2) {
+        alert(`Question ${i + 1} : au moins 2 options sont requises pour une question à choix.`); return
+      }
+    }
+    saveQuestionsQB(questions)
+    setSaved(true)
+    setEditing(null)
+  }
+
+  function handleReset() {
+    if (!confirm('Remettre le questionnaire aux questions par défaut ? Toutes les modifications seront perdues.')) return
+    resetQuestionsQB()
+    setQuestions(DEFAULT_QUESTIONS_QB)
+    setSaved(false)
+    setEditing(null)
+  }
+
+  const isCustom = JSON.stringify(questions) !== JSON.stringify(DEFAULT_QUESTIONS_QB)
+
+  return (
+    <div className="param-section">
+      <div className="param-section-header">
+        <h2>Questionnaire de besoin</h2>
+        <p>Personnalisez les questions envoyées aux clients commanditaires avant chaque formation.</p>
+      </div>
+
+      <div className="qb-editor-toolbar">
+        <span className="qb-editor-count">{questions.length} question{questions.length > 1 ? 's' : ''}</span>
+        {isCustom && <span className="qb-editor-badge-custom">Personnalisé</span>}
+        <div style={{ flex: 1 }} />
+        {isCustom && <button className="btn-reset" onClick={handleReset}>↩ Remettre par défaut</button>}
+        {saved && <span className="param-saved">✓ Enregistré</span>}
+        <button className="btn-save-param" onClick={handleSave}>Enregistrer</button>
+      </div>
+
+      <div className="qb-editor-list">
+        {questions.map((q, idx) => (
+          <div key={q.id} className={`qb-editor-card ${editing === idx ? 'open' : ''}`}>
+            <div className="qb-editor-card-header" onClick={() => setEditing(editing === idx ? null : idx)}>
+              <span className="qb-editor-num">{idx + 1}</span>
+              <div className="qb-editor-card-info">
+                <span className="qb-editor-card-label">{q.label || <em className="qb-editor-placeholder">Libellé vide</em>}</span>
+                <span className="qb-editor-card-question">{q.question || <em className="qb-editor-placeholder">Question vide</em>}</span>
+              </div>
+              <div className="qb-editor-card-badges">
+                <span className={`qb-type-badge ${q.type}`}>{q.type === 'textarea' ? 'Texte libre' : 'Choix unique'}</span>
+                {q.required && <span className="qb-required-badge">Obligatoire</span>}
+              </div>
+              <div className="qb-editor-card-actions" onClick={e => e.stopPropagation()}>
+                <button className="qb-move-btn" onClick={() => moveQuestion(idx, -1)} disabled={idx === 0} title="Monter">↑</button>
+                <button className="qb-move-btn" onClick={() => moveQuestion(idx, 1)} disabled={idx === questions.length - 1} title="Descendre">↓</button>
+                <button className="qb-remove-btn" onClick={() => removeQuestion(idx)} title="Supprimer">✕</button>
+              </div>
+            </div>
+
+            {editing === idx && (
+              <div className="qb-editor-card-body">
+                <div className="qb-editor-row">
+                  <div className="qb-editor-field">
+                    <label>Libellé <span className="qb-required-star">*</span></label>
+                    <input type="text" value={q.label} placeholder="Ex. : Contexte de la formation" onChange={e => update(idx, 'label', e.target.value)} />
+                  </div>
+                  <div className="qb-editor-field qb-editor-field-type">
+                    <label>Type de réponse</label>
+                    <select value={q.type} onChange={e => update(idx, 'type', e.target.value)}>
+                      <option value="textarea">Texte libre</option>
+                      <option value="radio">Choix unique</option>
+                    </select>
+                  </div>
+                  <div className="qb-editor-field qb-editor-field-required">
+                    <label>Obligatoire</label>
+                    <label className="qb-toggle">
+                      <input type="checkbox" checked={q.required} onChange={e => update(idx, 'required', e.target.checked)} />
+                      <span className="qb-toggle-slider" />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="qb-editor-field">
+                  <label>Texte de la question <span className="qb-required-star">*</span></label>
+                  <textarea rows={2} value={q.question} placeholder="Quelle est la situation qui motive cette demande ?" onChange={e => update(idx, 'question', e.target.value)} />
+                </div>
+
+                {q.type === 'textarea' && (
+                  <div className="qb-editor-field">
+                    <label>Placeholder (optionnel)</label>
+                    <input type="text" value={q.placeholder || ''} placeholder="Texte d'aide dans le champ…" onChange={e => update(idx, 'placeholder', e.target.value)} />
+                  </div>
+                )}
+
+                {q.type === 'radio' && (
+                  <div className="qb-editor-field">
+                    <label>Options de réponse <span className="qb-required-star">*</span></label>
+                    <div className="qb-options-list">
+                      {(q.options || []).map((opt, oi) => (
+                        <div key={oi} className="qb-option-row">
+                          <span className="qb-option-dot" />
+                          <input type="text" value={opt} placeholder={`Option ${oi + 1}…`} onChange={e => updateOption(idx, oi, e.target.value)} />
+                          {(q.options || []).length > 2 && (
+                            <button className="qb-remove-option" onClick={() => removeOption(idx, oi)}>✕</button>
+                          )}
+                        </div>
+                      ))}
+                      <button className="qb-add-option" onClick={() => addOption(idx)}>+ Ajouter une option</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button className="qb-add-question-btn" onClick={addQuestion}>+ Ajouter une question</button>
+    </div>
+  )
+}
+
 // ── Page principale Paramètres ────────────────────────────────────────────────
 const ONGLETS = [
   { id: 'of',        label: 'Organisme de formation' },
   { id: 'questions', label: 'Banque de questions' },
+  { id: 'qbesoin',   label: 'Questionnaire de besoin' },
 ]
 
 export default function Parametres() {
@@ -319,6 +504,7 @@ export default function Parametres() {
         <div className="param-content">
           {onglet === 'of'        && <InfosOF />}
           {onglet === 'questions' && <BanqueQuestions />}
+          {onglet === 'qbesoin'   && <QuestionnaireBesoinEditor />}
         </div>
       </div>
     </div>

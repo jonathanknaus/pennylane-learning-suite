@@ -1,66 +1,7 @@
 import { useState, useEffect } from 'react'
-import { verifyBesoinToken, getBesoin, saveBesoinReponses, addPrecisionBesoin } from '../data/questionnaire-besoin'
+import { verifyBesoinToken, getBesoin, saveBesoinReponses, addPrecisionBesoin, getQuestionsQB } from '../data/questionnaire-besoin'
 import { getSessions } from '../data/sessions'
 import './QuestionnaireBesoin.css'
-
-const QUESTIONS = [
-  {
-    id: 'contexte',
-    label: 'Contexte de la formation',
-    question: 'Quelle est la situation qui motive cette demande de formation ?',
-    type: 'textarea',
-    placeholder: 'Décrivez le contexte : changements récents, difficultés rencontrées, évolutions à venir…',
-    required: true,
-  },
-  {
-    id: 'objectifs',
-    label: 'Objectifs visés',
-    question: 'Quels sont les principaux objectifs que vous souhaitez atteindre ?',
-    type: 'textarea',
-    placeholder: 'Ex. : maîtriser la saisie comptable, comprendre la TVA, automatiser les exports…',
-    required: true,
-  },
-  {
-    id: 'public',
-    label: 'Public concerné',
-    question: 'Qui sera formé ? Quel est leur niveau actuel sur le sujet ?',
-    type: 'textarea',
-    placeholder: 'Ex. : 4 collaborateurs, débutants sur Pennylane, utilisateurs depuis 6 mois…',
-    required: true,
-  },
-  {
-    id: 'niveau_depart',
-    label: 'Niveau de départ',
-    question: 'Comment évaluez-vous le niveau actuel de vos équipes sur les sujets à former ?',
-    type: 'radio',
-    options: ['Débutant — premier contact avec le sujet', 'Intermédiaire — notions de base acquises', 'Avancé — pratique régulière, perfectionnement souhaité'],
-    required: true,
-  },
-  {
-    id: 'contraintes',
-    label: 'Contraintes pratiques',
-    question: 'Y a-t-il des contraintes de planning, de disponibilité ou d\'organisation à prendre en compte ?',
-    type: 'textarea',
-    placeholder: 'Ex. : clôture comptable en mars, télétravail les lundis, 1h max par session…',
-    required: false,
-  },
-  {
-    id: 'attentes_specifiques',
-    label: 'Attentes spécifiques',
-    question: 'Avez-vous des attentes particulières sur le déroulement ou le format de la formation ?',
-    type: 'textarea',
-    placeholder: 'Ex. : exercices pratiques sur vos données réelles, support PDF, suivi post-formation…',
-    required: false,
-  },
-  {
-    id: 'indicateurs_succes',
-    label: 'Indicateurs de succès',
-    question: 'Comment saurez-vous que la formation a atteint ses objectifs ?',
-    type: 'textarea',
-    placeholder: 'Ex. : les collaborateurs gèrent seuls la TVA, gain de temps de X heures par semaine…',
-    required: false,
-  },
-]
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -76,6 +17,7 @@ export default function QuestionnaireBesoin({ sessionId, token }) {
   const [submitted, setSubmitted] = useState(false)
   const [precision, setPrecision] = useState('')
   const [precisionSent, setPrecisionSent] = useState(false)
+  const QUESTIONS = getQuestionsQB()
 
   useEffect(() => {
     const ok = verifyBesoinToken(sessionId, token)
