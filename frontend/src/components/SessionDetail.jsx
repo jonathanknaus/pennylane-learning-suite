@@ -8,12 +8,12 @@ import { WORKFLOW_STEPS, getWorkflowsForSession, setWorkflowStep } from '../data
 import { getTemplate } from '../data/workflow-templates'
 import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
 import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken, getCodeCabinet, regenererCodeCabinet } from '../data/questionnaire-besoin'
+import { getParametres, interpolerTemplate } from '../data/parametres'
 import { getSessionData } from '../data/documents'
 import { getDevisBySession, saveDevis, deleteDevis, calculerDevis, STATUTS_DEVIS, createDevisFromSession, convertirEnFacture, nextNumeroDevis } from '../data/devis'
 import { getFacturesBySession, saveFacture, deleteFacture, calculerFacture, STATUTS_FACTURE, TYPES_FACTURE, createFactureFromSession } from '../data/factures'
 import DevisDoc from './documents/DevisDoc'
 import Facture from './documents/Facture'
-import { getParametres } from '../data/parametres'
 import Convocation from './documents/Convocation'
 import Convention from './documents/Convention'
 import Emargement from './documents/Emargement'
@@ -1900,16 +1900,86 @@ const BESOIN_LABELS = {
   indicateurs_succes: 'Indicateurs de succès',
 }
 
+function MailAccesModal({ to, draft, onClose }) {
+  const [objet, setObjet] = useState(draft.objet)
+  const [corps, setCorps] = useState(draft.corps)
+
+  function handleEnvoyer() {
+    const mailtoLink = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(objet)}&body=${encodeURIComponent(corps)}`
+    window.open(mailtoLink)
+    onClose()
+  }
+
+  return (
+    <div className="modale-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modale besoin-mail-modale">
+        <div className="modale-header">
+          <h2>Envoyer les accès cabinet</h2>
+          <button className="modale-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="besoin-mail-to">
+          <span className="besoin-mail-to-label">Destinataire</span>
+          <span className="besoin-mail-to-val">{to}</span>
+        </div>
+
+        <div className="modale-section">
+          <label className="modale-label">Objet</label>
+          <input
+            className="modale-input"
+            type="text"
+            value={objet}
+            onChange={e => setObjet(e.target.value)}
+          />
+        </div>
+
+        <div className="modale-section">
+          <label className="modale-label">Corps du mail</label>
+          <textarea
+            className="modale-textarea"
+            value={corps}
+            rows={12}
+            onChange={e => setCorps(e.target.value)}
+          />
+        </div>
+
+        <div className="modale-footer">
+          <button className="btn-annuler" onClick={onClose}>Annuler</button>
+          <button className="btn-valider" onClick={handleEnvoyer}>✉️ Ouvrir dans mon client mail</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BesoinTab({ session }) {
   const [besoin, setBesoin] = useState(() => getBesoin(session.id))
   const [lien, setLien] = useState(() => getLienBesoin(session.id))
   const [copied, setCopied] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
   const [lienCabCopied, setLienCabCopied] = useState(false)
+  const [showMailModal, setShowMailModal] = useState(false)
 
   const contactEmail = session.contact_email || ''
   const codeCabinet = contactEmail ? getCodeCabinet(contactEmail) : null
   const lienPortailCabinet = window.location.origin + window.location.pathname + '#portail-cabinet'
+
+  function buildMailDraft() {
+    const params = getParametres()
+    const vars = {
+      contact_nom:   session.contact_nom || contactEmail,
+      contact_email: contactEmail,
+      code:          codeCabinet || '',
+      lien:          lienPortailCabinet,
+      of_nom:        params.of_nom,
+      of_signataire: params.of_signataire,
+      of_titre:      params.of_titre,
+    }
+    return {
+      objet: interpolerTemplate(params.mail_acces_cabinet_objet, vars),
+      corps: interpolerTemplate(params.mail_acces_cabinet_corps, vars),
+    }
+  }
 
   function refresh() {
     setBesoin(getBesoin(session.id))
@@ -1997,13 +2067,26 @@ function BesoinTab({ session }) {
             <button className={`besoin-copy-btn ${lienCabCopied ? 'copied' : ''}`} onClick={copyLienCab}>{lienCabCopied ? '✓ Copié !' : '🔗 Copier'}</button>
             <a href={lienPortailCabinet} target="_blank" rel="noopener noreferrer" className="besoin-open-btn">↗ Ouvrir</a>
           </div>
-          <button className="besoin-regen-btn" onClick={handleRegenererCode}>↺ Nouveau code (invalider l'ancien)</button>
+          <div className="besoin-portail-footer">
+            <button className="besoin-regen-btn" onClick={handleRegenererCode}>↺ Nouveau code (invalider l'ancien)</button>
+            <button className="besoin-btn-send-acces" onClick={() => setShowMailModal(true)}>
+              ✉️ Envoyer les accès par mail
+            </button>
+          </div>
         </div>
       )}
       {!contactEmail && (
         <div className="besoin-portail-warning">
           ⚠️ Ajoutez un email de contact dans les infos de la session pour activer l'accès portail cabinet.
         </div>
+      )}
+
+      {showMailModal && (
+        <MailAccesModal
+          to={contactEmail}
+          draft={buildMailDraft()}
+          onClose={() => setShowMailModal(false)}
+        />
       )}
 
       {!hasReponses && (

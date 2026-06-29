@@ -1,5 +1,25 @@
 const KEY = 'pls_parametres'
 
+export const TEMPLATE_ACCES_CABINET_DEFAUT = {
+  objet: `Vos accès — Espace cabinet AFS Pennylane`,
+  corps: `Bonjour {{contact_nom}},
+
+Votre espace cabinet AFS Pennylane est maintenant disponible.
+
+Vous pouvez y accéder à tout moment pour consulter vos formations et remplir le questionnaire de besoin.
+
+🔗 Lien d'accès : {{lien}}
+
+🔑 Email : {{contact_email}}
+🔑 Code d'accès : {{code}}
+
+Conservez ces informations, elles vous permettront de vous connecter à tout moment.
+
+Cordialement,
+{{of_signataire}}
+{{of_titre}} — {{of_nom}}`,
+}
+
 const DEFAUTS = {
   of_nom:        'PENNYLANE',
   of_siret:      '88026592100044',
@@ -9,6 +29,8 @@ const DEFAUTS = {
   of_titre:      'Team Lead Accounting Firm Services',
   of_email:      'afs-training@pennylane.com',
   of_tel:        '',
+  mail_acces_cabinet_objet: TEMPLATE_ACCES_CABINET_DEFAUT.objet,
+  mail_acces_cabinet_corps: TEMPLATE_ACCES_CABINET_DEFAUT.corps,
 }
 
 export function getParametres() {
@@ -29,6 +51,10 @@ export function saveParametres(data) {
 
 export function getParametre(cle) {
   return getParametres()[cle] ?? ''
+}
+
+export function interpolerTemplate(texte, vars) {
+  return Object.entries(vars).reduce((t, [k, v]) => t.replaceAll(`{{${k}}}`, v || ''), texte)
 }
 
 export const CHAMPS_OF = [

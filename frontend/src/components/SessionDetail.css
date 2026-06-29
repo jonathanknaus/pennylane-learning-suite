@@ -1104,6 +1104,26 @@
 .besoin-portail-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #4338CA; }
 .besoin-portail-code-row { display: flex; align-items: center; gap: 8px; }
 .besoin-portail-code { font-size: 20px; font-weight: 800; letter-spacing: 0.15em; color: var(--bg-dark); font-family: monospace; }
+.besoin-portail-footer {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.besoin-btn-send-acces {
+  padding: 8px 16px; background: var(--bg-dark); color: var(--blanc);
+  border-radius: 8px; font-size: 13px; font-weight: 700;
+  transition: background 0.15s;
+}
+.besoin-btn-send-acces:hover { background: var(--bg-medium); }
+
+/* Modale mail accès */
+.besoin-mail-modale { max-width: 600px; }
+.besoin-mail-to {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--gris); border-radius: 8px;
+  font-size: 14px;
+}
+.besoin-mail-to-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texte-secondaire); flex-shrink: 0; }
+.besoin-mail-to-val { font-weight: 600; color: var(--bg-dark); }
+
 .besoin-portail-warning {
   font-size: 13px; color: #92400E; background: #FFFBEB;
   border: 1px solid #FCD34D; border-radius: 8px; padding: 10px 14px;

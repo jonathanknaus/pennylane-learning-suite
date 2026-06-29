@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getParametres, saveParametres, CHAMPS_OF } from '../data/parametres'
+import { getParametres, saveParametres, CHAMPS_OF, TEMPLATE_ACCES_CABINET_DEFAUT } from '../data/parametres'
 import { THEMATIQUES } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
 import { getQuestionsQB, saveQuestionsQB, resetQuestionsQB, DEFAULT_QUESTIONS_QB } from '../data/questionnaire-besoin'
@@ -471,11 +471,97 @@ function QuestionnaireBesoinEditor() {
   )
 }
 
+// ── Éditeur email accès cabinet ───────────────────────────────────────────────
+const VARS_ACCES = [
+  { var: '{{contact_nom}}',   desc: 'Nom du contact' },
+  { var: '{{contact_email}}', desc: 'Email du contact' },
+  { var: '{{code}}',          desc: 'Code d\'accès cabinet' },
+  { var: '{{lien}}',          desc: 'Lien portail cabinet' },
+  { var: '{{of_nom}}',        desc: 'Nom de l\'organisme' },
+  { var: '{{of_signataire}}', desc: 'Signataire' },
+  { var: '{{of_titre}}',      desc: 'Titre du signataire' },
+]
+
+function MailAccesCabinetEditor() {
+  const [form, setForm] = useState(() => {
+    const p = getParametres()
+    return {
+      objet: p.mail_acces_cabinet_objet,
+      corps: p.mail_acces_cabinet_corps,
+    }
+  })
+  const [saved, setSaved] = useState(false)
+
+  function handleSave() {
+    saveParametres({ mail_acces_cabinet_objet: form.objet, mail_acces_cabinet_corps: form.corps })
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
+  function handleReset() {
+    if (!confirm('Remettre le template par défaut ?')) return
+    const def = { objet: TEMPLATE_ACCES_CABINET_DEFAUT.objet, corps: TEMPLATE_ACCES_CABINET_DEFAUT.corps }
+    setForm(def)
+    saveParametres({ mail_acces_cabinet_objet: def.objet, mail_acces_cabinet_corps: def.corps })
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
+  return (
+    <div className="param-section">
+      <div className="param-section-header">
+        <h2>Email d'envoi des accès cabinet</h2>
+        <p>Template envoyé au commanditaire pour lui communiquer son email et son code d'accès au portail cabinet.</p>
+      </div>
+
+      <div className="mail-vars-list">
+        <div className="mail-vars-title">Variables disponibles</div>
+        <div className="mail-vars-grid">
+          {VARS_ACCES.map(v => (
+            <div key={v.var} className="mail-var-item">
+              <code className="mail-var-code">{v.var}</code>
+              <span className="mail-var-desc">{v.desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="param-form">
+        <div className="param-field">
+          <label className="param-label">Objet du mail</label>
+          <input
+            className="param-input"
+            type="text"
+            value={form.objet}
+            onChange={e => { setForm(f => ({ ...f, objet: e.target.value })); setSaved(false) }}
+          />
+        </div>
+        <div className="param-field" style={{ gridColumn: '1 / -1' }}>
+          <label className="param-label">Corps du mail</label>
+          <textarea
+            className="param-input"
+            value={form.corps}
+            rows={14}
+            style={{ resize: 'vertical', fontFamily: 'monospace', fontSize: 13 }}
+            onChange={e => { setForm(f => ({ ...f, corps: e.target.value })); setSaved(false) }}
+          />
+        </div>
+        <div className="param-actions" style={{ gridColumn: '1 / -1' }}>
+          <button type="button" className="btn-reset" onClick={handleReset}>↩ Remettre par défaut</button>
+          {saved && <span className="param-saved">✓ Enregistré</span>}
+          <button type="button" className="btn-save-param" onClick={handleSave}>Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Page principale Paramètres ────────────────────────────────────────────────
 const ONGLETS = [
   { id: 'of',        label: 'Organisme de formation' },
   { id: 'questions', label: 'Banque de questions' },
   { id: 'qbesoin',   label: 'Questionnaire de besoin' },
+  { id: 'mails',     label: 'Modèles de mails' },
 ]
 
 export default function Parametres() {
@@ -505,6 +591,7 @@ export default function Parametres() {
           {onglet === 'of'        && <InfosOF />}
           {onglet === 'questions' && <BanqueQuestions />}
           {onglet === 'qbesoin'   && <QuestionnaireBesoinEditor />}
+          {onglet === 'mails'     && <MailAccesCabinetEditor />}
         </div>
       </div>
     </div>

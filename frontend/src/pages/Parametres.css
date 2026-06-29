@@ -118,6 +118,17 @@
 /* ── Banque de questions (réutilise les classes de BanqueQuestions.css) ──── */
 /* Les styles banque-* sont déjà dans BanqueQuestions.css et restent actifs   */
 
+/* ── Variables mail ──────────────────────────────────────────────────────── */
+.mail-vars-list {
+  background: var(--gris); border-radius: 10px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.mail-vars-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--texte-secondaire); }
+.mail-vars-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.mail-var-item { display: flex; align-items: center; gap: 8px; }
+.mail-var-code { font-size: 12px; background: var(--blanc); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: monospace; color: var(--bg-dark); white-space: nowrap; }
+.mail-var-desc { font-size: 12px; color: var(--texte-secondaire); }
+
 /* ── Éditeur questionnaire de besoin ─────────────────────────────────────── */
 .qb-editor-toolbar {
   display: flex;
