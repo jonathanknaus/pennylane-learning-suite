@@ -424,16 +424,37 @@ export default function TableauDeBord() {
     e.target.value = ''
   }
 
-  const tousArticles = useMemo(() => [...articles, ...articlesManuels], [articles, articlesManuels])
+  const tousArticles = useMemo(() => {
+    const base = [...articles, ...articlesManuels]
+    const baseIds = new Set(base.map(a => a.id))
+    // Reconstruire les articles orphelins (traitement sans article local)
+    const orphelins = traitements
+      .filter(t => !baseIds.has(t.articleId))
+      .map(t => ({
+        id: t.articleId,
+        titre: t.articleTitre || t.articleId,
+        source_nom: t.articleSource || 'Source externe',
+        source_id: 'manuel',
+        thematique: t.articleThematique || 'legislatif',
+        niveau: 'info',
+        date: t.articleDate || t.traiteAt,
+        url: t.urlArticle || '',
+        resume: '',
+        manuel: true,
+        _orphelin: true,
+      }))
+    return [...base, ...orphelins]
+  }, [articles, articlesManuels, traitements])
 
   const stats = useMemo(() => {
     const traitesIds = new Set(traitements.map(t => t.articleId))
-    const traites = tousArticles.filter(a => traitesIds.has(a.id)).length
+    const articlesConnus = tousArticles.filter(a => !a._orphelin)
+    const traites = articlesConnus.filter(a => traitesIds.has(a.id)).length
     return {
-      total: tousArticles.length,
+      total: articlesConnus.length,
       traites,
       diffuses: traitements.filter(t => t.decision === 'diffuser').length,
-      enAttente: tousArticles.length - traites,
+      enAttente: articlesConnus.length - traites,
     }
   }, [tousArticles, traitements])
 
