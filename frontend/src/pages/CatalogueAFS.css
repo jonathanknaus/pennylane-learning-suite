@@ -596,3 +596,52 @@
   margin-top: 2px;
 }
 .detail-seq-add:hover { background: var(--vert); color: var(--bg-dark); }
+
+/* ── Édition description / objectifs ─────────────────────────────────────── */
+.catalogue-edit-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.catalogue-edit-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6B7280; }
+.catalogue-edit-textarea {
+  width: 100%;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--bg-dark);
+  resize: vertical;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.catalogue-edit-textarea:focus { outline: none; border-color: var(--vert); }
+
+.catalogue-edit-objectifs { display: flex; flex-direction: column; gap: 8px; }
+.catalogue-obj-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.catalogue-obj-num {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--vert-clair);
+  color: var(--bg-dark);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.catalogue-obj-input {
+  flex: 1;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--bg-dark);
+  transition: border-color 0.15s;
+}
+.catalogue-obj-input:focus { outline: none; border-color: var(--vert); }
+.catalogue-obj-controls { display: flex; gap: 4px; flex-shrink: 0; }

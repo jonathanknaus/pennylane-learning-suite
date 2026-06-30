@@ -268,7 +268,20 @@ function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, o
           {/* Description */}
           {tab === 'description' && (
             <>
-              <p className="catalogue-detail-desc">{module.description}</p>
+              {publicMode ? (
+                <p className="catalogue-detail-desc">{config.description ?? module.description}</p>
+              ) : (
+                <div className="catalogue-edit-field">
+                  <label className="catalogue-edit-label">Description</label>
+                  <textarea
+                    className="catalogue-edit-textarea"
+                    value={config.description ?? module.description ?? ''}
+                    onChange={e => updateConfig({ description: e.target.value })}
+                    rows={4}
+                    placeholder="Description du module…"
+                  />
+                </div>
+              )}
               {module.format_special && (
                 <div className="catalogue-detail-format">{module.format_special}</div>
               )}
@@ -301,18 +314,63 @@ function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, o
           )}
 
           {/* Objectifs */}
-          {tab === 'objectifs' && (
-            <div className="catalogue-detail-section">
-              <div className="catalogue-detail-section-title">À l'issue de cette formation, les apprenants seront capables de :</div>
-              {module.objectifs?.length > 0 ? (
-                <ul className="catalogue-detail-objectives">
-                  {module.objectifs.map((obj, i) => <li key={i}>{obj}</li>)}
-                </ul>
-              ) : (
-                <p style={{ color: '#9CA3AF', fontSize: 13 }}>Objectifs à renseigner.</p>
-              )}
-            </div>
-          )}
+          {tab === 'objectifs' && (() => {
+            const objectifs = config.objectifs ?? module.objectifs ?? []
+            if (publicMode) {
+              return (
+                <div className="catalogue-detail-section">
+                  <div className="catalogue-detail-section-title">À l'issue de cette formation, les apprenants seront capables de :</div>
+                  {objectifs.length > 0 ? (
+                    <ul className="catalogue-detail-objectives">
+                      {objectifs.map((obj, i) => <li key={i}>{obj}</li>)}
+                    </ul>
+                  ) : (
+                    <p style={{ color: '#9CA3AF', fontSize: 13 }}>Objectifs à renseigner.</p>
+                  )}
+                </div>
+              )
+            }
+            function updateObjectif(idx, val) {
+              const next = objectifs.map((o, i) => i === idx ? val : o)
+              updateConfig({ objectifs: next })
+            }
+            function addObjectif() {
+              updateConfig({ objectifs: [...objectifs, ''] })
+            }
+            function removeObjectif(idx) {
+              updateConfig({ objectifs: objectifs.filter((_, i) => i !== idx) })
+            }
+            function moveObjectif(idx, dir) {
+              const next = [...objectifs]
+              const swap = idx + dir
+              if (swap < 0 || swap >= next.length) return
+              ;[next[idx], next[swap]] = [next[swap], next[idx]]
+              updateConfig({ objectifs: next })
+            }
+            return (
+              <div className="catalogue-edit-objectifs">
+                <div className="catalogue-edit-label">Objectifs pédagogiques</div>
+                {objectifs.map((obj, idx) => (
+                  <div key={idx} className="catalogue-obj-row">
+                    <span className="catalogue-obj-num">{idx + 1}</span>
+                    <input
+                      className="catalogue-obj-input"
+                      type="text"
+                      value={obj}
+                      onChange={e => updateObjectif(idx, e.target.value)}
+                      placeholder="Objectif pédagogique…"
+                    />
+                    <div className="catalogue-obj-controls">
+                      <button className="detail-seq-btn" onClick={() => moveObjectif(idx, -1)} disabled={idx === 0} title="Monter">↑</button>
+                      <button className="detail-seq-btn" onClick={() => moveObjectif(idx, 1)} disabled={idx === objectifs.length - 1} title="Descendre">↓</button>
+                      <button className="detail-seq-btn danger" onClick={() => removeObjectif(idx)} title="Supprimer">✕</button>
+                    </div>
+                  </div>
+                ))}
+                <button className="detail-seq-add" onClick={addObjectif}>+ Ajouter un objectif</button>
+              </div>
+            )
+          })()}
 
           {/* Contenu */}
           {tab === 'contenu' && (
