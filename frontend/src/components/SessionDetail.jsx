@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx'
 import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
-import { WORKFLOW_STEPS, getWorkflowsForSession, setWorkflowStep } from '../data/workflows'
+import { WORKFLOW_PHASES, getWorkflowsForSession, setWorkflowStep, addRelance, resolveRelance, getPhaseStatus, isSubstepDone, PHASE_STATUS_LABELS } from '../data/workflows'
 import { getTemplate } from '../data/workflow-templates'
 import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
 import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken, getCodeCabinet, regenererCodeCabinet } from '../data/questionnaire-besoin'
@@ -468,6 +468,14 @@ export default function SessionDetail({ session, onClose, onEdit }) {
                 setWorkflowStep(session.id, stepId, status)
                 setWfStatuts(getWorkflowsForSession(session.id))
               }}
+              onAddRelance={(substepId) => {
+                addRelance(session.id, substepId)
+                setWfStatuts(getWorkflowsForSession(session.id))
+              }}
+              onResolveRelance={(substepId) => {
+                resolveRelance(session.id, substepId)
+                setWfStatuts(getWorkflowsForSession(session.id))
+              }}
             />
           )}
 
@@ -558,8 +566,6 @@ export default function SessionDetail({ session, onClose, onEdit }) {
     </div>
   )
 }
-
-const GROUPES_LABELS = { client: 'Workflows client', apprenants: 'Workflows apprenants' }
 
 function QuizzStepDetail({ session, inscriptions, stagiaires, type }) {
   const baseUrl = window.location.origin + window.location.pathname
@@ -659,12 +665,59 @@ function TemplatePanel({ stepId, session }) {
   )
 }
 
-function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires, onNavigate }) {
-  const groupes = ['client', 'apprenants']
+function RelanceWidget({ substep, entry, onAddRelance, onResolveRelance }) {
+  const relances = entry?.relances || { count: 0, dates: [], resolved: false }
+  const max = substep.maxRelances || 3
+  const bloque = relances.count >= max && !relances.resolved
+
+  return (
+    <div className="wf-relance-widget">
+      <div className="wf-relance-header">
+        <span className="wf-relance-count">Relance {relances.count}/{max}</span>
+        {relances.resolved && <span className="wf-relance-resolved">✓ Résolu</span>}
+        {bloque && <span className="wf-relance-blocked-badge">⚠ Bloqué — sans réponse</span>}
+      </div>
+      {relances.dates.length > 0 && (
+        <div className="wf-relance-dates">
+          {relances.dates.map((d, i) => (
+            <span key={i} className="wf-relance-date">Relance {i + 1} — {new Date(d).toLocaleDateString('fr-FR')}</span>
+          ))}
+        </div>
+      )}
+      <div className="wf-relance-actions">
+        <button
+          className="wf-btn wf-btn-tpl"
+          disabled={relances.count >= max || relances.resolved}
+          onClick={() => onAddRelance(substep.id)}
+        >
+          + Relance
+        </button>
+        <button
+          className="wf-btn wf-btn-done"
+          disabled={relances.resolved}
+          onClick={() => onResolveRelance(substep.id)}
+        >
+          Marquer résolu
+        </button>
+      </div>
+      {bloque && (
+        <div className="wf-relance-note">
+          Passer la fiche en statut <strong>Cancel</strong> sur Salesforce et envoyer un Chatter à la personne ayant fait la demande.
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PhaseBadge({ status }) {
+  return (
+    <span className={`wf-phase-badge wf-phase-badge-${status}`}>{PHASE_STATUS_LABELS[status]}</span>
+  )
+}
+
+function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelance, inscriptions, stagiaires, onNavigate }) {
   const [openQuizz, setOpenQuizz] = useState(null)
   const [openTpl, setOpenTpl] = useState(null)
-
-  const quizzSteps = { quizz_initial: 'pre', quizz_final: 'post' }
 
   return (
     <div className="workflows-tab">
@@ -687,31 +740,46 @@ function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires, on
         </div>
       )}
 
-      {groupes.map(groupe => {
-        const steps = WORKFLOW_STEPS.filter(s => s.groupe === groupe)
-        return (
-          <div key={groupe} className="wf-groupe">
-            <div className="wf-groupe-title">{GROUPES_LABELS[groupe]}</div>
-            <div className="wf-steps">
-              {steps.map(step => {
-                const entry = statuts[step.id]
-                const status = entry?.status || 'pending'
-                const isQuizz = step.id in quizzSteps
-                const quizzType = quizzSteps[step.id]
-                const quizzOpen = openQuizz === step.id
+      {WORKFLOW_PHASES.map(phase => {
+        const applicable = phase.substeps.filter(s => s.conditional !== 'presentiel' || session.modalite === 'presentiel')
+        const doneCount = applicable.filter(s => isSubstepDone(s, statuts, session, inscriptions, getResultat) || statuts[s.id]?.relances?.resolved).length
+        const phaseStatus = getPhaseStatus(phase, statuts, session, inscriptions, getResultat)
 
+        return (
+          <div key={phase.id} className="wf-phase">
+            <div className="wf-phase-header">
+              <span className="wf-phase-icon">{phase.icon}</span>
+              <div className="wf-phase-title-block">
+                <div className="wf-phase-title">Phase {phase.numero} — {phase.label}</div>
+                <div className="wf-phase-desc">{phase.description}</div>
+              </div>
+              <PhaseBadge status={phaseStatus} />
+            </div>
+            <div className="wf-phase-progress">
+              <div className="wf-phase-progress-bar-wrap">
+                <div className="wf-phase-progress-bar" style={{ width: `${applicable.length ? Math.round((doneCount / applicable.length) * 100) : 0}%` }} />
+              </div>
+              <span>{doneCount}/{applicable.length} étapes</span>
+            </div>
+
+            <div className="wf-steps">
+              {applicable.map(substep => {
+                const entry = statuts[substep.id]
+                const status = entry?.status || 'pending'
+                const quizzOpen = openQuizz === substep.id
                 const nbInscrits = inscriptions.length
-                const nbCompletes = isQuizz
-                  ? inscriptions.filter(ins => getResultat(session.id, ins.stagiaireId, quizzType)).length
+                const nbCompletes = substep.type === 'quizz'
+                  ? inscriptions.filter(ins => getResultat(session.id, ins.stagiaireId, substep.quizzType)).length
                   : 0
+                const isDone = substep.type === 'quizz'
+                  ? nbCompletes === nbInscrits && nbInscrits > 0
+                  : status === 'done'
 
                 return (
-                  <div key={step.id} className={`wf-step wf-step-${isQuizz && nbCompletes === nbInscrits && nbInscrits > 0 ? 'done' : status}`}>
-                    <div className="wf-step-icon">{step.icon}</div>
+                  <div key={substep.id} className={`wf-step wf-step-${isDone ? 'done' : status}`}>
                     <div className="wf-step-body">
-                      <div className="wf-step-label">{step.label}</div>
-                      <div className="wf-step-desc">{step.description}</div>
-                      {isQuizz && nbInscrits > 0 && (
+                      <div className="wf-step-label">{substep.label}</div>
+                      {substep.type === 'quizz' && nbInscrits > 0 && (
                         <div className="wf-quizz-progress">
                           <div className="wf-quizz-progress-bar-wrap">
                             <div
@@ -722,55 +790,72 @@ function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires, on
                           <span>{nbCompletes}/{nbInscrits} complétés</span>
                         </div>
                       )}
-                      {!isQuizz && entry?.updatedAt && (
+                      {substep.type !== 'quizz' && substep.type !== 'relance' && entry?.updatedAt && (
                         <div className="wf-step-date">
                           {status === 'done' ? 'Fait' : 'Ignoré'} le {new Date(entry.updatedAt).toLocaleDateString('fr-FR')}
                         </div>
                       )}
                     </div>
                     <div className="wf-step-actions">
-                      {isQuizz ? (
+                      {substep.type === 'quizz' && (
                         <button
                           className={`wf-btn wf-btn-done ${quizzOpen ? 'active' : ''}`}
-                          onClick={() => setOpenQuizz(quizzOpen ? null : step.id)}
+                          onClick={() => setOpenQuizz(quizzOpen ? null : substep.id)}
                         >
                           {quizzOpen ? '▲ Masquer' : '👥 Gérer'}
                         </button>
-                      ) : (
+                      )}
+                      {substep.type === 'email' && (
                         <>
                           <button
-                            className={`wf-btn wf-btn-tpl ${openTpl === step.id ? 'active' : ''}`}
-                            onClick={() => setOpenTpl(openTpl === step.id ? null : step.id)}
+                            className={`wf-btn wf-btn-tpl ${openTpl === substep.id ? 'active' : ''}`}
+                            onClick={() => setOpenTpl(openTpl === substep.id ? null : substep.id)}
                             title="Voir le modèle email"
                           >
-                            {openTpl === step.id ? '▲ Modèle' : '✉️ Modèle'}
+                            {openTpl === substep.id ? '▲ Modèle' : '✉️ Modèle'}
                           </button>
                           <button className="wf-btn wf-btn-send" disabled title="Envoyer (indisponible — AWS requis)">
                             📤 Envoyer
                           </button>
                           <button
                             className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
-                            onClick={() => onUpdate(step.id, status === 'done' ? 'pending' : 'done')}
+                            onClick={() => onUpdate(substep.id, status === 'done' ? 'pending' : 'done')}
                           >
                             {status === 'done' ? '✓ Fait' : 'Marquer fait'}
                           </button>
                         </>
                       )}
+                      {substep.type === 'checkbox' && (
+                        <button
+                          className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
+                          onClick={() => onUpdate(substep.id, status === 'done' ? 'pending' : 'done')}
+                        >
+                          {status === 'done' ? '✓ Fait' : 'Marquer fait'}
+                        </button>
+                      )}
                     </div>
-                    {isQuizz && quizzOpen && (
+                    {substep.type === 'quizz' && quizzOpen && (
                       <div className="wf-quizz-panel">
                         <QuizzStepDetail
                           session={session}
                           inscriptions={inscriptions}
                           stagiaires={stagiaires}
-                          type={quizzType}
+                          type={substep.quizzType}
                         />
                       </div>
                     )}
-                    {!isQuizz && openTpl === step.id && (
+                    {substep.type === 'email' && openTpl === substep.id && (
                       <div className="wf-quizz-panel">
-                        <TemplatePanel stepId={step.id} session={session} />
+                        <TemplatePanel stepId={substep.templateKey} session={session} />
                       </div>
+                    )}
+                    {substep.type === 'relance' && (
+                      <RelanceWidget
+                        substep={substep}
+                        entry={entry}
+                        onAddRelance={onAddRelance}
+                        onResolveRelance={onResolveRelance}
+                      />
                     )}
                   </div>
                 )
