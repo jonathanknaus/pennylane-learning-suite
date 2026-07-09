@@ -92,11 +92,11 @@ function RoleBadge({ role }) {
   return <span className="role-badge role-formateur">Formateur</span>
 }
 
-function PageContent({ currentPage }) {
+function PageContent({ currentPage, onNavigate }) {
   return (
     <>
       {currentPage === 'catalogue'    && <CatalogueAFS />}
-      {currentPage === 'sessions'     && <Sessions />}
+      {currentPage === 'sessions'     && <Sessions onNavigate={onNavigate} />}
       {currentPage === 'stagiaires'   && <Stagiaires />}
       {currentPage === 'entreprises'  && <Entreprises />}
       {currentPage === 'formateurs'   && <Formateurs />}
@@ -363,7 +363,7 @@ export default function App() {
           </div>
         </header>
         <div className="sidebar-content-inner">
-          <PageContent currentPage={currentPage} />
+          <PageContent currentPage={currentPage} onNavigate={setPage} />
         </div>
       </div>
     </div>

@@ -705,6 +705,11 @@
 .wf-btn-informer:hover { background: #DDD6FE; }
 .wf-btn-informer.active { background: #D1FAE5; border-color: #059669; color: #059669; }
 
+.wf-btn-outil { background: #EFF6FF; color: #1D4ED8; border: 1.5px solid #BFDBFE; }
+.wf-btn-outil:hover { background: #DBEAFE; }
+
+.modal-montant-devis { max-width: 480px; }
+
 /* Template email panel */
 .wf-tpl-panel {
   display: flex;

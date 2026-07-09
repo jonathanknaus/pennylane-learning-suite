@@ -29,7 +29,7 @@ import './SessionDetail.css'
 
 const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification', 'besoin', 'documents', 'finance']
 
-export default function SessionDetail({ session, onClose, onEdit }) {
+export default function SessionDetail({ session, onClose, onEdit, onNavigateApp }) {
   const [tab, setTab] = useState('participants')
   const [wfStatuts, setWfStatuts] = useState(() => getWorkflowsForSession(session.id))
   const [inscriptions, setInscriptions] = useState([])
@@ -468,6 +468,7 @@ export default function SessionDetail({ session, onClose, onEdit }) {
               inscriptions={inscriptions}
               stagiaires={stagiaires}
               onNavigate={setTab}
+              onNavigateApp={onNavigateApp}
               onUpdate={(stepId, status) => {
                 setWorkflowStep(session.id, stepId, status)
                 setWfStatuts(getWorkflowsForSession(session.id))
@@ -674,6 +675,66 @@ function InformerGestionnaireBtn({ session, substep }) {
   )
 }
 
+function MontantDevisModal({ session, onClose, onConfirm }) {
+  const gestionnaires = getGestionnaires()
+  const gestionnaireBase = gestionnaires.find(g => g.id === session.gestionnaireId)
+  const effectifId = gestionnaireBase ? resolveResponsable(gestionnaireBase.id) : null
+  const gestionnaire = gestionnaires.find(g => g.id === effectifId) || gestionnaireBase
+
+  const [programme, setProgramme] = useState(session.titre || '')
+  const [montant, setMontant] = useState('')
+  const [sent, setSent] = useState(false)
+
+  function envoyer() {
+    const message = `Programme : ${programme || '—'}\nMontant du devis à établir : ${montant ? `${montant} € HT` : '—'}`
+    if (gestionnaire) {
+      addNotification({
+        destinataireType: 'gestionnaire',
+        destinataireId: gestionnaire.id,
+        type: 'info_gestionnaire',
+        sessionId: session.id,
+        titre: `${session.titre || session.client} — Montant à établir`,
+        message,
+      })
+      const objet = encodeURIComponent(`[Formation AFS] Montant à établir — ${session.titre || session.client}`)
+      const corps = encodeURIComponent(`Bonjour ${gestionnaire.prenom},\n\n${message}\n\nClient : ${session.client || ''}\n\nCordialement,`)
+      window.open(`mailto:${gestionnaire.email}?subject=${objet}&body=${corps}`, '_self')
+    }
+    setSent(true)
+    setTimeout(() => { setSent(false); onConfirm() }, 900)
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-montant-devis" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Montant à communiquer au gestionnaire</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-form">
+          <div className="form-group">
+            <label>Nom du programme de formation</label>
+            <input type="text" value={programme} onChange={e => setProgramme(e.target.value)} placeholder="Ex : Saisie comptable & TVA" />
+          </div>
+          <div className="form-group">
+            <label>Montant du devis à établir (€ HT)</label>
+            <input type="number" min="0" value={montant} onChange={e => setMontant(e.target.value)} placeholder="Ex : 400" />
+          </div>
+          {!gestionnaire && (
+            <p className="form-error">Aucun gestionnaire attitré sur cette session — définissez-en un via "Modifier la session" pour pouvoir l'informer.</p>
+          )}
+          <div className="modal-actions">
+            <button className="btn-primary" disabled={!gestionnaire || !montant || sent} onClick={envoyer}>
+              {sent ? `✓ Envoyé à ${gestionnaire?.prenom}` : `Envoyer à ${gestionnaire?.prenom || '—'}`}
+            </button>
+            <button className="btn-secondary" onClick={onClose}>Annuler</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function EmargementStepDetail({ session, inscriptions, stagiaires }) {
   const [, setTick] = useState(0)
   const modules = (session.modules || []).map(id => ALL_MODULES.find(m => m.id === id)).filter(Boolean)
@@ -833,11 +894,18 @@ function PhaseBadge({ status }) {
   )
 }
 
-function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelance, onValidatePhase, onInvalidatePhase, inscriptions, stagiaires, onNavigate }) {
+function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelance, onValidatePhase, onInvalidatePhase, inscriptions, stagiaires, onNavigate, onNavigateApp }) {
   const [openQuizz, setOpenQuizz] = useState(null)
   const [openTpl, setOpenTpl] = useState(null)
+  const [montantDevisOpen, setMontantDevisOpen] = useState(null)
 
   const totalValidated = WORKFLOW_PHASES.filter(p => isPhaseValidated(p.id, statuts)).length
+
+  function goToOutil(outil) {
+    if (!outil) return
+    if (outil.page && onNavigateApp) onNavigateApp(outil.page)
+    else if (outil.tab && onNavigate) onNavigate(outil.tab)
+  }
 
   return (
     <div className="workflows-tab">
@@ -848,17 +916,6 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
           <span>Les boutons d'envoi seront actifs une fois le backend FastAPI déployé. Les quizz sont disponibles dès maintenant via lien partageable.</span>
         </div>
       </div>
-
-      {onNavigate && (
-        <div className="workflows-presentation-banner">
-          <span>🖼️</span>
-          <div>
-            <strong>Présentation du dossier</strong>
-            <span>Générer le récapitulatif visuel (programme, participants, financement) depuis l'onglet Documents.</span>
-          </div>
-          <button className="wf-btn wf-btn-tpl" onClick={() => onNavigate('documents')}>Voir la présentation →</button>
-        </div>
-      )}
 
       <div className="wf-global-progress">
         <div className="wf-global-progress-bar-wrap">
@@ -983,7 +1040,15 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
                                   </button>
                                 </>
                               )}
-                              {substep.notifieGestionnaire && (
+                              {substep.type === 'montant_devis' && (
+                                <button
+                                  className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
+                                  onClick={() => setMontantDevisOpen(substep.id)}
+                                >
+                                  {status === 'done' ? '✓ Fait' : '💶 Renseigner & envoyer'}
+                                </button>
+                              )}
+                              {substep.notifieGestionnaire && substep.type !== 'montant_devis' && (
                                 <InformerGestionnaireBtn session={session} substep={substep} />
                               )}
                               {substep.type === 'checkbox' && (
@@ -1000,6 +1065,15 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
                                   onClick={() => setOpenQuizz(emargementOpen ? null : substep.id)}
                                 >
                                   {emargementOpen ? '▲ Masquer' : '✍️ Gérer les signatures'}
+                                </button>
+                              )}
+                              {substep.outil && (
+                                <button
+                                  className="wf-btn wf-btn-outil"
+                                  onClick={() => goToOutil(substep.outil)}
+                                  title={substep.outil.label}
+                                >
+                                  🔗 {substep.outil.label}
                                 </button>
                               )}
                             </div>
@@ -1068,6 +1142,28 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
           </div>
         )
       })}
+
+      {montantDevisOpen && (
+        <MontantDevisModal
+          session={session}
+          onClose={() => setMontantDevisOpen(null)}
+          onConfirm={() => {
+            onUpdate(montantDevisOpen, 'done')
+            setMontantDevisOpen(null)
+          }}
+        />
+      )}
+
+      {onNavigate && (
+        <div className="workflows-presentation-banner">
+          <span>🖼️</span>
+          <div>
+            <strong>Présentation du dossier</strong>
+            <span>Générer le récapitulatif visuel (programme, participants, financement) depuis l'onglet Documents.</span>
+          </div>
+          <button className="wf-btn wf-btn-tpl" onClick={() => onNavigate('documents')}>Voir la présentation →</button>
+        </div>
+      )}
     </div>
   )
 }

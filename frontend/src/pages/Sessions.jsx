@@ -5,7 +5,7 @@ import SessionForm from '../components/SessionForm'
 import SessionDetail from '../components/SessionDetail'
 import './Sessions.css'
 
-export default function Sessions() {
+export default function Sessions({ onNavigate }) {
   const [sessions, setSessions] = useState([])
   const [view, setView] = useState('liste') // 'liste' | 'form' | 'detail'
   const [editing, setEditing] = useState(null)
@@ -69,6 +69,7 @@ export default function Sessions() {
         session={editing}
         onClose={() => { refresh(); setView('liste') }}
         onEdit={() => setView('form')}
+        onNavigateApp={onNavigate}
       />
     )
   }
