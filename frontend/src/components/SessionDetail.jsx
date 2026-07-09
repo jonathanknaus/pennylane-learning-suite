@@ -5,6 +5,10 @@ import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS, formatDateL
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
 import { WORKFLOW_PHASES, getWorkflowsForSession, setWorkflowStep, addRelance, resolveRelance, getPhaseStatus, isSubstepDone, isPhaseComplete, isPhaseValidated, isPhaseUnlocked, validatePhase, invalidatePhase, PHASE_STATUS_LABELS } from '../data/workflows'
+import { signerModule, estSigne, getSignatureDate, isModuleComplet } from '../data/emargement'
+import { getFormateurs } from '../data/formateurs'
+import { getGestionnaires, resolveResponsable } from '../data/gestionnaires'
+import { addNotification } from '../data/notifications'
 import { getTemplate } from '../data/workflow-templates'
 import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
 import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken, getCodeCabinet, regenererCodeCabinet } from '../data/questionnaire-besoin'
@@ -638,6 +642,112 @@ function QuizzStepDetail({ session, inscriptions, stagiaires, type }) {
   )
 }
 
+function InformerGestionnaireBtn({ session, substep }) {
+  const [sent, setSent] = useState(false)
+  const gestionnaires = getGestionnaires()
+  const gestionnaireBase = gestionnaires.find(g => g.id === session.gestionnaireId)
+  if (!gestionnaireBase) return null
+
+  const effectifId = resolveResponsable(gestionnaireBase.id)
+  const gestionnaire = gestionnaires.find(g => g.id === effectifId) || gestionnaireBase
+
+  function informer() {
+    addNotification({
+      destinataireType: 'gestionnaire',
+      destinataireId: gestionnaire.id,
+      type: 'info_gestionnaire',
+      sessionId: session.id,
+      titre: `${session.titre || session.client}`,
+      message: substep.label,
+    })
+    const objet = encodeURIComponent(`[Formation AFS] ${session.titre || session.client}`)
+    const corps = encodeURIComponent(`Bonjour ${gestionnaire.prenom},\n\n${substep.label}\n\nDossier : ${session.titre || ''}\nClient : ${session.client || ''}\n\nCordialement,`)
+    window.open(`mailto:${gestionnaire.email}?subject=${objet}&body=${corps}`, '_self')
+    setSent(true)
+    setTimeout(() => setSent(false), 2500)
+  }
+
+  return (
+    <button className={`wf-btn wf-btn-informer ${sent ? 'active' : ''}`} onClick={informer} title={`Notifier ${gestionnaire.prenom} ${gestionnaire.nom} (in-app + mail)`}>
+      {sent ? `✓ Envoyé à ${gestionnaire.prenom}` : `🔔 Informer ${gestionnaire.prenom}`}
+    </button>
+  )
+}
+
+function EmargementStepDetail({ session, inscriptions, stagiaires }) {
+  const [, setTick] = useState(0)
+  const modules = (session.modules || []).map(id => ALL_MODULES.find(m => m.id === id)).filter(Boolean)
+  const formateurs = getFormateurs()
+  const formateurIds = [session.formateurId, session.formateurAppuiId].filter(Boolean)
+  const presents = inscriptions.filter(i => i.presence !== false)
+
+  function signerPour(moduleId, personType, personId) {
+    signerModule(session.id, moduleId, personType, personId)
+    setTick(t => t + 1)
+  }
+
+  if (modules.length === 0) {
+    return <div className="wf-quizz-empty">Aucun module associé à cette session.</div>
+  }
+  if (presents.length === 0 && formateurIds.length === 0) {
+    return <div className="wf-quizz-empty">Aucun participant ni formateur à émarger.</div>
+  }
+
+  return (
+    <div className="wf-emargement-detail">
+      <p className="wf-emargement-note">
+        Émargement électronique — chaque apprenant signe depuis son espace personnel. En cas de panne réseau,
+        le formateur peut signer manuellement pour le compte d'un apprenant ci-dessous (secours uniquement).
+      </p>
+      {modules.map(m => (
+        <div key={m.id} className="wf-emargement-module">
+          <div className="wf-emargement-module-titre">{m.titre}</div>
+          <div className="wf-emargement-rows">
+            {formateurIds.map(fid => {
+              const fmt = formateurs.find(f => f.id === fid)
+              if (!fmt) return null
+              const signe = estSigne(session.id, m.id, 'formateur', fid)
+              const date = getSignatureDate(session.id, m.id, 'formateur', fid)
+              return (
+                <div key={fid} className={`wf-emargement-row ${signe ? 'signed' : ''}`}>
+                  <span className="wf-emargement-nom">🧑‍🏫 {fmt.prenom} {fmt.nom}</span>
+                  {signe ? (
+                    <span className="wf-emargement-signed">✓ Signé{date ? ` le ${new Date(date).toLocaleDateString('fr-FR')}` : ''}</span>
+                  ) : (
+                    <button className="wf-btn wf-btn-done" onClick={() => signerPour(m.id, 'formateur', fid)}>Signer</button>
+                  )}
+                </div>
+              )
+            })}
+            {presents.map(ins => {
+              const stag = stagiaires.find(s => s.id === ins.stagiaireId)
+              if (!stag) return null
+              const signe = estSigne(session.id, m.id, 'apprenant', stag.id)
+              const date = getSignatureDate(session.id, m.id, 'apprenant', stag.id)
+              return (
+                <div key={stag.id} className={`wf-emargement-row ${signe ? 'signed' : ''}`}>
+                  <span className="wf-emargement-nom">{stag.prenom} {stag.nom}</span>
+                  {signe ? (
+                    <span className="wf-emargement-signed">✓ Signé{date ? ` le ${new Date(date).toLocaleDateString('fr-FR')}` : ''}</span>
+                  ) : (
+                    <button
+                      className="wf-btn wf-btn-tpl"
+                      title="Signer pour le compte de l'apprenant — secours technique uniquement"
+                      onClick={() => signerPour(m.id, 'apprenant', stag.id)}
+                    >
+                      Signer pour lui (secours)
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function TemplatePanel({ stepId, session }) {
   const tpl = getTemplate(stepId, session)
   const [copied, setCopied] = useState(null)
@@ -764,11 +874,11 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
           return true
         })
         const countable = applicable.filter(s => s.type !== 'info')
-        const doneCount = countable.filter(s => isSubstepDone(s, statuts, session, inscriptions, getResultat)).length
+        const doneCount = countable.filter(s => isSubstepDone(s, statuts, session, inscriptions, getResultat, isModuleComplet)).length
         const locked = !isPhaseUnlocked(phaseIndex, WORKFLOW_PHASES, statuts)
-        const phaseStatus = getPhaseStatus(phase, statuts, session, inscriptions, getResultat, locked)
+        const phaseStatus = getPhaseStatus(phase, statuts, session, inscriptions, getResultat, locked, isModuleComplet)
         const validated = isPhaseValidated(phase.id, statuts)
-        const complete = isPhaseComplete(phase, statuts, session, inscriptions, getResultat)
+        const complete = isPhaseComplete(phase, statuts, session, inscriptions, getResultat, isModuleComplet)
 
         // Regroupement des sous-étapes par "groupe" (ex: Matin / Après-midi / Réception des documents signés)
         const groupes = []
@@ -811,7 +921,8 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
                         const nbCompletes = substep.type === 'quizz'
                           ? inscriptions.filter(ins => getResultat(session.id, ins.stagiaireId, substep.quizzType)).length
                           : 0
-                        const isDone = isSubstepDone(substep, statuts, session, inscriptions, getResultat)
+                        const isDone = isSubstepDone(substep, statuts, session, inscriptions, getResultat, isModuleComplet)
+                        const emargementOpen = openQuizz === substep.id
 
                         if (substep.type === 'info') {
                           return (
@@ -872,12 +983,23 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
                                   </button>
                                 </>
                               )}
+                              {substep.notifieGestionnaire && (
+                                <InformerGestionnaireBtn session={session} substep={substep} />
+                              )}
                               {substep.type === 'checkbox' && (
                                 <button
                                   className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
                                   onClick={() => onUpdate(substep.id, status === 'done' ? 'pending' : 'done')}
                                 >
                                   {status === 'done' ? '✓ Fait' : 'Marquer fait'}
+                                </button>
+                              )}
+                              {substep.type === 'emargement' && (
+                                <button
+                                  className={`wf-btn wf-btn-done ${emargementOpen ? 'active' : ''}`}
+                                  onClick={() => setOpenQuizz(emargementOpen ? null : substep.id)}
+                                >
+                                  {emargementOpen ? '▲ Masquer' : '✍️ Gérer les signatures'}
                                 </button>
                               )}
                             </div>
@@ -888,6 +1010,15 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
                                   inscriptions={inscriptions}
                                   stagiaires={stagiaires}
                                   type={substep.quizzType}
+                                />
+                              </div>
+                            )}
+                            {substep.type === 'emargement' && emargementOpen && (
+                              <div className="wf-quizz-panel">
+                                <EmargementStepDetail
+                                  session={session}
+                                  inscriptions={inscriptions}
+                                  stagiaires={stagiaires}
                                 />
                               </div>
                             )}

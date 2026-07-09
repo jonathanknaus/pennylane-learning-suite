@@ -27,7 +27,7 @@ export const WORKFLOW_PHASES = [
       { id: 'p1_tache_relance_sf', label: 'Création d’une tâche de relance sur Salesforce', type: 'checkbox' },
       { id: 'p1_log_modjo', label: 'Log de l’échange sur Modjo / Ringover (impératif)', type: 'checkbox' },
       { id: 'p1_questionnaire_besoin', label: 'Envoi du questionnaire de recueil du besoin au cabinet', type: 'email', templateKey: 'questionnaire_besoins' },
-      { id: 'p1_info_sarah', label: 'Information de Sarah à réception du retour du questionnaire', type: 'checkbox' },
+      { id: 'p1_info_sarah', label: 'Information du gestionnaire à réception du retour du questionnaire', type: 'checkbox', notifieGestionnaire: true },
       { id: 'p1_relances', label: 'Relances si sans réponse (3 max, délai 1-2 jours entre chaque)', type: 'relance', maxRelances: 3 },
       { id: 'p1_cancel_note', label: 'Si aucune réponse après 3 relances : passer la fiche en statut Cancel sur Salesforce et envoyer un Chatter à la personne ayant fait la demande.', type: 'info' },
     ],
@@ -69,7 +69,7 @@ export const WORKFLOW_PHASES = [
     icon: '🛠️',
     substeps: [
       { id: 'p4_fiche_produit', label: 'Création de la fiche produit (si pas existante — contrôler Smart OF / Drive)', type: 'checkbox' },
-      { id: 'p4_communication_montant', label: 'Le formateur communique le montant et le nom du programme à Sarah, complète SF, passe le statut à "Completing Admin"', type: 'checkbox' },
+      { id: 'p4_communication_montant', label: 'Le formateur communique le montant et le nom du programme au gestionnaire, complète SF, passe le statut à "Completing Admin"', type: 'checkbox', notifieGestionnaire: true },
       { id: 'p4_devis', label: 'Création du dossier + devis sur Smart OF, adressé au cabinet (copie formateur)', type: 'email', templateKey: 'devis' },
       { id: 'p4_relance_devis', label: 'Relance si besoin (tâche Smart OF + note SF)', type: 'relance', maxRelances: 3 },
       { id: 'p4_relance_devis_note', label: 'Si aucune réponse après 3 relances : Chatter interne au formateur + owner dossier (et à la personne ayant demandé la formation, le cas échéant).', type: 'info' },
@@ -92,13 +92,12 @@ export const WORKFLOW_PHASES = [
     substeps: [
       { id: 'p5_lien_veille', label: '(La veille) Envoi du lien Google de la formation', type: 'checkbox' },
       { id: 'p5_emargement_declenche', label: 'Émargement déclenché par le formateur (15 minutes avant la formation)', type: 'checkbox', groupe: 'Matin' },
-      { id: 'p5_verif_emargement_recu', label: 'Vérification que tous les apprenants ont bien reçu la feuille d’émargement', type: 'checkbox', groupe: 'Matin' },
+      { id: 'p5_verif_emargement_recu', label: 'Vérification que tous les apprenants ont bien reçu le lien d’émargement électronique', type: 'checkbox', groupe: 'Matin' },
       { id: 'p5_presences', label: 'Vérification des présents / absents', type: 'checkbox', groupe: 'Matin' },
-      { id: 'p5_emargement_matin', label: 'Émargement des apprenants (matin) + des formateurs', type: 'checkbox', groupe: 'Matin' },
+      { id: 'p5_emargement_matin', label: 'Émargement électronique des apprenants + des formateurs, par module', type: 'emargement', groupe: 'Matin' },
       { id: 'p5_quizz_initial', label: 'Envoi du questionnaire pré-formation via SmartOF', type: 'quizz', quizzType: 'pre', groupe: 'Matin' },
-      { id: 'p5_controle_emargement_matin', label: 'Contrôle que tous les émargements ont bien été signés', type: 'checkbox', groupe: 'Matin' },
       { id: 'p5_quizz_final', label: 'Questionnaire post-formation adressé à l’apprenant (fin de module)', type: 'quizz', quizzType: 'post', groupe: 'Matin' },
-      { id: 'p5_emargement_apres_midi', label: 'Émargement des apprenants (début d’après-midi) + des formateurs', type: 'checkbox', conditional: 'journee_entiere', groupe: 'Après-midi (si formation journée entière)' },
+      { id: 'p5_emargement_apres_midi', label: 'Émargement électronique des apprenants + des formateurs (après-midi)', type: 'emargement', conditional: 'journee_entiere', groupe: 'Après-midi (si formation journée entière)' },
       { id: 'p5_satisfaction_am', label: 'Envoi du questionnaire de satisfaction via SmartOF', type: 'checkbox', conditional: 'journee_entiere', groupe: 'Après-midi (si formation journée entière)' },
       { id: 'p5_controle_am', label: 'Contrôle que tous les questionnaires et les émargements sont bien complétés', type: 'checkbox', conditional: 'journee_entiere', groupe: 'Après-midi (si formation journée entière)' },
       { id: 'p5_lien_csat', label: 'Envoi du lien CSAT à tous les apprenants', type: 'checkbox', conditional: 'journee_entiere', groupe: 'Après-midi (si formation journée entière)' },
@@ -114,9 +113,9 @@ export const WORKFLOW_PHASES = [
       { id: 'p6_support_help_center', label: 'Envoi du support de formation au client', type: 'checkbox' },
       { id: 'p6_lien_help_center', label: 'Envoi du lien vers le Help Center Pennylane', type: 'checkbox' },
       { id: 'p6_reponses_questions', label: 'Réponses aux questions restées sans réponse pendant la formation', type: 'checkbox' },
-      { id: 'p6_confirmation_cloture', label: 'Confirmation à Sarah que le dossier est clos', type: 'checkbox' },
+      { id: 'p6_confirmation_cloture', label: 'Confirmation au gestionnaire que le dossier est clos', type: 'checkbox', notifieGestionnaire: true },
       { id: 'p6_aleas_note', label: 'Si un problème a été rencontré pendant ou après la formation : renseigner le tableau des aléas et réclamations.', type: 'info' },
-      { id: 'p6_statut_done', label: 'Statut SF passé à "Done" + Chatter à Sarah', type: 'checkbox', groupe: 'Clôture du dossier' },
+      { id: 'p6_statut_done', label: 'Statut SF passé à "Done" + Chatter au gestionnaire', type: 'checkbox', groupe: 'Clôture du dossier', notifieGestionnaire: true },
       { id: 'p6_certificat', label: 'Envoi des certificats de réalisation via SmartOF', type: 'email', templateKey: 'certificat', groupe: 'Clôture du dossier' },
       { id: 'p6_attestation', label: 'Envoi des attestations de formation via SmartOF', type: 'email', templateKey: 'attestation', groupe: 'Clôture du dossier' },
       { id: 'p6_rapport_emargement', label: 'Envoi des rapports d’émargement via SmartOF', type: 'checkbox', groupe: 'Clôture du dossier' },
@@ -200,8 +199,8 @@ export function addRelance(sessionId, substepId) {
 export function resolveRelance(sessionId, substepId) {
   try {
     const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
-    if (!all[sessionId]?.[substepId]) return
-    const entry = all[sessionId][substepId]
+    if (!all[sessionId]) all[sessionId] = {}
+    const entry = all[sessionId][substepId] || { status: 'pending' }
     const relances = { ...(entry.relances || { count: 0, dates: [] }), resolved: true }
     all[sessionId][substepId] = { ...entry, status: 'done', relances, updatedAt: new Date().toISOString() }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
@@ -220,7 +219,7 @@ function isCountable(substep) {
   return substep.type !== 'info'
 }
 
-export function isSubstepDone(substep, statuts, session, inscriptions, getResultat) {
+export function isSubstepDone(substep, statuts, session, inscriptions, getResultat, isModuleCompletFn) {
   if (substep.type === 'info') return true
   if (substep.type === 'quizz') {
     const nbInscrits = inscriptions?.length || 0
@@ -228,13 +227,21 @@ export function isSubstepDone(substep, statuts, session, inscriptions, getResult
     const nbCompletes = inscriptions.filter(ins => getResultat(session.id, ins.stagiaireId, substep.quizzType)).length
     return nbCompletes === nbInscrits
   }
+  if (substep.type === 'emargement') {
+    if (!isModuleCompletFn) return statuts[substep.id]?.status === 'done'
+    const moduleIds = session.modules || []
+    if (moduleIds.length === 0) return false
+    const participantIds = (inscriptions || []).filter(i => i.presence !== false).map(i => i.stagiaireId)
+    const formateurIds = [session.formateurId, session.formateurAppuiId].filter(Boolean)
+    return moduleIds.every(mid => isModuleCompletFn(session.id, mid, participantIds, formateurIds))
+  }
   if (substep.type === 'relance') {
     return statuts[substep.id]?.relances?.resolved || statuts[substep.id]?.status === 'done'
   }
   return statuts[substep.id]?.status === 'done'
 }
 
-export function getPhaseStatus(phase, statuts, session, inscriptions, getResultat, locked = false) {
+export function getPhaseStatus(phase, statuts, session, inscriptions, getResultat, locked = false, isModuleCompletFn) {
   if (locked) return 'locked'
 
   const applicable = phase.substeps.filter(s => isSubstepApplicable(s, session))
@@ -247,7 +254,7 @@ export function getPhaseStatus(phase, statuts, session, inscriptions, getResulta
     return relances && relances.count >= (s.maxRelances || 3) && !relances.resolved
   })
 
-  const doneFlags = countable.map(s => isSubstepDone(s, statuts, session, inscriptions, getResultat))
+  const doneFlags = countable.map(s => isSubstepDone(s, statuts, session, inscriptions, getResultat, isModuleCompletFn))
   const allDone = doneFlags.every(Boolean)
 
   if (isPhaseValidated(phase.id, statuts)) return 'done'
@@ -257,10 +264,10 @@ export function getPhaseStatus(phase, statuts, session, inscriptions, getResulta
   return 'not_started'
 }
 
-export function isPhaseComplete(phase, statuts, session, inscriptions, getResultat) {
+export function isPhaseComplete(phase, statuts, session, inscriptions, getResultat, isModuleCompletFn) {
   const applicable = phase.substeps.filter(s => isSubstepApplicable(s, session) && isCountable(s))
   if (applicable.length === 0) return true
-  return applicable.every(s => isSubstepDone(s, statuts, session, inscriptions, getResultat))
+  return applicable.every(s => isSubstepDone(s, statuts, session, inscriptions, getResultat, isModuleCompletFn))
 }
 
 export function isPhaseValidated(phaseId, statuts) {

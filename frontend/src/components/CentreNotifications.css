@@ -1,0 +1,93 @@
+.cn-wrap { position: relative; }
+
+.cn-bell {
+  position: relative;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 6px;
+  line-height: 1;
+}
+
+.cn-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #EF4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.cn-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  max-height: 440px;
+  background: var(--blanc, #fff);
+  border: 1.5px solid var(--border, #E5E7EB);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cn-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border, #E5E7EB);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bg-dark, #003D3D);
+}
+
+.cn-mark-all {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6B7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.cn-mark-all:hover { color: var(--bg-dark, #003D3D); }
+
+.cn-list { overflow-y: auto; max-height: 380px; }
+
+.cn-empty { padding: 24px 14px; font-size: 13px; color: #9CA3AF; text-align: center; }
+
+.cn-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid #F3F4F6;
+  background: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s;
+}
+.cn-item:hover { background: #F9FAFB; }
+.cn-item.unread { background: #F0FDF4; }
+
+.cn-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.cn-item-body { flex: 1; min-width: 0; }
+.cn-item-titre { font-size: 12.5px; font-weight: 700; color: var(--bg-dark, #003D3D); margin-bottom: 2px; }
+.cn-item-msg { font-size: 12px; color: #4B5563; line-height: 1.4; }
+.cn-item-date { font-size: 10.5px; color: #9CA3AF; margin-top: 4px; }
+.cn-item-dot { width: 7px; height: 7px; border-radius: 50%; background: #10B981; flex-shrink: 0; margin-top: 5px; }

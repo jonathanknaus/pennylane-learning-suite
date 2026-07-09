@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { saveSession, STATUTS, MODALITES, FORMATS, ALL_MODULES, QUALIOPI_OPTIONS } from '../data/sessions'
 import { THEMATIQUES } from '../data/catalogue-afs'
+import { getGestionnaires, getGestionnaireDefaut } from '../data/gestionnaires'
+import { getFormateurs } from '../data/formateurs'
 import './SessionForm.css'
 
 const EMPTY = {
@@ -14,6 +16,9 @@ const EMPTY = {
   heure: '09:00',
   occurrences: [],
   formateur: 'Équipe AFS',
+  formateurId: '',
+  formateurAppuiId: '',
+  gestionnaireId: '',
   participants_max: 15,
   participants_inscrits: 0,
   qualiopi: 'non',
@@ -22,7 +27,11 @@ const EMPTY = {
 }
 
 export default function SessionForm({ session, onSaved, onCancel }) {
-  const [form, setForm] = useState(session ? { qualiopi: 'non', occurrences: [], ...session } : { ...EMPTY })
+  const gestionnaires = getGestionnaires()
+  const formateurs = getFormateurs()
+  const [form, setForm] = useState(session
+    ? { qualiopi: 'non', occurrences: [], gestionnaireId: '', formateurId: '', formateurAppuiId: '', ...session }
+    : { ...EMPTY, gestionnaireId: getGestionnaireDefaut()?.id || '' })
   const [errors, setErrors] = useState({})
 
   function addOccurrence() {
@@ -132,14 +141,44 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Formateur</label>
-                  <input
-                    type="text"
-                    value={form.formateur}
-                    onChange={e => set('formateur', e.target.value)}
-                    placeholder="Nom du formateur"
-                  />
+                  <label>Formateur responsable</label>
+                  <select
+                    value={form.formateurId}
+                    onChange={e => {
+                      const fmt = formateurs.find(f => f.id === e.target.value)
+                      setForm(f => ({ ...f, formateurId: e.target.value, formateur: fmt ? `${fmt.prenom} ${fmt.nom}` : f.formateur }))
+                    }}
+                  >
+                    <option value="">— Nom libre : {form.formateur || 'non renseigné'} —</option>
+                    {formateurs.map(f => (
+                      <option key={f.id} value={f.id}>{f.prenom} {f.nom}</option>
+                    ))}
+                  </select>
+                  <p className="form-hint" style={{ fontSize: 12, color: 'var(--texte-secondaire)', marginTop: 4 }}>
+                    Prend le lead sur le dossier jusqu'à la clôture de la formation.
+                  </p>
                 </div>
+                <div className="form-group">
+                  <label>Formateur en appui (optionnel)</label>
+                  <select value={form.formateurAppuiId} onChange={e => set('formateurAppuiId', e.target.value)}>
+                    <option value="">— Aucun —</option>
+                    {formateurs.filter(f => f.id !== form.formateurId).map(f => (
+                      <option key={f.id} value={f.id}>{f.prenom} {f.nom}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Gestionnaire attitré</label>
+                <select value={form.gestionnaireId} onChange={e => set('gestionnaireId', e.target.value)}>
+                  <option value="">— Aucun —</option>
+                  {gestionnaires.map(g => (
+                    <option key={g.id} value={g.id}>{g.prenom} {g.nom}</option>
+                  ))}
+                </select>
+                <p className="form-hint" style={{ fontSize: 12, color: 'var(--texte-secondaire)', marginTop: 4 }}>
+                  Reçoit les notifications administratives (dossier, devis, convention, facturation) pour cette session.
+                </p>
               </div>
             </div>
 

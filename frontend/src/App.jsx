@@ -9,6 +9,7 @@ import Documents from './pages/Documents'
 import PresentationDossier from './pages/PresentationDossier'
 import Entreprises from './pages/Entreprises'
 import Formateurs from './pages/Formateurs'
+import Gestionnaires from './pages/Gestionnaires'
 import Financeurs from './pages/Financeurs'
 import Calendrier from './pages/Calendrier'
 import Facturation from './pages/Facturation'
@@ -26,6 +27,9 @@ import Webinaires from './pages/Webinaires'
 import BilanAnnuel from './pages/BilanAnnuel'
 import Reclamations from './pages/Reclamations'
 import Devis from './pages/Devis'
+import CentreNotifications from './components/CentreNotifications'
+import { getGestionnaires, getGestionnaireDefaut } from './data/gestionnaires'
+import { scanRappels } from './data/rappels'
 import './App.css'
 
 const NAV_ADMIN = [
@@ -48,6 +52,7 @@ const NAV_ADMIN = [
     group: 'Équipe',
     items: [
       { id: 'formateurs', label: 'Formateurs', icon: '🧑‍🏫' },
+      { id: 'gestionnaires', label: 'Resp. admin. & réglementaire', icon: '🗂️' },
       { id: 'financeurs', label: 'Financeurs', icon: '🏦' },
     ],
   },
@@ -95,6 +100,7 @@ function PageContent({ currentPage }) {
       {currentPage === 'stagiaires'   && <Stagiaires />}
       {currentPage === 'entreprises'  && <Entreprises />}
       {currentPage === 'formateurs'   && <Formateurs />}
+      {currentPage === 'gestionnaires' && <Gestionnaires />}
       {currentPage === 'financeurs'   && <Financeurs />}
       {currentPage === 'calendrier'   && <Calendrier />}
       {currentPage === 'devis'        && <Devis />}
@@ -164,6 +170,8 @@ export default function App() {
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
+
+  useEffect(() => { scanRappels() }, [])
 
   // Lien quiz public : rendu sans auth, sans sidebar
   if (quizParams) {
@@ -282,6 +290,10 @@ export default function App() {
   }
 
   const currentPage = page || 'catalogue'
+  // Tout utilisateur admin est un gestionnaire (Sarah ou un autre) — on résout son identité
+  // par email pour rattacher le centre de notifications au bon destinataire.
+  const gestionnaireCourant = getGestionnaires().find(g => g.email?.toLowerCase() === user?.email?.toLowerCase())
+    || getGestionnaireDefaut()
 
   // Admin : layout sidebar
   return (
@@ -338,6 +350,14 @@ export default function App() {
               || (currentPage === 'parametres' ? 'Paramètres' : '')}
           </div>
           <div className="content-topbar-right">
+            {gestionnaireCourant && (
+              <CentreNotifications
+                destinataireType="gestionnaire"
+                destinataireId={gestionnaireCourant.id}
+                vueGlobale
+                onNavigateSession={() => setPage('sessions')}
+              />
+            )}
             <RoleBadge role={user?.role} />
             <button className="btn-logout" onClick={handleLogout}>Déconnexion</button>
           </div>

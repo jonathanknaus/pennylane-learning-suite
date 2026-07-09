@@ -4,6 +4,7 @@ import { getSessions, STATUTS, MODALITES, FORMATS, ALL_MODULES } from '../data/s
 import { getFormateurs } from '../data/formateurs'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid } from '../data/satisfaction'
+import { getSignaturesModule, signerModule, estSigne } from '../data/emargement'
 import './PortailApprenant.css'
 
 const SESSION_KEY = 'pls_portail_app_session'
@@ -70,6 +71,33 @@ function ScoreBadge({ label, score, max = 100, unit = '%' }) {
   )
 }
 
+function EmargementModule({ session, module, stagiaire }) {
+  const [, setTick] = useState(0)
+  const signe = estSigne(session.id, module.id, 'apprenant', stagiaire.id)
+  const sig = getSignaturesModule(session.id, module.id)[`apprenant_${stagiaire.id}`]
+
+  function signer() {
+    signerModule(session.id, module.id, 'apprenant', stagiaire.id)
+    setTick(t => t + 1)
+  }
+
+  return (
+    <div className={`pa-emargement-row ${signe ? 'signed' : ''}`}>
+      <div className="pa-emargement-info">
+        <span className="pa-emargement-module">{module.titre}</span>
+        {signe && sig && (
+          <span className="pa-emargement-date">Signé le {new Date(sig.signedAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+        )}
+      </div>
+      {signe ? (
+        <span className="pa-emargement-badge">✓ Émargé</span>
+      ) : (
+        <button className="pa-emargement-btn" onClick={signer}>✍️ Émarger ce module</button>
+      )}
+    </div>
+  )
+}
+
 function SessionCard({ session, inscription, stagiaire }) {
   const statut = STATUTS.find(s => s.id === session.statut) || STATUTS[0]
   const format = FORMATS.find(f => f.id === session.format)
@@ -79,6 +107,7 @@ function SessionCard({ session, inscription, stagiaire }) {
     f.id === session.formateurId ||
     (session.formateur && session.formateur.toLowerCase().includes(f.nom.toLowerCase()))
   )
+  const emargementActif = session.statut === 'en_cours' || session.statut === 'termine'
 
   const pre = getResultat(session.id, stagiaire.id, 'pre')
   const post = getResultat(session.id, stagiaire.id, 'post')
@@ -142,6 +171,15 @@ function SessionCard({ session, inscription, stagiaire }) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {emargementActif && modules.length > 0 && inscription.presence !== false && (
+        <div className="pa-emargement-block">
+          <div className="pa-emargement-label">✍️ Émargement électronique — obligatoire (Qualiopi)</div>
+          {modules.map(m => (
+            <EmargementModule key={m.id} session={session} module={m} stagiaire={stagiaire} />
+          ))}
         </div>
       )}
 

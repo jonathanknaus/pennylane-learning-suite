@@ -5,6 +5,8 @@ import { getSessions, STATUTS, MODALITES, FORMATS, ALL_MODULES } from '../data/s
 import { getInscriptionsBySession, getStagiaires } from '../data/stagiaires'
 import { getResultat } from '../data/questionnaires'
 import { getReponsesChaud } from '../data/satisfaction'
+import { scanRappels } from '../data/rappels'
+import CentreNotifications from '../components/CentreNotifications'
 import './PortailFormateur.css'
 
 const SESSION_KEY = 'pls_portail_fmt_session'
@@ -175,6 +177,8 @@ export default function PortailFormateur() {
   const [sessions, setSessions] = useState([])
   const [filtre, setFiltre] = useState('all')
 
+  useEffect(() => { scanRappels() }, [])
+
   useEffect(() => {
     if (!user) return
     const formateurs = getFormateurs()
@@ -188,7 +192,8 @@ export default function PortailFormateur() {
     const toutes = getSessions()
     const siennes = toutes.filter(s =>
       s.formateurId === fmt?.id ||
-      (s.formateur && s.formateur.toLowerCase().includes(fmt.nom.toLowerCase()))
+      s.formateurAppuiId === fmt?.id ||
+      (!s.formateurId && s.formateur && s.formateur.toLowerCase().includes(fmt.nom.toLowerCase()))
     )
     setSessions(user.role === ROLES.admin ? toutes : siennes)
   }, [user])
@@ -205,6 +210,8 @@ export default function PortailFormateur() {
 
   const FILTRES = [
     { id: 'all', label: 'Toutes' },
+    { id: 'responsable', label: 'Dont je suis responsable' },
+    { id: 'appui', label: 'En appui' },
     { id: 'a_venir', label: 'À venir' },
     { id: 'en_cours', label: 'En cours' },
     { id: 'termine', label: 'Terminées' },
@@ -212,6 +219,8 @@ export default function PortailFormateur() {
 
   const sessionsFiltrees = sessions.filter(s => {
     if (filtre === 'all') return true
+    if (filtre === 'responsable') return formateur ? s.formateurId === formateur.id : true
+    if (filtre === 'appui') return formateur ? s.formateurAppuiId === formateur.id : false
     if (filtre === 'a_venir') return ['brouillon', 'confirme'].includes(s.statut)
     if (filtre === 'en_cours') return s.statut === 'en_cours'
     if (filtre === 'termine') return s.statut === 'termine'
@@ -245,6 +254,9 @@ export default function PortailFormateur() {
               <span className="pf-stat-label">À venir</span>
             </div>
           </div>
+          {formateur && (
+            <CentreNotifications destinataireType="formateur" destinataireId={formateur.id} />
+          )}
           <button className="pf-logout-btn" onClick={handleLogout}>Déconnexion</button>
         </div>
       </div>

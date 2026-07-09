@@ -212,6 +212,50 @@
   display: flex; align-items: center; justify-content: center;
 }
 
+/* Émargement électronique */
+.pa-emargement-block {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #FFFBEB;
+}
+.pa-emargement-label {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  color: #92400E;
+}
+.pa-emargement-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--blanc);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.pa-emargement-row.signed { border-color: #10B981; background: #F0FDF4; }
+.pa-emargement-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pa-emargement-module { font-size: 13px; font-weight: 600; color: var(--texte); }
+.pa-emargement-date { font-size: 11px; color: #059669; }
+.pa-emargement-badge { font-size: 12px; font-weight: 700; color: #059669; flex-shrink: 0; }
+.pa-emargement-btn {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: var(--vert);
+  color: var(--bg-dark);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.pa-emargement-btn:hover { opacity: 0.85; }
+
 /* Évaluations */
 .pa-evals-block {
   padding: 14px 20px;

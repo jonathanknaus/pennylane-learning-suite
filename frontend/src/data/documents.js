@@ -4,7 +4,7 @@ import { getStagiaires, getInscriptionsBySession } from './stagiaires'
 export const TYPES_DOCUMENT = [
   { id: 'convocation',  label: 'Convocation',              icon: '✉️',  description: 'Envoyée avant la session à chaque participant' },
   { id: 'convention',   label: 'Convention de formation',  icon: '📄',  description: '10 clauses légales, liste participants, prix, signatures' },
-  { id: 'emargement',  label: "Feuille d'émargement",      icon: '✍️',  description: 'Signée le jour J, preuve de présence Qualiopi' },
+  { id: 'emargement',  label: "Feuille d'émargement (secours papier)", icon: '✍️',  description: 'Émargement électronique par défaut (onglet Workflows) — PDF à imprimer uniquement en cas de panne réseau' },
   { id: 'attestation', label: 'Attestation de formation',  icon: '🎓',  description: 'Remise à chaque participant après la session' },
 ]
 

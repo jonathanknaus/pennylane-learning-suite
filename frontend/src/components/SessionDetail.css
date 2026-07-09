@@ -701,6 +701,10 @@
 .wf-btn-tpl:hover { background: #FFF7ED; border-color: #F59E0B; color: #B45309; }
 .wf-btn-tpl.active { background: #FFF7ED; border-color: #F59E0B; color: #B45309; }
 
+.wf-btn-informer { background: #EDE9FE; color: #6D28D9; border: 1.5px solid #C4B5FD; }
+.wf-btn-informer:hover { background: #DDD6FE; }
+.wf-btn-informer.active { background: #D1FAE5; border-color: #059669; color: #059669; }
+
 /* Template email panel */
 .wf-tpl-panel {
   display: flex;
@@ -776,6 +780,35 @@
 }
 
 .wf-quizz-empty { padding: 12px; font-size: 13px; color: var(--texte-secondaire); }
+
+/* Émargement électronique — panneau workflow */
+.wf-emargement-detail { display: flex; flex-direction: column; gap: 16px; }
+.wf-emargement-note {
+  font-size: 12px;
+  color: #92400E;
+  background: #FFFBEB;
+  border-left: 3px solid #F59E0B;
+  border-radius: 0 8px 8px 0;
+  padding: 8px 12px;
+  margin: 0;
+  line-height: 1.5;
+}
+.wf-emargement-module-titre { font-size: 13px; font-weight: 700; color: var(--texte); margin-bottom: 8px; }
+.wf-emargement-rows { display: flex; flex-direction: column; gap: 6px; }
+.wf-emargement-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--blanc);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.wf-emargement-row.signed { border-color: #10B981; background: #F0FDF4; }
+.wf-emargement-nom { font-weight: 600; color: var(--texte); }
+.wf-emargement-signed { font-size: 12px; font-weight: 600; color: #059669; }
 
 .wf-quizz-list { display: flex; flex-direction: column; gap: 6px; }
 
