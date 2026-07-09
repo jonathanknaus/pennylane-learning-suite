@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getNotificationsFor, getNotificationsGestionnaireGlobal, markAsRead, markAllAsRead } from '../data/notifications'
+import { getNotificationsFor, getNotificationsGestionnaireGlobal, markAsRead, markAllAsRead, deleteNotification, deleteReadNotifications } from '../data/notifications'
 import './CentreNotifications.css'
 
 function timeAgo(iso) {
@@ -41,6 +41,7 @@ export default function CentreNotifications({ destinataireType, destinataireId, 
   }, [destinataireType, destinataireId])
 
   const unread = notifs.filter(n => !n.lu).length
+  const readCount = notifs.filter(n => n.lu).length
 
   function handleOpen() {
     setOpen(v => {
@@ -54,6 +55,17 @@ export default function CentreNotifications({ destinataireType, destinataireId, 
     if (onNavigateSession && n.sessionId) onNavigateSession(n.sessionId)
   }
 
+  function handleDelete(e, id) {
+    e.stopPropagation()
+    deleteNotification(id)
+    refresh()
+  }
+
+  function handleDeleteRead() {
+    deleteReadNotifications(destinataireType, destinataireId)
+    refresh()
+  }
+
   return (
     <div className="cn-wrap">
       <button className="cn-bell" onClick={handleOpen} title="Notifications">
@@ -64,18 +76,25 @@ export default function CentreNotifications({ destinataireType, destinataireId, 
         <div className="cn-panel">
           <div className="cn-panel-header">
             <span>Notifications</span>
-            {unread > 0 && (
-              <button className="cn-mark-all" onClick={() => { markAllAsRead(destinataireType, destinataireId); refresh() }}>
-                Tout marquer lu
-              </button>
-            )}
+            <div className="cn-header-actions">
+              {unread > 0 && (
+                <button className="cn-mark-all" onClick={() => { markAllAsRead(destinataireType, destinataireId); refresh() }}>
+                  Tout marquer lu
+                </button>
+              )}
+              {readCount > 0 && (
+                <button className="cn-mark-all" onClick={handleDeleteRead}>
+                  Supprimer les lues
+                </button>
+              )}
+            </div>
           </div>
           <div className="cn-list">
             {notifs.length === 0 ? (
               <div className="cn-empty">Aucune notification.</div>
             ) : (
               notifs.slice(0, 30).map(n => (
-                <button key={n.id} className={`cn-item ${n.lu ? '' : 'unread'}`} onClick={() => handleClickNotif(n)}>
+                <div key={n.id} className={`cn-item ${n.lu ? '' : 'unread'}`} onClick={() => handleClickNotif(n)}>
                   <span className="cn-item-icon">{TYPE_ICONS[n.type] || '🔔'}</span>
                   <div className="cn-item-body">
                     <div className="cn-item-titre">{n.titre}</div>
@@ -83,7 +102,8 @@ export default function CentreNotifications({ destinataireType, destinataireId, 
                     <div className="cn-item-date">{timeAgo(n.createdAt)}</div>
                   </div>
                   {!n.lu && <span className="cn-item-dot" />}
-                </button>
+                  <button className="cn-item-delete" onClick={e => handleDelete(e, n.id)} title="Supprimer">×</button>
+                </div>
               ))
             )}
           </div>

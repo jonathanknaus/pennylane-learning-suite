@@ -76,6 +76,12 @@ export function deleteNotification(id) {
   save(load().filter(n => n.id !== id))
 }
 
+export function deleteReadNotifications(destinataireType, destinataireId) {
+  save(load().filter(n =>
+    !(n.destinataireType === destinataireType && n.destinataireId === destinataireId && n.lu)
+  ))
+}
+
 // Vue élargie d'un gestionnaire : ses propres notifications + tous les rappels 48h envoyés
 // aux formateurs (pour pouvoir relancer un formateur qui n'a pas réagi à temps).
 export function getNotificationsGestionnaireGlobal(gestionnaireId) {
