@@ -9,8 +9,8 @@ export const WORKFLOW_PHASES = [
     description: 'Canal Salesforce ou Slack #afs-demande-formation. Toujours interne (CSM/BDR/AM), jamais direct client.',
     icon: '📥',
     substeps: [
-      { id: 'p0_enregistrement_sf', label: 'Enregistrement de la demande sur Salesforce (si nécessaire)', type: 'checkbox', responsable: 'commercial' },
-      { id: 'p0_attribution_formation', label: 'Attribution de la formation au formateur (mail automatique SF)', type: 'checkbox', responsable: 'commercial' },
+      { id: 'p0_enregistrement_sf', label: 'Enregistrement de la demande sur Salesforce (si nécessaire)', type: 'checkbox', responsable: 'responsable_afs' },
+      { id: 'p0_attribution_formation', label: 'Attribution de la formation au formateur (mail automatique SF)', type: 'checkbox', responsable: 'responsable_afs' },
       { id: 'p0_confirmation_formateur', label: 'Confirmation de prise en charge par le formateur (auprès du PrM/CSM/AM/KAM/FE/support)', type: 'checkbox', responsable: 'formateur' },
       { id: 'p0_note_lead', label: 'La personne qui prend contact avec le client prend le lead sur l’ensemble du dossier jusqu’à la clôture de la formation.', type: 'info' },
     ],
@@ -300,8 +300,13 @@ export const RESPONSABLE_LABELS = {
   formateur: 'Formateur',
   gestionnaire: 'Gestionnaire',
   commercial: 'Commercial (CSM/BDR/AM)',
+  responsable_afs: 'Team Lead AFS',
   systeme: 'Automatique',
 }
+
+// Team Lead AFS — responsable fixe de la réception/attribution des demandes,
+// indépendant du formateur ou du gestionnaire assignés à la session.
+export const TEAM_LEAD_AFS = { prenom: 'Jonathan', nom: 'KNAUS', email: 'jonathan.knaus@pennylane.com' }
 
 // Nom réel de la personne responsable d'une sous-étape pour une session donnée,
 // utilisé pour afficher "Formateur — Timothy RATSIMA" plutôt que juste "Formateur".
@@ -314,6 +319,9 @@ export function getResponsableNom(substep, session, { formateurs, gestionnaires 
   if (substep.responsable === 'gestionnaire') {
     const gest = gestionnaires?.find(g => g.id === session.gestionnaireId)
     return gest ? `${gest.prenom} ${gest.nom}` : RESPONSABLE_LABELS.gestionnaire
+  }
+  if (substep.responsable === 'responsable_afs') {
+    return `${TEAM_LEAD_AFS.prenom} ${TEAM_LEAD_AFS.nom}`
   }
   return RESPONSABLE_LABELS[substep.responsable] || null
 }

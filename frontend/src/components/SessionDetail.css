@@ -678,6 +678,7 @@
 .wf-step-responsable-formateur { background: #EFF6FF; color: #1D4ED8; }
 .wf-step-responsable-gestionnaire { background: #EDE9FE; color: #6D28D9; }
 .wf-step-responsable-commercial { background: #FEF3C7; color: #92400E; }
+.wf-step-responsable-responsable_afs { background: #FEF9C3; color: #854D0E; }
 .wf-step-responsable-systeme { background: var(--gris); color: var(--texte-secondaire); }
 
 .wf-step-actions { display: flex; gap: 6px; flex-shrink: 0; }

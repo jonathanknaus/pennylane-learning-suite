@@ -1002,7 +1002,7 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
                               <div className="wf-step-label">{substep.label}</div>
                               {responsableNom && (
                                 <span className={`wf-step-responsable wf-step-responsable-${substep.responsable}`}>
-                                  {substep.responsable === 'formateur' ? '🧑‍🏫' : substep.responsable === 'gestionnaire' ? '🗂️' : substep.responsable === 'commercial' ? '💼' : '⚙️'} {responsableNom}
+                                  {substep.responsable === 'formateur' ? '🧑‍🏫' : substep.responsable === 'gestionnaire' ? '🗂️' : substep.responsable === 'commercial' ? '💼' : substep.responsable === 'responsable_afs' ? '⭐' : '⚙️'} {responsableNom}
                                 </span>
                               )}
                               {substep.type === 'quizz' && nbInscrits > 0 && (
