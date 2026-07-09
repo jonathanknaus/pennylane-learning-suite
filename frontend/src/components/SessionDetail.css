@@ -576,11 +576,57 @@
 .wf-phase-badge-not_started { background: var(--gris); color: var(--texte-secondaire); }
 .wf-phase-badge-in_progress { background: #FEF3C7; color: #92400E; }
 .wf-phase-badge-blocked { background: #FEE2E2; color: #B91C1C; }
+.wf-phase-badge-ready_to_validate { background: #DBEAFE; color: #1D4ED8; }
 .wf-phase-badge-done { background: #D1FAE5; color: #059669; }
+.wf-phase-badge-locked { background: var(--gris); color: var(--texte-secondaire); }
 
 .wf-phase-progress { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--texte-secondaire); }
 .wf-phase-progress-bar-wrap { flex: 1; height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; max-width: 240px; }
 .wf-phase-progress-bar { height: 5px; background: var(--vert-fonce); border-radius: 4px; transition: width 0.3s; }
+
+.wf-global-progress { display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 600; color: var(--texte); background: var(--blanc); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 16px; }
+.wf-global-progress-bar-wrap { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.wf-global-progress-bar { height: 7px; background: var(--vert); border-radius: 4px; transition: width 0.3s; }
+
+.wf-phase-locked { opacity: 0.7; }
+.wf-phase-locked-note { font-size: 12px; color: var(--texte-secondaire); font-style: italic; }
+
+.wf-groupe { display: flex; flex-direction: column; gap: 6px; }
+.wf-groupe-titre { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #6B7280; margin-top: 6px; }
+
+.wf-step-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #92400E;
+  background: #FFFBEB;
+  border-left: 3px solid #F59E0B;
+  border-radius: 0 8px 8px 0;
+  padding: 8px 12px;
+  line-height: 1.4;
+}
+.wf-step-info-icon { flex-shrink: 0; }
+
+.wf-phase-validation { display: flex; align-items: center; gap: 10px; margin-top: 4px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.wf-phase-validated-badge { font-size: 13px; font-weight: 700; color: #059669; }
+.wf-btn-validate-phase {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: 9px;
+  background: var(--vert);
+  color: var(--bg-dark);
+  border: none;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.wf-btn-validate-phase:hover:not(:disabled) { opacity: 0.85; }
+.wf-btn-validate-phase:disabled {
+  background: var(--gris);
+  color: var(--texte-secondaire);
+  cursor: not-allowed;
+}
 
 .wf-steps { display: flex; flex-direction: column; gap: 6px; }
 

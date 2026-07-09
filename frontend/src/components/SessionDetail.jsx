@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx'
 import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
-import { WORKFLOW_PHASES, getWorkflowsForSession, setWorkflowStep, addRelance, resolveRelance, getPhaseStatus, isSubstepDone, PHASE_STATUS_LABELS } from '../data/workflows'
+import { WORKFLOW_PHASES, getWorkflowsForSession, setWorkflowStep, addRelance, resolveRelance, getPhaseStatus, isSubstepDone, isPhaseComplete, isPhaseValidated, isPhaseUnlocked, validatePhase, invalidatePhase, PHASE_STATUS_LABELS } from '../data/workflows'
 import { getTemplate } from '../data/workflow-templates'
 import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../data/planification'
 import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken, getCodeCabinet, regenererCodeCabinet } from '../data/questionnaire-besoin'
@@ -476,6 +476,14 @@ export default function SessionDetail({ session, onClose, onEdit }) {
                 resolveRelance(session.id, substepId)
                 setWfStatuts(getWorkflowsForSession(session.id))
               }}
+              onValidatePhase={(phaseId) => {
+                validatePhase(session.id, phaseId)
+                setWfStatuts(getWorkflowsForSession(session.id))
+              }}
+              onInvalidatePhase={(phaseId) => {
+                invalidatePhase(session.id, phaseId)
+                setWfStatuts(getWorkflowsForSession(session.id))
+              }}
             />
           )}
 
@@ -715,9 +723,11 @@ function PhaseBadge({ status }) {
   )
 }
 
-function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelance, inscriptions, stagiaires, onNavigate }) {
+function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelance, onValidatePhase, onInvalidatePhase, inscriptions, stagiaires, onNavigate }) {
   const [openQuizz, setOpenQuizz] = useState(null)
   const [openTpl, setOpenTpl] = useState(null)
+
+  const totalValidated = WORKFLOW_PHASES.filter(p => isPhaseValidated(p.id, statuts)).length
 
   return (
     <div className="workflows-tab">
@@ -740,127 +750,190 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
         </div>
       )}
 
-      {WORKFLOW_PHASES.map(phase => {
-        const applicable = phase.substeps.filter(s => s.conditional !== 'presentiel' || session.modalite === 'presentiel')
-        const doneCount = applicable.filter(s => isSubstepDone(s, statuts, session, inscriptions, getResultat) || statuts[s.id]?.relances?.resolved).length
-        const phaseStatus = getPhaseStatus(phase, statuts, session, inscriptions, getResultat)
+      <div className="wf-global-progress">
+        <div className="wf-global-progress-bar-wrap">
+          <div className="wf-global-progress-bar" style={{ width: `${Math.round((totalValidated / WORKFLOW_PHASES.length) * 100)}%` }} />
+        </div>
+        <span>{totalValidated}/{WORKFLOW_PHASES.length} phases validées</span>
+      </div>
+
+      {WORKFLOW_PHASES.map((phase, phaseIndex) => {
+        const applicable = phase.substeps.filter(s => {
+          if (s.conditional === 'presentiel') return session.modalite === 'presentiel'
+          if (s.conditional === 'journee_entiere') return session.format === 'journee'
+          return true
+        })
+        const countable = applicable.filter(s => s.type !== 'info')
+        const doneCount = countable.filter(s => isSubstepDone(s, statuts, session, inscriptions, getResultat)).length
+        const locked = !isPhaseUnlocked(phaseIndex, WORKFLOW_PHASES, statuts)
+        const phaseStatus = getPhaseStatus(phase, statuts, session, inscriptions, getResultat, locked)
+        const validated = isPhaseValidated(phase.id, statuts)
+        const complete = isPhaseComplete(phase, statuts, session, inscriptions, getResultat)
+
+        // Regroupement des sous-étapes par "groupe" (ex: Matin / Après-midi / Réception des documents signés)
+        const groupes = []
+        applicable.forEach(s => {
+          const key = s.groupe || null
+          let g = groupes.find(g => g.key === key)
+          if (!g) { g = { key, items: [] }; groupes.push(g) }
+          g.items.push(s)
+        })
 
         return (
-          <div key={phase.id} className="wf-phase">
+          <div key={phase.id} className={`wf-phase ${locked ? 'wf-phase-locked' : ''}`}>
             <div className="wf-phase-header">
-              <span className="wf-phase-icon">{phase.icon}</span>
+              <span className="wf-phase-icon">{locked ? '🔒' : phase.icon}</span>
               <div className="wf-phase-title-block">
                 <div className="wf-phase-title">Phase {phase.numero} — {phase.label}</div>
                 <div className="wf-phase-desc">{phase.description}</div>
               </div>
               <PhaseBadge status={phaseStatus} />
             </div>
-            <div className="wf-phase-progress">
-              <div className="wf-phase-progress-bar-wrap">
-                <div className="wf-phase-progress-bar" style={{ width: `${applicable.length ? Math.round((doneCount / applicable.length) * 100) : 0}%` }} />
-              </div>
-              <span>{doneCount}/{applicable.length} étapes</span>
-            </div>
 
-            <div className="wf-steps">
-              {applicable.map(substep => {
-                const entry = statuts[substep.id]
-                const status = entry?.status || 'pending'
-                const quizzOpen = openQuizz === substep.id
-                const nbInscrits = inscriptions.length
-                const nbCompletes = substep.type === 'quizz'
-                  ? inscriptions.filter(ins => getResultat(session.id, ins.stagiaireId, substep.quizzType)).length
-                  : 0
-                const isDone = substep.type === 'quizz'
-                  ? nbCompletes === nbInscrits && nbInscrits > 0
-                  : status === 'done'
-
-                return (
-                  <div key={substep.id} className={`wf-step wf-step-${isDone ? 'done' : status}`}>
-                    <div className="wf-step-body">
-                      <div className="wf-step-label">{substep.label}</div>
-                      {substep.type === 'quizz' && nbInscrits > 0 && (
-                        <div className="wf-quizz-progress">
-                          <div className="wf-quizz-progress-bar-wrap">
-                            <div
-                              className="wf-quizz-bar"
-                              style={{ width: `${Math.round((nbCompletes / nbInscrits) * 100)}%` }}
-                            />
-                          </div>
-                          <span>{nbCompletes}/{nbInscrits} complétés</span>
-                        </div>
-                      )}
-                      {substep.type !== 'quizz' && substep.type !== 'relance' && entry?.updatedAt && (
-                        <div className="wf-step-date">
-                          {status === 'done' ? 'Fait' : 'Ignoré'} le {new Date(entry.updatedAt).toLocaleDateString('fr-FR')}
-                        </div>
-                      )}
-                    </div>
-                    <div className="wf-step-actions">
-                      {substep.type === 'quizz' && (
-                        <button
-                          className={`wf-btn wf-btn-done ${quizzOpen ? 'active' : ''}`}
-                          onClick={() => setOpenQuizz(quizzOpen ? null : substep.id)}
-                        >
-                          {quizzOpen ? '▲ Masquer' : '👥 Gérer'}
-                        </button>
-                      )}
-                      {substep.type === 'email' && (
-                        <>
-                          <button
-                            className={`wf-btn wf-btn-tpl ${openTpl === substep.id ? 'active' : ''}`}
-                            onClick={() => setOpenTpl(openTpl === substep.id ? null : substep.id)}
-                            title="Voir le modèle email"
-                          >
-                            {openTpl === substep.id ? '▲ Modèle' : '✉️ Modèle'}
-                          </button>
-                          <button className="wf-btn wf-btn-send" disabled title="Envoyer (indisponible — AWS requis)">
-                            📤 Envoyer
-                          </button>
-                          <button
-                            className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
-                            onClick={() => onUpdate(substep.id, status === 'done' ? 'pending' : 'done')}
-                          >
-                            {status === 'done' ? '✓ Fait' : 'Marquer fait'}
-                          </button>
-                        </>
-                      )}
-                      {substep.type === 'checkbox' && (
-                        <button
-                          className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
-                          onClick={() => onUpdate(substep.id, status === 'done' ? 'pending' : 'done')}
-                        >
-                          {status === 'done' ? '✓ Fait' : 'Marquer fait'}
-                        </button>
-                      )}
-                    </div>
-                    {substep.type === 'quizz' && quizzOpen && (
-                      <div className="wf-quizz-panel">
-                        <QuizzStepDetail
-                          session={session}
-                          inscriptions={inscriptions}
-                          stagiaires={stagiaires}
-                          type={substep.quizzType}
-                        />
-                      </div>
-                    )}
-                    {substep.type === 'email' && openTpl === substep.id && (
-                      <div className="wf-quizz-panel">
-                        <TemplatePanel stepId={substep.templateKey} session={session} />
-                      </div>
-                    )}
-                    {substep.type === 'relance' && (
-                      <RelanceWidget
-                        substep={substep}
-                        entry={entry}
-                        onAddRelance={onAddRelance}
-                        onResolveRelance={onResolveRelance}
-                      />
-                    )}
+            {!locked && (
+              <>
+                <div className="wf-phase-progress">
+                  <div className="wf-phase-progress-bar-wrap">
+                    <div className="wf-phase-progress-bar" style={{ width: `${countable.length ? Math.round((doneCount / countable.length) * 100) : 100}%` }} />
                   </div>
-                )
-              })}
-            </div>
+                  <span>{doneCount}/{countable.length} étapes</span>
+                </div>
+
+                <div className="wf-steps">
+                  {groupes.map(groupe => (
+                    <div key={groupe.key || '_racine'} className="wf-groupe">
+                      {groupe.key && <div className="wf-groupe-titre">{groupe.key}</div>}
+                      {groupe.items.map(substep => {
+                        const entry = statuts[substep.id]
+                        const status = entry?.status || 'pending'
+                        const quizzOpen = openQuizz === substep.id
+                        const nbInscrits = inscriptions.length
+                        const nbCompletes = substep.type === 'quizz'
+                          ? inscriptions.filter(ins => getResultat(session.id, ins.stagiaireId, substep.quizzType)).length
+                          : 0
+                        const isDone = isSubstepDone(substep, statuts, session, inscriptions, getResultat)
+
+                        if (substep.type === 'info') {
+                          return (
+                            <div key={substep.id} className="wf-step-info">
+                              <span className="wf-step-info-icon">ℹ️</span>
+                              <span>{substep.label}</span>
+                            </div>
+                          )
+                        }
+
+                        return (
+                          <div key={substep.id} className={`wf-step wf-step-${isDone ? 'done' : status}`}>
+                            <div className="wf-step-body">
+                              <div className="wf-step-label">{substep.label}</div>
+                              {substep.type === 'quizz' && nbInscrits > 0 && (
+                                <div className="wf-quizz-progress">
+                                  <div className="wf-quizz-progress-bar-wrap">
+                                    <div
+                                      className="wf-quizz-bar"
+                                      style={{ width: `${Math.round((nbCompletes / nbInscrits) * 100)}%` }}
+                                    />
+                                  </div>
+                                  <span>{nbCompletes}/{nbInscrits} complétés</span>
+                                </div>
+                              )}
+                              {substep.type !== 'quizz' && substep.type !== 'relance' && entry?.updatedAt && (
+                                <div className="wf-step-date">
+                                  {status === 'done' ? 'Fait' : 'Ignoré'} le {new Date(entry.updatedAt).toLocaleDateString('fr-FR')}
+                                </div>
+                              )}
+                            </div>
+                            <div className="wf-step-actions">
+                              {substep.type === 'quizz' && (
+                                <button
+                                  className={`wf-btn wf-btn-done ${quizzOpen ? 'active' : ''}`}
+                                  onClick={() => setOpenQuizz(quizzOpen ? null : substep.id)}
+                                >
+                                  {quizzOpen ? '▲ Masquer' : '👥 Gérer'}
+                                </button>
+                              )}
+                              {substep.type === 'email' && (
+                                <>
+                                  <button
+                                    className={`wf-btn wf-btn-tpl ${openTpl === substep.id ? 'active' : ''}`}
+                                    onClick={() => setOpenTpl(openTpl === substep.id ? null : substep.id)}
+                                    title="Voir le modèle email"
+                                  >
+                                    {openTpl === substep.id ? '▲ Modèle' : '✉️ Modèle'}
+                                  </button>
+                                  <button className="wf-btn wf-btn-send" disabled title="Envoyer (indisponible — AWS requis)">
+                                    📤 Envoyer
+                                  </button>
+                                  <button
+                                    className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
+                                    onClick={() => onUpdate(substep.id, status === 'done' ? 'pending' : 'done')}
+                                  >
+                                    {status === 'done' ? '✓ Fait' : 'Marquer fait'}
+                                  </button>
+                                </>
+                              )}
+                              {substep.type === 'checkbox' && (
+                                <button
+                                  className={`wf-btn wf-btn-done ${status === 'done' ? 'active' : ''}`}
+                                  onClick={() => onUpdate(substep.id, status === 'done' ? 'pending' : 'done')}
+                                >
+                                  {status === 'done' ? '✓ Fait' : 'Marquer fait'}
+                                </button>
+                              )}
+                            </div>
+                            {substep.type === 'quizz' && quizzOpen && (
+                              <div className="wf-quizz-panel">
+                                <QuizzStepDetail
+                                  session={session}
+                                  inscriptions={inscriptions}
+                                  stagiaires={stagiaires}
+                                  type={substep.quizzType}
+                                />
+                              </div>
+                            )}
+                            {substep.type === 'email' && openTpl === substep.id && (
+                              <div className="wf-quizz-panel">
+                                <TemplatePanel stepId={substep.templateKey} session={session} />
+                              </div>
+                            )}
+                            {substep.type === 'relance' && (
+                              <RelanceWidget
+                                substep={substep}
+                                entry={entry}
+                                onAddRelance={onAddRelance}
+                                onResolveRelance={onResolveRelance}
+                              />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="wf-phase-validation">
+                  {validated ? (
+                    <>
+                      <span className="wf-phase-validated-badge">✓ Phase validée{statuts[`${phase.id}__validation`]?.updatedAt ? ` le ${new Date(statuts[`${phase.id}__validation`].updatedAt).toLocaleDateString('fr-FR')}` : ''}</span>
+                      <button className="wf-btn wf-btn-tpl" onClick={() => onInvalidatePhase(phase.id)}>Dévalider</button>
+                    </>
+                  ) : (
+                    <button
+                      className="wf-btn-validate-phase"
+                      disabled={!complete}
+                      title={complete ? 'Valider cette phase et déverrouiller la suivante' : 'Toutes les étapes doivent être complétées avant validation'}
+                      onClick={() => onValidatePhase(phase.id)}
+                    >
+                      {complete ? '✓ Valider la phase et passer à la suivante' : `Compléter les ${countable.length - doneCount} étape(s) restante(s) pour valider`}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+
+            {locked && (
+              <div className="wf-phase-locked-note">Cette phase se déverrouille une fois la phase précédente validée.</div>
+            )}
           </div>
         )
       })}
