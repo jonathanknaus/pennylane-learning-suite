@@ -14,4 +14,4 @@ Outil de gestion de formations en ligne, conforme Qualiopi.
 - Frontend : React 19 + Vite
 - Backend : Python 3.13 + Litestar
 - Base de données : PostgreSQL
-- Hébergement : Railway
+- Hébergement : à définir (AWS en cours de validation IT)

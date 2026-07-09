@@ -10,7 +10,7 @@ import { getPlanification, savePlanification, DEFAULT_PLANIFICATION } from '../d
 import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regenererBesoinToken, getCodeCabinet, regenererCodeCabinet } from '../data/questionnaire-besoin'
 import { getParametres, interpolerTemplate } from '../data/parametres'
 import { getSessionData } from '../data/documents'
-import { getDevisBySession, saveDevis, deleteDevis, calculerDevis, STATUTS_DEVIS, createDevisFromSession, convertirEnFacture, nextNumeroDevis } from '../data/devis'
+import { getDevisBySession, getDevisActifBySession, saveDevis, deleteDevis, calculerDevis, STATUTS_DEVIS, createDevisFromSession, convertirEnFacture, nextNumeroDevis } from '../data/devis'
 import { getFacturesBySession, saveFacture, deleteFacture, calculerFacture, STATUTS_FACTURE, TYPES_FACTURE, createFactureFromSession } from '../data/factures'
 import DevisDoc from './documents/DevisDoc'
 import Facture from './documents/Facture'
@@ -18,6 +18,7 @@ import Convocation from './documents/Convocation'
 import Convention from './documents/Convention'
 import Emargement from './documents/Emargement'
 import Attestation from './documents/Attestation'
+import PresentationDossierDoc from './documents/PresentationDossier'
 import Passation from '../pages/Passation'
 import EnqueteSatisfaction from './EnqueteSatisfaction'
 import './SessionDetail.css'
@@ -462,6 +463,7 @@ export default function SessionDetail({ session, onClose, onEdit }) {
               statuts={wfStatuts}
               inscriptions={inscriptions}
               stagiaires={stagiaires}
+              onNavigate={setTab}
               onUpdate={(stepId, status) => {
                 setWorkflowStep(session.id, stepId, status)
                 setWfStatuts(getWorkflowsForSession(session.id))
@@ -657,7 +659,7 @@ function TemplatePanel({ stepId, session }) {
   )
 }
 
-function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires }) {
+function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires, onNavigate }) {
   const groupes = ['client', 'apprenants']
   const [openQuizz, setOpenQuizz] = useState(null)
   const [openTpl, setOpenTpl] = useState(null)
@@ -673,6 +675,17 @@ function WorkflowsTab({ session, statuts, onUpdate, inscriptions, stagiaires }) 
           <span>Les boutons d'envoi seront actifs une fois le backend FastAPI déployé. Les quizz sont disponibles dès maintenant via lien partageable.</span>
         </div>
       </div>
+
+      {onNavigate && (
+        <div className="workflows-presentation-banner">
+          <span>🖼️</span>
+          <div>
+            <strong>Présentation du dossier</strong>
+            <span>Générer le récapitulatif visuel (programme, participants, financement) depuis l'onglet Documents.</span>
+          </div>
+          <button className="wf-btn wf-btn-tpl" onClick={() => onNavigate('documents')}>Voir la présentation →</button>
+        </div>
+      )}
 
       {groupes.map(groupe => {
         const steps = WORKFLOW_STEPS.filter(s => s.groupe === groupe)
@@ -1706,10 +1719,11 @@ function FactureForm({ facture, session, onSave, onCancel }) {
 // ====================================================
 
 const TYPES_DOCS = [
-  { id: 'convocation',  label: 'Convocation',             icon: '✉️',  desc: 'Envoyée avant la session à chaque participant', perParticipant: true },
-  { id: 'convention',   label: 'Convention de formation', icon: '📄',  desc: '10 clauses légales, liste participants, prix, signatures', perParticipant: false },
-  { id: 'emargement',   label: "Feuille d'émargement",   icon: '✍️',  desc: 'Preuve de présence — 1 feuille par occurrence', perParticipant: false },
-  { id: 'attestation',  label: 'Attestation',             icon: '🎓',  desc: 'Remise à chaque participant après la session', perParticipant: true },
+  { id: 'convocation',   label: 'Convocation',             icon: '✉️',   desc: 'Envoyée avant la session à chaque participant', perParticipant: true },
+  { id: 'convention',    label: 'Convention de formation', icon: '📄',   desc: '10 clauses légales, liste participants, prix, signatures', perParticipant: false },
+  { id: 'emargement',    label: "Feuille d'émargement",   icon: '✍️',   desc: 'Preuve de présence — 1 feuille par occurrence', perParticipant: false },
+  { id: 'attestation',   label: 'Attestation',             icon: '🎓',   desc: 'Remise à chaque participant après la session', perParticipant: true },
+  { id: 'presentation',  label: 'Présentation dossier',    icon: '🖼️',  desc: 'Récap visuel du dossier — programme, participants, financement', perParticipant: false },
 ]
 
 function DocumentsTab({ session, inscriptions, stagiaires }) {
@@ -1763,6 +1777,10 @@ function DocumentsTab({ session, inscriptions, stagiaires }) {
 
   function renderDoc() {
     const d = buildDataForOccurrence(occurrenceIdx)
+    if (typeDoc === 'presentation') {
+      const devis = getDevisActifBySession(session.id)
+      return <PresentationDossierDoc data={d} devis={devis} of={getParametres()} />
+    }
     if (typeDoc === 'emargement') return <Emargement data={d} />
     if (typeDoc === 'convention') return <Convention data={d} />
     if (typeDoc === 'convocation') {

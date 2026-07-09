@@ -533,6 +533,22 @@
 .workflows-aws-banner strong { display: block; font-weight: 700; color: #92400E; margin-bottom: 3px; }
 .workflows-aws-banner span:last-child { color: #78350F; }
 
+.workflows-presentation-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--vert-clair);
+  border: 1px solid var(--vert);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 13px;
+}
+.workflows-presentation-banner span:first-child { font-size: 18px; flex-shrink: 0; }
+.workflows-presentation-banner div { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.workflows-presentation-banner strong { font-weight: 700; color: var(--vert-fonce); }
+.workflows-presentation-banner div span { color: var(--texte-secondaire); }
+.workflows-presentation-banner .wf-btn { flex-shrink: 0; }
+
 .wf-groupe { display: flex; flex-direction: column; gap: 8px; }
 
 .wf-groupe-title {

@@ -6,6 +6,7 @@ import CatalogueAFS from './pages/CatalogueAFS'
 import Sessions from './pages/Sessions'
 import Stagiaires from './pages/Stagiaires'
 import Documents from './pages/Documents'
+import PresentationDossier from './pages/PresentationDossier'
 import Entreprises from './pages/Entreprises'
 import Formateurs from './pages/Formateurs'
 import Financeurs from './pages/Financeurs'
@@ -58,6 +59,7 @@ const NAV_ADMIN = [
       { id: 'bilan',        label: 'Bilan annuel',          icon: '📊' },
       { id: 'reclamations', label: 'Réclamations',          icon: '📋' },
       { id: 'documents',    label: 'Documents Qualiopi',    icon: '📄' },
+      { id: 'presentation', label: 'Présentation dossier',  icon: '🖼️' },
     ],
   },
   {
@@ -100,6 +102,7 @@ function PageContent({ currentPage }) {
       {currentPage === 'bilan'        && <BilanAnnuel />}
       {currentPage === 'reclamations' && <Reclamations />}
       {currentPage === 'documents'    && <Documents />}
+      {currentPage === 'presentation' && <PresentationDossier />}
       {currentPage === 'parametres'   && <Parametres />}
       {currentPage === 'veille'       && <TableauDeBord />}
       {currentPage === 'webinaires'   && <Webinaires />}

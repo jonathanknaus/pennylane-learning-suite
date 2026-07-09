@@ -1,0 +1,8 @@
+.presentation-dossier { display: flex; flex-direction: column; gap: 24px; }
+
+.presentation-resume {
+  font-size: 12px;
+  color: var(--texte-secondaire);
+  display: flex;
+  gap: 8px;
+}

@@ -31,6 +31,11 @@ export function getDevisBySession(sessionId) {
   return getDevis().filter(d => d.session_id === sessionId)
 }
 
+export function getDevisActifBySession(sessionId) {
+  const list = getDevisBySession(sessionId)
+  return list.find(d => d.statut === 'accepte') || list[0] || null
+}
+
 export function createDevisFromSession(session, format, prix) {
   return {
     ...EMPTY_DEVIS,
