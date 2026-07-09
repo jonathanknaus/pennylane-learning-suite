@@ -182,6 +182,69 @@
 /* ---- Financier ---- */
 .bilan-fin-rows { display: flex; flex-direction: column; gap: 10px; }
 
+/* ---- Sélecteur de mode ---- */
+.bilan-mode-switch { display: flex; gap: 8px; margin-bottom: 24px; }
+.bilan-mode-btn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #E5E7EB;
+  background: #fff;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.bilan-mode-btn:hover { border-color: var(--vert); }
+.bilan-mode-btn.active { background: var(--bg-dark); border-color: var(--bg-dark); color: var(--vert); }
+
+/* ---- Bilan par session ---- */
+.bilan-session-select { display: flex; flex-direction: column; gap: 8px; max-width: 480px; }
+.bilan-session-select label { font-size: 0.85rem; font-weight: 600; color: #374151; }
+
+.bilan-session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.bilan-card-full { grid-column: 1 / -1; }
+
+.bilan-incidents-list { display: flex; flex-direction: column; gap: 10px; }
+.bilan-incident-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #374151;
+  padding: 8px 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+.bilan-incident-row:last-child { border-bottom: none; }
+
+.bilan-session-form {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bilan-session-form h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6B7280;
+  margin: 0 0 4px;
+}
+.bilan-session-form textarea { resize: vertical; font-family: inherit; }
+
 .bilan-fin-row {
   display: flex;
   justify-content: space-between;

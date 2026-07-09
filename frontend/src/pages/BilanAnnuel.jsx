@@ -2,7 +2,10 @@ import { useState, useRef } from 'react'
 import { getSessions } from '../data/sessions'
 import { getStagiaires, getInscriptionsBySession } from '../data/stagiaires'
 import { getFactures } from '../data/factures'
-import { getAllReponsesChaudBySession } from '../data/satisfaction'
+import { getAllReponsesChaudBySession, getAllReponsesFroidBySession } from '../data/satisfaction'
+import { getResultatsSession } from '../data/questionnaires'
+import { getReclamations, TYPES_REMONTEE } from '../data/reclamations'
+import { getBilanSession, saveBilanSession } from '../data/bilan-session'
 import { getParametres } from '../data/parametres'
 import './BilanAnnuel.css'
 
@@ -93,7 +96,51 @@ function computeBilan(year) {
   }
 }
 
+// Bilan qualité d'une session unique — satisfaction, incidents, résultats d'évaluation
+// et actions d'amélioration, tel que défini pour le suivi Qualiopi par session.
+function computeBilanSession(sessionId) {
+  const session = getSessions().find(s => s.id === sessionId)
+  if (!session) return null
+
+  const inscriptions = getInscriptionsBySession(sessionId).filter(i => i.statut !== 'annule')
+  const stagiaires = getStagiaires()
+
+  const reponsesChaud = getAllReponsesChaudBySession(sessionId)
+  const moyennesChaud = reponsesChaud.map(r => r.moyenne).filter(m => m !== null)
+  const satisfactionMoyenne = moyennesChaud.length
+    ? Math.round((moyennesChaud.reduce((s, m) => s + m, 0) / moyennesChaud.length) * 10) / 10
+    : null
+  const tauxSatisfaction = inscriptions.length > 0 ? Math.round((reponsesChaud.length / inscriptions.length) * 100) : 0
+
+  const reponsesFroid = getAllReponsesFroidBySession(sessionId)
+  const recommandation = reponsesFroid
+    .map(r => r.reponses?.f4)
+    .filter(v => v !== null && v !== undefined)
+  const tauxRecommandation = recommandation.length
+    ? Math.round((recommandation.filter(v => v >= 7).length / recommandation.length) * 100)
+    : null
+
+  const incidents = getReclamations().filter(r => r.session_id === sessionId)
+
+  const resultats = getResultatsSession(sessionId).filter(r => r.type === 'post')
+  const scores = resultats.map(r => r.score).filter(s => s !== undefined && s !== null)
+  const tauxAtteinteObjectifs = scores.length
+    ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length)
+    : null
+
+  return {
+    session,
+    nbInscrits: inscriptions.length,
+    satisfactionMoyenne, tauxSatisfaction, nbReponsesChaud: reponsesChaud.length,
+    tauxRecommandation, nbReponsesFroid: reponsesFroid.length,
+    incidents,
+    tauxAtteinteObjectifs, nbResultats: resultats.length,
+    stagiaires,
+  }
+}
+
 export default function BilanAnnuel() {
+  const [mode, setMode] = useState('annuel') // 'annuel' | 'session'
   const [year, setYear] = useState(CURRENT_YEAR)
   const [printMode, setPrintMode] = useState(false)
   const bilan = computeBilan(year)
@@ -113,6 +160,32 @@ export default function BilanAnnuel() {
     { label: 'Sessions visio', value: bilan.sessionsByModalite.visio, icon: '💻' },
     { label: 'Sessions présentiel', value: bilan.sessionsByModalite.presentiel, icon: '🏫' },
   ]
+
+  const ModeSwitch = () => (
+    <div className="bilan-mode-switch">
+      <button className={`bilan-mode-btn ${mode === 'annuel' ? 'active' : ''}`} onClick={() => setMode('annuel')}>
+        📊 Bilan annuel
+      </button>
+      <button className={`bilan-mode-btn ${mode === 'session' ? 'active' : ''}`} onClick={() => setMode('session')}>
+        🎓 Bilan qualité par session
+      </button>
+    </div>
+  )
+
+  if (mode === 'session') {
+    return (
+      <div className="bilan-annuel">
+        <div className="bilan-topbar">
+          <div>
+            <h1 className="bilan-title">Bilan qualité par session</h1>
+            <p className="bilan-sub">Satisfaction, incidents, résultats d'évaluation et actions d'amélioration</p>
+          </div>
+        </div>
+        <ModeSwitch />
+        <BilanSessionView />
+      </div>
+    )
+  }
 
   if (printMode) {
     return (
@@ -143,6 +216,7 @@ export default function BilanAnnuel() {
           <button className="btn-primary" onClick={() => setPrintMode(true)}>🖨 Exporter PDF</button>
         </div>
       </div>
+      <ModeSwitch />
 
       {/* KPIs */}
       <div className="bilan-kpis">
@@ -294,6 +368,248 @@ export default function BilanAnnuel() {
           </table>
         </div>
       )}
+    </div>
+  )
+}
+
+function BilanSessionView() {
+  const [sessionId, setSessionId] = useState('')
+  const [printMode, setPrintMode] = useState(false)
+  const [champs, setChamps] = useState(() => sessionId ? getBilanSession(sessionId) : null)
+  const of = getParametres()
+  const sessions = getSessions()
+    .filter(s => s.statut === 'termine')
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+
+  const bilan = sessionId ? computeBilanSession(sessionId) : null
+
+  function selectSession(id) {
+    setSessionId(id)
+    setChamps(getBilanSession(id))
+  }
+
+  function updateChamp(key, value) {
+    const next = { ...champs, [key]: value }
+    setChamps(next)
+    saveBilanSession(sessionId, next)
+  }
+
+  if (!sessionId) {
+    return (
+      <div className="bilan-session-select">
+        <label>Choisir une session terminée</label>
+        <select className="bilan-year-select" value={sessionId} onChange={e => selectSession(e.target.value)}>
+          <option value="">— Sélectionner —</option>
+          {sessions.map(s => (
+            <option key={s.id} value={s.id}>{s.titre} — {s.client} {s.date ? `(${new Date(s.date + 'T12:00:00').toLocaleDateString('fr-FR')})` : ''}</option>
+          ))}
+        </select>
+        {sessions.length === 0 && <p className="bilan-empty-msg">Aucune session terminée pour le moment.</p>}
+      </div>
+    )
+  }
+
+  if (!bilan) return null
+
+  if (printMode) {
+    return (
+      <div className="bilan-annuel preview-mode">
+        <div className="preview-toolbar no-print">
+          <button className="btn-back-preview" onClick={() => setPrintMode(false)}>← Retour au bilan</button>
+          <div className="preview-info">Bilan qualité — {bilan.session.titre}</div>
+          <button className="btn-print-now" onClick={() => window.print()}>🖨 Imprimer / PDF</button>
+        </div>
+        <div className="print-area">
+          <BilanSessionPrint bilan={bilan} champs={champs} of={of} />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bilan-session-detail">
+      <div className="bilan-session-header">
+        <div>
+          <select className="bilan-year-select" value={sessionId} onChange={e => selectSession(e.target.value)}>
+            {sessions.map(s => (
+              <option key={s.id} value={s.id}>{s.titre} — {s.client} {s.date ? `(${new Date(s.date + 'T12:00:00').toLocaleDateString('fr-FR')})` : ''}</option>
+            ))}
+          </select>
+        </div>
+        <button className="btn-primary" onClick={() => setPrintMode(true)}>🖨 Exporter PDF</button>
+      </div>
+
+      <div className="bilan-grid">
+        <div className="bilan-card">
+          <h3>Satisfaction stagiaires</h3>
+          {bilan.satisfactionMoyenne !== null ? (
+            <>
+              <div className="bilan-score-big">
+                <span style={{ color: bilan.satisfactionMoyenne >= 8 ? '#10B981' : bilan.satisfactionMoyenne >= 6 ? '#F59E0B' : '#EF4444' }}>
+                  {bilan.satisfactionMoyenne}
+                </span>
+                <span className="bilan-score-max">/10</span>
+              </div>
+              <p className="bilan-score-detail">
+                {bilan.nbReponsesChaud}/{bilan.nbInscrits} réponse{bilan.nbReponsesChaud > 1 ? 's' : ''} · {bilan.tauxSatisfaction}% de taux de réponse
+              </p>
+            </>
+          ) : (
+            <p className="bilan-empty-msg">Aucune enquête à chaud complétée</p>
+          )}
+          {bilan.tauxRecommandation !== null && (
+            <p className="bilan-score-detail">Taux de recommandation (à froid) : <strong>{bilan.tauxRecommandation}%</strong> ({bilan.nbReponsesFroid} réponse{bilan.nbReponsesFroid > 1 ? 's' : ''})</p>
+          )}
+        </div>
+
+        <div className="bilan-card">
+          <h3>Résultats d'évaluation</h3>
+          {bilan.tauxAtteinteObjectifs !== null ? (
+            <>
+              <div className="bilan-score-big">
+                <span style={{ color: bilan.tauxAtteinteObjectifs >= 80 ? '#10B981' : bilan.tauxAtteinteObjectifs >= 60 ? '#F59E0B' : '#EF4444' }}>
+                  {bilan.tauxAtteinteObjectifs}
+                </span>
+                <span className="bilan-score-max">%</span>
+              </div>
+              <p className="bilan-score-detail">Taux d'atteinte des objectifs · {bilan.nbResultats} évaluation{bilan.nbResultats > 1 ? 's' : ''} post-formation</p>
+            </>
+          ) : (
+            <p className="bilan-empty-msg">Aucune évaluation post-formation complétée</p>
+          )}
+        </div>
+
+        <div className="bilan-card bilan-card-full">
+          <h3>Incidents ou signalements ({bilan.incidents.length})</h3>
+          {bilan.incidents.length === 0 ? (
+            <p className="bilan-empty-msg">Aucun incident ou signalement enregistré pour cette session.</p>
+          ) : (
+            <div className="bilan-incidents-list">
+              {bilan.incidents.map(inc => {
+                const type = TYPES_REMONTEE.find(t => t.id === inc.type)
+                return (
+                  <div key={inc.id} className="bilan-incident-row">
+                    {type && <span className="badge-pill small" style={{ color: type.color, background: type.bg }}>{type.label}</span>}
+                    <span>{inc.description || '—'}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="bilan-session-form">
+        <h3>Synthèse qualitative</h3>
+        <div className="form-group">
+          <label>Points positifs essentiels signalés</label>
+          <textarea rows={2} value={champs.points_positifs} onChange={e => updateChamp('points_positifs', e.target.value)} placeholder="Éléments décrits par les apprenants dans le questionnaire de satisfaction…" />
+        </div>
+        <div className="form-group">
+          <label>Points à améliorer</label>
+          <textarea rows={2} value={champs.points_ameliorer} onChange={e => updateChamp('points_ameliorer', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Besoins complémentaires</label>
+          <textarea rows={2} value={champs.besoins_complementaires} onChange={e => updateChamp('besoins_complementaires', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Précisions sur la satisfaction / recommandation (si nécessaire)</label>
+          <textarea rows={2} value={champs.precisions_satisfaction} onChange={e => updateChamp('precisions_satisfaction', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Précisions sur le taux d'atteinte des objectifs (si nécessaire)</label>
+          <textarea rows={2} value={champs.precisions_evaluation} onChange={e => updateChamp('precisions_evaluation', e.target.value)} />
+        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Actions d'amélioration envisagées</label>
+            <textarea rows={2} value={champs.actions_amelioration} onChange={e => updateChamp('actions_amelioration', e.target.value)} placeholder="Ex : vérification du matériel en amont, modification des supports…" />
+          </div>
+          <div className="form-group">
+            <label>Délai de mise en œuvre</label>
+            <input type="text" value={champs.delai_action} onChange={e => updateChamp('delai_action', e.target.value)} placeholder="Ex : avant la prochaine session" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BilanSessionPrint({ bilan, champs, of }) {
+  const s = bilan.session
+  return (
+    <div className="bilan-print-page">
+      <div className="bilan-print-header">
+        <div>
+          <div className="bilan-print-of">{of.of_nom}</div>
+          <div className="bilan-print-of-detail">SIRET {of.of_siret} · N° DA {of.of_da}</div>
+          <div className="bilan-print-of-detail">{of.of_adresse}</div>
+        </div>
+        <div className="bilan-print-title-block">
+          <div className="bilan-print-title">Bilan qualité — session</div>
+          <div className="bilan-print-year">{s.titre}</div>
+          <div className="bilan-print-qualiopi">
+            <span className="qualiopi-badge small">Qualiopi</span>
+            <span>{s.client} · {s.date ? new Date(s.date + 'T12:00:00').toLocaleDateString('fr-FR') : '—'}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bilan-print-section-title">Satisfaction stagiaires</div>
+      <table className="bilan-print-fin-table">
+        <tbody>
+          <tr><td>Taux de satisfaction global</td><td><strong>{bilan.satisfactionMoyenne !== null ? `${bilan.satisfactionMoyenne}/10` : '—'}</strong></td></tr>
+          <tr><td>Taux de recommandation</td><td>{bilan.tauxRecommandation !== null ? `${bilan.tauxRecommandation}%` : '—'}</td></tr>
+          <tr><td>Points positifs essentiels signalés</td><td>{champs.points_positifs || '—'}</td></tr>
+          <tr><td>Points à améliorer</td><td>{champs.points_ameliorer || '—'}</td></tr>
+          <tr><td>Besoins complémentaires</td><td>{champs.besoins_complementaires || '—'}</td></tr>
+          <tr><td>Précisions</td><td>{champs.precisions_satisfaction || '—'}</td></tr>
+        </tbody>
+      </table>
+
+      <div className="bilan-print-section-title">Incidents ou signalements</div>
+      {bilan.incidents.length === 0 ? (
+        <p className="bilan-print-empty">Aucun incident ou signalement.</p>
+      ) : (
+        <table className="bilan-print-fin-table">
+          <tbody>
+            {bilan.incidents.map(inc => {
+              const type = TYPES_REMONTEE.find(t => t.id === inc.type)
+              return <tr key={inc.id}><td>{type?.label || inc.type}</td><td>{inc.description || '—'}</td></tr>
+            })}
+          </tbody>
+        </table>
+      )}
+
+      <div className="bilan-print-section-title">Résultats d'évaluation</div>
+      <table className="bilan-print-fin-table">
+        <tbody>
+          <tr><td>Taux d'atteinte des objectifs</td><td><strong>{bilan.tauxAtteinteObjectifs !== null ? `${bilan.tauxAtteinteObjectifs}%` : '—'}</strong></td></tr>
+          <tr><td>Précisions</td><td>{champs.precisions_evaluation || '—'}</td></tr>
+        </tbody>
+      </table>
+
+      <div className="bilan-print-section-title">Actions d'amélioration envisagées</div>
+      <table className="bilan-print-fin-table">
+        <tbody>
+          <tr><td>Action</td><td>{champs.actions_amelioration || '—'}</td></tr>
+          <tr><td>Délai</td><td>{champs.delai_action || '—'}</td></tr>
+        </tbody>
+      </table>
+
+      <div className="bilan-print-signatures">
+        <div className="bilan-print-sig-block">
+          <div className="bilan-print-sig-label">Établi par</div>
+          <div className="bilan-print-sig-name">{of.of_signataire}</div>
+          <div className="bilan-print-sig-title">{of.of_titre}</div>
+          <div className="bilan-print-sig-box" />
+        </div>
+        <div className="bilan-print-sig-block">
+          <div className="bilan-print-sig-label">Date d'établissement</div>
+          <div className="bilan-print-sig-name">{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+        </div>
+      </div>
     </div>
   )
 }
