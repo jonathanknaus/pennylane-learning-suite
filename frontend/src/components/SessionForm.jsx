@@ -3,6 +3,7 @@ import { saveSession, STATUTS, MODALITES, FORMATS, ALL_MODULES, QUALIOPI_OPTIONS
 import { THEMATIQUES } from '../data/catalogue-afs'
 import { getGestionnaires, getGestionnaireDefaut } from '../data/gestionnaires'
 import { getFormateurs } from '../data/formateurs'
+import { suggererFormateurs, respecteDelaiQualiopi, joursAvantDate, DELAI_MIN_JOURS } from '../data/affectation-formateurs'
 import './SessionForm.css'
 
 const EMPTY = {
@@ -422,6 +423,17 @@ export default function SessionForm({ session, onSaved, onCancel }) {
               </div>
             </div>
 
+            {/* Suggestion de formateur */}
+            {form.modules.length > 0 && (
+              <FormateursSuggeres
+                moduleIds={form.modules}
+                dateStr={form.date}
+                excludeSessionId={form.id}
+                onAssigner={fmt => setForm(f => ({ ...f, formateurId: fmt.id, formateur: `${fmt.prenom} ${fmt.nom}` }))}
+                formateurActuelId={form.formateurId}
+              />
+            )}
+
             {/* Notes */}
             <div className="form-section">
               <h2 className="form-section-title">Notes internes</h2>
@@ -487,6 +499,45 @@ export default function SessionForm({ session, onSaved, onCancel }) {
           </aside>
         </div>
       </form>
+    </div>
+  )
+}
+
+function FormateursSuggeres({ moduleIds, dateStr, excludeSessionId, onAssigner, formateurActuelId }) {
+  const suggestions = suggererFormateurs(moduleIds, dateStr, { excludeSessionId })
+  const delaiOk = respecteDelaiQualiopi(dateStr)
+  const jours = joursAvantDate(dateStr)
+
+  if (suggestions.length === 0) return null
+
+  return (
+    <div className="form-section">
+      <h2 className="form-section-title">Formateurs suggérés</h2>
+      {dateStr && !delaiOk && (
+        <div className="form-hint-warning">
+          ⚠️ Cette date est dans {jours >= 0 ? `${jours} jour${jours > 1 ? 's' : ''}` : 'le passé'} — la règle Qualiopi recommande un délai minimum de {DELAI_MIN_JOURS} jours (15 jours de dépôt de financement + 1 semaine de marge).
+        </div>
+      )}
+      <div className="fmt-suggeres-list">
+        {suggestions.slice(0, 6).map(({ formateur, couvreTout, disponible, nbModulesCouverts }) => (
+          <div key={formateur.id} className={`fmt-suggere-row ${formateur.id === formateurActuelId ? 'active' : ''}`}>
+            <div className="fmt-suggere-info">
+              <span className="fmt-suggere-nom">{formateur.prenom} {formateur.nom}</span>
+              <span className="fmt-suggere-badges">
+                {couvreTout
+                  ? <span className="fmt-badge fmt-badge-ok">✓ Toutes compétences</span>
+                  : <span className="fmt-badge fmt-badge-partiel">{nbModulesCouverts}/{moduleIds.length} module{moduleIds.length > 1 ? 's' : ''}</span>}
+                {disponible
+                  ? <span className="fmt-badge fmt-badge-ok">Disponible</span>
+                  : <span className="fmt-badge fmt-badge-warn">Déjà occupé ce jour</span>}
+              </span>
+            </div>
+            <button type="button" className="btn-secondary-sm" onClick={() => onAssigner(formateur)} disabled={formateur.id === formateurActuelId}>
+              {formateur.id === formateurActuelId ? '✓ Assigné' : 'Assigner'}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
