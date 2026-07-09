@@ -30,7 +30,10 @@ import Devis from './pages/Devis'
 import CentreNotifications from './components/CentreNotifications'
 import { getGestionnaires, getGestionnaireDefaut } from './data/gestionnaires'
 import { scanRappels } from './data/rappels'
+import { getInitialNavState, pushNavState, replaceNavState, readNavState } from './lib/navigation'
 import './App.css'
+
+const NAV_DEFAULT = { page: 'catalogue', sessionId: null, view: null, tab: null }
 
 const NAV_ADMIN = [
   {
@@ -92,11 +95,11 @@ function RoleBadge({ role }) {
   return <span className="role-badge role-formateur">Formateur</span>
 }
 
-function PageContent({ currentPage, onNavigate }) {
+function PageContent({ currentPage, onNavigate, nav, onNavigateNav }) {
   return (
     <>
       {currentPage === 'catalogue'    && <CatalogueAFS />}
-      {currentPage === 'sessions'     && <Sessions onNavigate={onNavigate} />}
+      {currentPage === 'sessions'     && <Sessions onNavigate={onNavigate} nav={nav} onNavigateNav={onNavigateNav} />}
       {currentPage === 'stagiaires'   && <Stagiaires />}
       {currentPage === 'entreprises'  && <Entreprises />}
       {currentPage === 'formateurs'   && <Formateurs />}
@@ -151,6 +154,7 @@ export default function App() {
   const stored = getSession()
   const [user, setUser] = useState(stored ? getCurrentUser() : null)
   const [page, setPage] = useState(null)
+  const [nav, setNav] = useState(() => getInitialNavState(NAV_DEFAULT))
   const [quizParams, setQuizParams] = useState(() => parseQuizHash())
   const [evalParams, setEvalParams] = useState(() => parseEvalHash())
   const [portailFmt, setPortailFmt] = useState(() => isPortailFormateurHash())
@@ -170,6 +174,30 @@ export default function App() {
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
+
+  // Le bouton retour du navigateur restaure l'écran admin précédent (page, session
+  // ouverte, onglet) plutôt que de quitter l'application.
+  useEffect(() => {
+    function onPopState(e) {
+      const restored = readNavState(e)
+      if (restored) setNav(restored)
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
+  // navigate({ page }) change de page sidebar (réinitialise session/onglet) ;
+  // navigate({ sessionId, view, tab }) affine l'écran courant (ex: ouvrir une session,
+  // changer d'onglet) sans changer de page. { replace: true } évite d'empiler une
+  // entrée d'historique (ex: bascule d'onglet de session).
+  function navigate(patch, { replace = false } = {}) {
+    const next = 'page' in patch && patch.page !== nav.page
+      ? { ...NAV_DEFAULT, ...patch }
+      : { ...nav, ...patch }
+    setNav(next)
+    if (replace) replaceNavState(next)
+    else pushNavState(next)
+  }
 
   useEffect(() => { scanRappels() }, [])
 
@@ -273,7 +301,7 @@ export default function App() {
       return
     }
     setUser(getCurrentUser())
-    setPage('catalogue')
+    navigate({ page: 'catalogue' }, { replace: true })
   }
 
   function handleLogout() {
@@ -289,7 +317,7 @@ export default function App() {
     return <AccueilPublic onLogin={() => setPage('login')} />
   }
 
-  const currentPage = page || 'catalogue'
+  const currentPage = nav.page || 'catalogue'
   // Tout utilisateur admin est un gestionnaire (Sarah ou un autre) — on résout son identité
   // par email pour rattacher le centre de notifications au bon destinataire.
   const gestionnaireCourant = getGestionnaires().find(g => g.email?.toLowerCase() === user?.email?.toLowerCase())
@@ -317,7 +345,7 @@ export default function App() {
                 <button
                   key={p.id}
                   className={`sidebar-link ${currentPage === p.id ? 'active' : ''}`}
-                  onClick={() => setPage(p.id)}
+                  onClick={() => navigate({ page: p.id })}
                 >
                   <span className="sidebar-icon">{p.icon}</span>
                   {p.label}
@@ -330,7 +358,7 @@ export default function App() {
         <div className="sidebar-footer">
           <button
             className={`sidebar-link ${currentPage === 'parametres' ? 'active' : ''}`}
-            onClick={() => setPage('parametres')}
+            onClick={() => navigate({ page: 'parametres' })}
           >
             <span className="sidebar-icon">⚙️</span>
             Paramètres
@@ -355,7 +383,7 @@ export default function App() {
                 destinataireType="gestionnaire"
                 destinataireId={gestionnaireCourant.id}
                 vueGlobale
-                onNavigateSession={() => setPage('sessions')}
+                onNavigateSession={() => navigate({ page: 'sessions' })}
               />
             )}
             <RoleBadge role={user?.role} />
@@ -363,7 +391,7 @@ export default function App() {
           </div>
         </header>
         <div className="sidebar-content-inner">
-          <PageContent currentPage={currentPage} onNavigate={setPage} />
+          <PageContent currentPage={currentPage} onNavigate={p => navigate({ page: p })} nav={nav} onNavigateNav={navigate} />
         </div>
       </div>
     </div>

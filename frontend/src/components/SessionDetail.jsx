@@ -29,8 +29,10 @@ import './SessionDetail.css'
 
 const TABS = ['participants', 'evaluations', 'satisfaction', 'workflows', 'planification', 'besoin', 'documents', 'finance']
 
-export default function SessionDetail({ session, onClose, onEdit, onNavigateApp }) {
-  const [tab, setTab] = useState('participants')
+export default function SessionDetail({ session, onClose, onEdit, onNavigateApp, tab: tabProp, onNavigateTab }) {
+  const [localTab, setLocalTab] = useState('participants')
+  const tab = tabProp || localTab
+  const setTab = onNavigateTab || setLocalTab
   const [wfStatuts, setWfStatuts] = useState(() => getWorkflowsForSession(session.id))
   const [inscriptions, setInscriptions] = useState([])
   const [stagiaires, setStagiaires] = useState([])

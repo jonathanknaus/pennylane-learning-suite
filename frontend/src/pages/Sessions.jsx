@@ -5,11 +5,24 @@ import SessionForm from '../components/SessionForm'
 import SessionDetail from '../components/SessionDetail'
 import './Sessions.css'
 
-export default function Sessions({ onNavigate }) {
+const NAV_LOCAL_FALLBACK = { view: 'liste', sessionId: null, tab: null }
+
+export default function Sessions({ onNavigate, nav, onNavigateNav }) {
   const [sessions, setSessions] = useState([])
-  const [view, setView] = useState('liste') // 'liste' | 'form' | 'detail'
-  const [editing, setEditing] = useState(null)
   const [filtreStatut, setFiltreStatut] = useState('tous')
+
+  // Navigation locale repliée sur nav (page/session/onglet) quand disponible — permet
+  // au bouton retour du navigateur de restaurer exactement la vue précédente. Sans
+  // nav (composant utilisé hors contexte App), on retombe sur un état local classique.
+  const [localNav, setLocalNav] = useState(NAV_LOCAL_FALLBACK)
+  const effectiveNav = nav || localNav
+  const view = effectiveNav.view || 'liste'
+  const sessionId = effectiveNav.sessionId
+
+  function setNav(patch, opts) {
+    if (onNavigateNav) onNavigateNav(patch, opts)
+    else setLocalNav(n => ({ ...n, ...patch }))
+  }
 
   useEffect(() => {
     seedDemoSessions()
@@ -27,25 +40,23 @@ export default function Sessions({ onNavigate }) {
   }
 
   function handleEdit(session) {
-    setEditing(session)
-    setView('form')
+    setNav({ view: 'form', sessionId: session.id })
   }
 
   function handleNew() {
-    setEditing(null)
-    setView('form')
+    setNav({ view: 'form', sessionId: null })
   }
 
   function handleSaved() {
     refresh()
-    setView('liste')
-    setEditing(null)
+    setNav({ view: 'liste', sessionId: null })
   }
 
   function handleOpenDetail(session) {
-    setEditing(session)
-    setView('detail')
+    setNav({ view: 'detail', sessionId: session.id, tab: null })
   }
+
+  const editing = sessionId ? sessions.find(s => s.id === sessionId) : null
 
   const sessionsFiltrees = filtreStatut === 'tous'
     ? sessions
@@ -58,7 +69,7 @@ export default function Sessions({ onNavigate }) {
       <SessionForm
         session={editing}
         onSaved={handleSaved}
-        onCancel={() => setView(editing ? 'detail' : 'liste')}
+        onCancel={() => setNav({ view: editing ? 'detail' : 'liste' })}
       />
     )
   }
@@ -67,9 +78,11 @@ export default function Sessions({ onNavigate }) {
     return (
       <SessionDetail
         session={editing}
-        onClose={() => { refresh(); setView('liste') }}
-        onEdit={() => setView('form')}
+        onClose={() => { refresh(); setNav({ view: 'liste', sessionId: null }) }}
+        onEdit={() => setNav({ view: 'form' })}
         onNavigateApp={onNavigate}
+        tab={effectiveNav.tab}
+        onNavigateTab={t => setNav({ tab: t }, { replace: true })}
       />
     )
   }
