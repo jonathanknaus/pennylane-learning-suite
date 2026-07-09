@@ -1,3 +1,5 @@
+import { getLienBesoin } from './questionnaire-besoin'
+
 export function getTemplate(stepId, session) {
   const date = session.date
     ? new Date(session.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -12,7 +14,7 @@ export function getTemplate(stepId, session) {
   const TEMPLATES = {
     questionnaire_besoins: {
       objet: `[Formation AFS] Questionnaire de besoins — ${titre}`,
-      corps: `Bonjour,\n\nSuite à notre échange au sujet de la formation "${titre}", je vous adresse notre questionnaire de besoins.\n\nObjectif : adapter au mieux le contenu et le programme à vos équipes.\n\n→ [INSÉRER LIEN QUESTIONNAIRE]\n\nMerci de le compléter idéalement avant le [DATE LIMITE].\n\nCordialement,\n${formateur}\nÉquipe Formation AFS — Pennylane`,
+      corps: `Bonjour,\n\nSuite à notre échange au sujet de la formation "${titre}", je vous adresse notre questionnaire de besoins.\n\nObjectif : adapter au mieux le contenu et le programme à vos équipes.\n\n→ ${getLienBesoin(session.id)}\n\nMerci de le compléter idéalement avant le [DATE LIMITE].\n\nCordialement,\n${formateur}\nÉquipe Formation AFS — Pennylane`,
     },
     collecte_dates: {
       objet: `[Formation AFS] Confirmation date & participants — ${titre}`,
