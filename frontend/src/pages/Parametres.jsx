@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { getParametres, saveParametres, CHAMPS_OF, TEMPLATE_ACCES_CABINET_DEFAUT } from '../data/parametres'
-import { THEMATIQUES } from '../data/catalogue-afs'
+import { getThematiques } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
 import { getQuestionsQB, saveQuestionsQB, resetQuestionsQB, DEFAULT_QUESTIONS_QB } from '../data/questionnaire-besoin'
 import './Parametres.css'
@@ -147,6 +147,7 @@ function BanqueQuestions() {
   const [draft, setDraft] = useState([])
   const [saved, setSaved] = useState(false)
 
+  const THEMATIQUES = getThematiques()
   const allModules = THEMATIQUES.flatMap(t => t.modules.map(m => ({ ...m, thematique: t.titre })))
 
   function selectModule(moduleId) {

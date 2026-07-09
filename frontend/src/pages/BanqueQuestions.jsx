@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { THEMATIQUES } from '../data/catalogue-afs'
+import { getThematiques } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
 import './BanqueQuestions.css'
 
@@ -15,6 +15,7 @@ export default function BanqueQuestions() {
   const [draft, setDraft] = useState([])
   const [saved, setSaved] = useState(false)
 
+  const THEMATIQUES = getThematiques()
   const allModules = THEMATIQUES.flatMap(t => t.modules.map(m => ({ ...m, thematique: t.titre })))
 
   function selectModule(moduleId) {

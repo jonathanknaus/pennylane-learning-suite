@@ -6,13 +6,9 @@ import {
 import { saveFacture } from '../data/factures'
 import { getSessions } from '../data/sessions'
 import { getParametres } from '../data/parametres'
-import { THEMATIQUES } from '../data/catalogue-afs'
+import { getThematiques } from '../data/catalogue-afs'
 import DevisDoc from '../components/documents/DevisDoc'
 import './Devis.css'
-
-const ALL_MODULES_CATALOGUE = THEMATIQUES.flatMap(t =>
-  t.modules.map(m => ({ ...m, thematique: t.titre, thematiqueId: t.id }))
-)
 
 function Badge({ id, list, small }) {
   const item = list.find(x => x.id === id)
@@ -30,6 +26,10 @@ export default function Devis() {
   const [list, setList] = useState(getDevis)
   const sessions = getSessions()
   const of = getParametres()
+  const THEMATIQUES = getThematiques()
+  const ALL_MODULES_CATALOGUE = THEMATIQUES.flatMap(t =>
+    t.modules.map(m => ({ ...m, thematique: t.titre, thematiqueId: t.id }))
+  )
 
   const [filterStatut, setFilterStatut] = useState('all')
   const [preview, setPreview] = useState(null)

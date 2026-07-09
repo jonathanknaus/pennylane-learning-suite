@@ -1,4 +1,5 @@
-import { getSessions, ALL_MODULES, FORMATS } from './sessions'
+import { getSessions, FORMATS } from './sessions'
+import { getAllModules } from './catalogue-afs'
 import { getStagiaires, getInscriptionsBySession } from './stagiaires'
 
 export const TYPES_DOCUMENT = [
@@ -22,8 +23,9 @@ export function getSessionData(sessionId) {
     }))
     .filter(p => p.stagiaire)
 
+  const allModules = getAllModules()
   const modules = (session.modules || [])
-    .map(id => ALL_MODULES.find(m => m.id === id))
+    .map(id => allModules.find(m => m.id === id))
     .filter(Boolean)
 
   const format = FORMATS.find(f => f.id === session.format)

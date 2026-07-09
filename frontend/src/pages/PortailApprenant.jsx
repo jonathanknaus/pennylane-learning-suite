@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getStagiaires, getInscriptionsByStagiaire } from '../data/stagiaires'
-import { getSessions, STATUTS, MODALITES, FORMATS, ALL_MODULES } from '../data/sessions'
+import { getSessions, STATUTS, MODALITES, FORMATS } from '../data/sessions'
+import { getAllModules } from '../data/catalogue-afs'
 import { getFormateurs } from '../data/formateurs'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid } from '../data/satisfaction'
@@ -101,7 +102,7 @@ function EmargementModule({ session, module, stagiaire }) {
 function SessionCard({ session, inscription, stagiaire }) {
   const statut = STATUTS.find(s => s.id === session.statut) || STATUTS[0]
   const format = FORMATS.find(f => f.id === session.format)
-  const modules = (session.modules || []).map(id => ALL_MODULES.find(m => m.id === id)).filter(Boolean)
+  const modules = (session.modules || []).map(id => getAllModules().find(m => m.id === id)).filter(Boolean)
   const formateurs = getFormateurs()
   const formateur = formateurs.find(f =>
     f.id === session.formateurId ||

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { saveSession, STATUTS, MODALITES, FORMATS, ALL_MODULES, QUALIOPI_OPTIONS } from '../data/sessions'
-import { THEMATIQUES } from '../data/catalogue-afs'
+import { saveSession, STATUTS, MODALITES, FORMATS, QUALIOPI_OPTIONS } from '../data/sessions'
+import { getThematiques } from '../data/catalogue-afs'
 import { getGestionnaires, getGestionnaireDefaut } from '../data/gestionnaires'
 import { getFormateurs } from '../data/formateurs'
 import { suggererFormateurs, respecteDelaiQualiopi, joursAvantDate, DELAI_MIN_JOURS } from '../data/affectation-formateurs'
@@ -30,6 +30,7 @@ const EMPTY = {
 export default function SessionForm({ session, onSaved, onCancel }) {
   const gestionnaires = getGestionnaires()
   const formateurs = getFormateurs()
+  const THEMATIQUES = getThematiques()
   const [form, setForm] = useState(session
     ? { qualiopi: 'non', occurrences: [], gestionnaireId: '', formateurId: '', formateurAppuiId: '', ...session }
     : { ...EMPTY, gestionnaireId: getGestionnaireDefaut()?.id || '' })

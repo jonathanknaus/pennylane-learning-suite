@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { login, logout, getSession, getCurrentUser, ROLES } from '../data/auth'
 import { getFormateurs } from '../data/formateurs'
-import { getSessions, STATUTS, MODALITES, FORMATS, ALL_MODULES } from '../data/sessions'
+import { getSessions, STATUTS, MODALITES, FORMATS } from '../data/sessions'
+import { getAllModules } from '../data/catalogue-afs'
 import { getInscriptionsBySession, getStagiaires } from '../data/stagiaires'
 import { getResultat } from '../data/questionnaires'
 import { getReponsesChaud } from '../data/satisfaction'
@@ -75,7 +76,7 @@ function SessionCard({ session, formateur }) {
   const stagiaires = getStagiaires()
   const statut = STATUTS.find(s => s.id === session.statut) || STATUTS[0]
   const format = FORMATS.find(f => f.id === session.format)
-  const modules = (session.modules || []).map(id => ALL_MODULES.find(m => m.id === id)).filter(Boolean)
+  const modules = (session.modules || []).map(id => getAllModules().find(m => m.id === id)).filter(Boolean)
   const dateFormatee = session.date
     ? new Date(session.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     : '—'

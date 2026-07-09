@@ -1,17 +1,18 @@
 import { useState } from 'react'
-import { THEMATIQUES, TARIFS, WEBINAIRES_EMBARQUEMENT } from '../data/catalogue-afs'
+import { getThematiques, TARIFS, WEBINAIRES_EMBARQUEMENT, ajouterThematiqueCustom, ajouterModuleCustom } from '../data/catalogue-afs'
 import { getBanqueModule } from '../data/questionnaires'
 import { getModuleConfig, saveModuleConfig, BPF_SPECIALITES, BPF_ITEMS } from '../data/catalogue-config'
 import ThematiqueCard from '../components/ThematiqueCard'
 import TarifsTable from '../components/TarifsTable'
 import './CatalogueAFS.css'
 
-const ALL_MODULES = THEMATIQUES.flatMap(t => t.modules.map(m => ({ ...m, thematique: t })))
-
 export default function CatalogueAFS({ publicMode = false }) {
   const [selectedModules, setSelectedModules] = useState([])
   const [detailModule, setDetailModule] = useState(null)
   const [detailTab, setDetailTab] = useState('description')
+  const [showNouveauModule, setShowNouveauModule] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const THEMATIQUES = getThematiques()
 
   function toggleModule(moduleId) {
     setSelectedModules(prev =>
@@ -58,11 +59,24 @@ export default function CatalogueAFS({ publicMode = false }) {
         </p>
       </div>
 
+      {showNouveauModule && (
+        <NouveauModuleModal
+          thematiques={THEMATIQUES}
+          onClose={() => setShowNouveauModule(false)}
+          onCreated={() => { setShowNouveauModule(false); setRefreshKey(k => k + 1) }}
+        />
+      )}
+
       <div className="catalogue-layout">
         <div className="catalogue-modules">
           <div className="section-header">
-            <h2>Modules disponibles</h2>
-            <p>Sélectionnez les modules pour construire votre programme</p>
+            <div>
+              <h2>Modules disponibles</h2>
+              <p>Sélectionnez les modules pour construire votre programme</p>
+            </div>
+            {!publicMode && (
+              <button className="btn-primary" onClick={() => setShowNouveauModule(true)}>+ Ajouter un module</button>
+            )}
           </div>
 
           {THEMATIQUES.map(thematique => (
@@ -524,6 +538,114 @@ function DetailModal({ module, thematique, isSelected, onToggle, onClose, tab, o
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function NouveauModuleModal({ thematiques, onClose, onCreated }) {
+  const [thematiqueId, setThematiqueId] = useState(thematiques[0]?.id || '__nouvelle__')
+  const [nouvelleThematiqueTitre, setNouvelleThematiqueTitre] = useState('')
+  const [nouvelleThematiqueEmoji, setNouvelleThematiqueEmoji] = useState('📦')
+  const [titre, setTitre] = useState('')
+  const [description, setDescription] = useState('')
+  const [objectifs, setObjectifs] = useState([''])
+  const [error, setError] = useState('')
+
+  function updateObjectif(idx, val) {
+    setObjectifs(o => o.map((x, i) => i === idx ? val : x))
+  }
+  function addObjectif() {
+    setObjectifs(o => [...o, ''])
+  }
+  function removeObjectif(idx) {
+    setObjectifs(o => o.filter((_, i) => i !== idx))
+  }
+
+  function handleCreer(e) {
+    e.preventDefault()
+    if (!titre.trim()) { setError('Le titre du module est requis.'); return }
+
+    let cibleId = thematiqueId
+    if (thematiqueId === '__nouvelle__') {
+      if (!nouvelleThematiqueTitre.trim()) { setError('Le titre de la nouvelle thématique est requis.'); return }
+      const nouvelle = ajouterThematiqueCustom({ emoji: nouvelleThematiqueEmoji || '📦', titre: nouvelleThematiqueTitre.trim() })
+      cibleId = nouvelle[nouvelle.length - 1].id
+    }
+
+    ajouterModuleCustom(cibleId, {
+      titre: titre.trim(),
+      description: description.trim(),
+      objectifs: objectifs.map(o => o.trim()).filter(Boolean),
+    })
+    onCreated()
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-nouveau-module" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Nouveau module de formation</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <form onSubmit={handleCreer} className="modal-form">
+          <div className="form-group">
+            <label>Thématique</label>
+            <select value={thematiqueId} onChange={e => setThematiqueId(e.target.value)}>
+              {thematiques.map(t => (
+                <option key={t.id} value={t.id}>{t.emoji} {t.titre}</option>
+              ))}
+              <option value="__nouvelle__">+ Nouvelle thématique…</option>
+            </select>
+          </div>
+
+          {thematiqueId === '__nouvelle__' && (
+            <div className="form-row">
+              <div className="form-group form-group-sm">
+                <label>Emoji</label>
+                <input value={nouvelleThematiqueEmoji} onChange={e => setNouvelleThematiqueEmoji(e.target.value)} maxLength={2} />
+              </div>
+              <div className="form-group">
+                <label>Titre de la thématique *</label>
+                <input value={nouvelleThematiqueTitre} onChange={e => setNouvelleThematiqueTitre(e.target.value)} placeholder="Ex : Gestion RH & Paie" />
+              </div>
+            </div>
+          )}
+
+          <div className="form-group">
+            <label>Titre du module *</label>
+            <input value={titre} onChange={e => setTitre(e.target.value)} placeholder="Ex : Déclaration sociale nominative" />
+          </div>
+
+          <div className="form-group">
+            <label>Description</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Description du module…" />
+          </div>
+
+          <div className="form-group">
+            <label>Objectifs pédagogiques</label>
+            {objectifs.map((obj, idx) => (
+              <div key={idx} className="catalogue-obj-row">
+                <span className="catalogue-obj-num">{idx + 1}</span>
+                <input
+                  className="catalogue-obj-input"
+                  value={obj}
+                  onChange={e => updateObjectif(idx, e.target.value)}
+                  placeholder="Objectif pédagogique…"
+                />
+                <button type="button" className="detail-seq-btn danger" onClick={() => removeObjectif(idx)} title="Supprimer">✕</button>
+              </div>
+            ))}
+            <button type="button" className="detail-seq-add" onClick={addObjectif}>+ Ajouter un objectif</button>
+          </div>
+
+          {error && <div className="form-error form-error-block">{error}</div>}
+
+          <div className="modal-actions">
+            <button type="submit" className="btn-primary">Créer le module</button>
+            <button type="button" className="btn-secondary" onClick={onClose}>Annuler</button>
+          </div>
+        </form>
       </div>
     </div>
   )

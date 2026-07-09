@@ -1,4 +1,4 @@
-import { THEMATIQUES, TARIFS } from './catalogue-afs'
+import { TARIFS, getAllModules } from './catalogue-afs'
 
 export const FORMATS = Object.entries(TARIFS)
   .filter(([k]) => k !== 'journee_sur_mesure')
@@ -8,9 +8,11 @@ export const FORMATEURS = [
   { id: 'f1', nom: 'Équipe AFS', email: 'afs@pennylane.com' },
 ]
 
-export const ALL_MODULES = THEMATIQUES.flatMap(t =>
-  t.modules.map(m => ({ ...m, thematique: t.titre, thematiqueId: t.id }))
-)
+// Recalculé à chaque appel (pas un const figé), pour inclure les modules
+// personnalisés créés depuis le Catalogue AFS après le chargement de la page.
+export function getModulesDisponibles() {
+  return getAllModules()
+}
 
 const STORAGE_KEY = 'pls_sessions'
 

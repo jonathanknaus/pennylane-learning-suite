@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { getStagiaires, getInscriptionsBySession, inscrire, desinscrire, updatePresence, updateStatutInscription, STATUTS_INSCRIPTION, createStagiaire } from '../data/stagiaires'
 import * as XLSX from 'xlsx'
-import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
+import { FORMATS, STATUTS, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
+import { getAllModules } from '../data/catalogue-afs'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
 import { WORKFLOW_PHASES, getWorkflowsForSession, setWorkflowStep, addRelance, resolveRelance, getPhaseStatus, isSubstepDone, isPhaseComplete, isPhaseValidated, isPhaseUnlocked, validatePhase, invalidatePhase, PHASE_STATUS_LABELS, getResponsableNom } from '../data/workflows'
@@ -166,7 +167,7 @@ export default function SessionDetail({ session, onClose, onEdit, onNavigateApp,
 
   const statut = STATUTS.find(s => s.id === session.statut) || STATUTS[0]
   const format = FORMATS.find(f => f.id === session.format)
-  const modules = (session.modules || []).map(id => ALL_MODULES.find(m => m.id === id)).filter(Boolean)
+  const modules = (session.modules || []).map(id => getAllModules().find(m => m.id === id)).filter(Boolean)
   const prix = format ? (session.modalite === 'visio' ? format.visio : format.presentiel) : null
 
   const inscritsIds = new Set(inscriptions.map(i => i.stagiaireId))
@@ -739,7 +740,7 @@ function MontantDevisModal({ session, onClose, onConfirm }) {
 
 function EmargementStepDetail({ session, inscriptions, stagiaires }) {
   const [, setTick] = useState(0)
-  const modules = (session.modules || []).map(id => ALL_MODULES.find(m => m.id === id)).filter(Boolean)
+  const modules = (session.modules || []).map(id => getAllModules().find(m => m.id === id)).filter(Boolean)
   const formateurs = getFormateurs()
   const formateurIds = [session.formateurId, session.formateurAppuiId].filter(Boolean)
   const presents = inscriptions.filter(i => i.presence !== false)

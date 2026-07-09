@@ -328,6 +328,73 @@ export const THEMATIQUES = [
   },
 ]
 
+// ── Modules personnalisés ──────────────────────────────────────────────────────
+// Modules et thématiques créés depuis l'UI (Catalogue AFS), stockés en localStorage
+// et fusionnés avec le catalogue statique ci-dessus. getThematiques() est la seule
+// source de vérité à utiliser dans l'app — ne jamais lire THEMATIQUES directement
+// pour l'affichage ou les sélecteurs, sous peine d'ignorer les modules custom.
+const KEY_CUSTOM = 'pls_catalogue_custom'
+
+function loadCustom() {
+  try { return JSON.parse(localStorage.getItem(KEY_CUSTOM) || '{"thematiques":[]}') }
+  catch { return { thematiques: [] } }
+}
+
+function saveCustom(data) {
+  localStorage.setItem(KEY_CUSTOM, JSON.stringify(data))
+}
+
+export function getThematiquesCustom() {
+  return loadCustom().thematiques
+}
+
+// Fusionne les thématiques statiques et personnalisées ; si une thématique custom
+// reprend l'id d'une thématique statique, ses modules sont ajoutés à la suite.
+export function getThematiques() {
+  const custom = getThematiquesCustom()
+  const merged = THEMATIQUES.map(t => ({ ...t, modules: [...t.modules] }))
+  custom.forEach(ct => {
+    const existante = merged.find(t => t.id === ct.id)
+    if (existante) existante.modules.push(...ct.modules)
+    else merged.push(ct)
+  })
+  return merged
+}
+
+export function getAllModules() {
+  return getThematiques().flatMap(t => t.modules.map(m => ({ ...m, thematique: t.titre, thematiqueId: t.id })))
+}
+
+export function ajouterThematiqueCustom(thematique) {
+  const data = loadCustom()
+  data.thematiques.push({ ...thematique, id: thematique.id || `custom_${Date.now()}`, modules: [], custom: true })
+  saveCustom(data)
+  return data.thematiques
+}
+
+export function ajouterModuleCustom(thematiqueId, module) {
+  const data = loadCustom()
+  let thematique = data.thematiques.find(t => t.id === thematiqueId)
+  if (!thematique) {
+    // La thématique cible est une thématique statique : on crée son pendant
+    // custom (mêmes id/emoji/titre) pour y accrocher les modules ajoutés.
+    const statique = THEMATIQUES.find(t => t.id === thematiqueId)
+    thematique = { id: thematiqueId, emoji: statique?.emoji || '📦', titre: statique?.titre || thematiqueId, modules: [], custom: true }
+    data.thematiques.push(thematique)
+  }
+  const nouveauModule = { ...module, id: module.id || `module_${Date.now()}`, custom: true }
+  thematique.modules.push(nouveauModule)
+  saveCustom(data)
+  return nouveauModule
+}
+
+export function supprimerModuleCustom(thematiqueId, moduleId) {
+  const data = loadCustom()
+  const thematique = data.thematiques.find(t => t.id === thematiqueId)
+  if (thematique) thematique.modules = thematique.modules.filter(m => m.id !== moduleId)
+  saveCustom(data)
+}
+
 export const WEBINAIRES_EMBARQUEMENT = [
   {
     id: "webinar_collectif_collab",

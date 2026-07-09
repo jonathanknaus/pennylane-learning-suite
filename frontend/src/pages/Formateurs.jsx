@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getFormateurs, saveFormateur, deleteFormateur, CIVILITES, STATUTS_BPF_FORMATEUR, TYPES_FORMATEUR } from '../data/formateurs'
 import { setFormateurLocked, isFormateurLocked } from '../data/portails'
-import { THEMATIQUES } from '../data/catalogue-afs'
+import { getThematiques, getAllModules } from '../data/catalogue-afs'
 import './Formateurs.css'
-
-const ALL_MODULES = THEMATIQUES.flatMap(t => t.modules.map(m => ({ ...m, thematique: t.titre, thematiqueId: t.id })))
 
 const EMPTY_FORM = {
   civilite: '', prenom: '', nom: '', email: '', telephone: '',
@@ -18,6 +16,8 @@ export default function Formateurs() {
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
+  const THEMATIQUES = getThematiques()
+  const ALL_MODULES = getAllModules()
 
   useEffect(() => { setFormateurs(getFormateurs()) }, [])
 
@@ -281,6 +281,8 @@ export default function Formateurs() {
 
 function DetailModal({ formateur, onClose, onEdit }) {
   const f = formateur
+  const THEMATIQUES = getThematiques()
+  const ALL_MODULES = getAllModules()
   const bpf = STATUTS_BPF_FORMATEUR.find(s => s.id === f.statut_bpf)
   const competenceModules = (f.competences || []).map(cid => ALL_MODULES.find(m => m.id === cid)).filter(Boolean)
 

@@ -40,9 +40,12 @@
 
 .catalogue-modules { display: flex; flex-direction: column; gap: 16px; }
 
-.section-header { margin-bottom: 8px; }
+.section-header { margin-bottom: 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .section-header h2 { font-size: 20px; font-weight: 700; }
 .section-header p { color: var(--texte-secondaire); font-size: 14px; margin-top: 4px; }
+.section-header .btn-primary { flex-shrink: 0; }
+
+.modal-nouveau-module { max-width: 560px; max-height: 88vh; overflow-y: auto; }
 
 .webinaires-section { margin-top: 8px; }
 .webinaires-section h3 { font-size: 17px; font-weight: 600; margin-bottom: 12px; }

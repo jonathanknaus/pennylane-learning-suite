@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getSessions, deleteSession, seedDemoSessions, STATUTS, ALL_MODULES, FORMATS, MODALITES, QUALIOPI_OPTIONS } from '../data/sessions'
+import { getSessions, deleteSession, seedDemoSessions, STATUTS, FORMATS, MODALITES, QUALIOPI_OPTIONS } from '../data/sessions'
+import { getAllModules } from '../data/catalogue-afs'
 import { seedDemoStagiaires } from '../data/stagiaires'
 import SessionForm from '../components/SessionForm'
 import SessionDetail from '../components/SessionDetail'
@@ -141,8 +142,9 @@ export default function Sessions({ onNavigate, nav, onNavigateNav }) {
 function SessionCard({ session, onOpen, onEdit, onDelete }) {
   const statut = STATUTS.find(s => s.id === session.statut) || STATUTS[0]
   const format = FORMATS.find(f => f.id === session.format)
+  const allModules = getAllModules()
   const modulesDetails = (session.modules || [])
-    .map(id => ALL_MODULES.find(m => m.id === id))
+    .map(id => allModules.find(m => m.id === id))
     .filter(Boolean)
 
   const dateFormatee = session.date
