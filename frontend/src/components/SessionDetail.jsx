@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx'
 import { FORMATS, STATUTS, ALL_MODULES, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
-import { WORKFLOW_PHASES, getWorkflowsForSession, setWorkflowStep, addRelance, resolveRelance, getPhaseStatus, isSubstepDone, isPhaseComplete, isPhaseValidated, isPhaseUnlocked, validatePhase, invalidatePhase, PHASE_STATUS_LABELS } from '../data/workflows'
+import { WORKFLOW_PHASES, getWorkflowsForSession, setWorkflowStep, addRelance, resolveRelance, getPhaseStatus, isSubstepDone, isPhaseComplete, isPhaseValidated, isPhaseUnlocked, validatePhase, invalidatePhase, PHASE_STATUS_LABELS, getResponsableNom } from '../data/workflows'
 import { signerModule, estSigne, getSignatureDate, isModuleComplet } from '../data/emargement'
 import { getFormateurs } from '../data/formateurs'
 import { getGestionnaires, resolveResponsable } from '../data/gestionnaires'
@@ -900,6 +900,8 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
   const [openQuizz, setOpenQuizz] = useState(null)
   const [openTpl, setOpenTpl] = useState(null)
   const [montantDevisOpen, setMontantDevisOpen] = useState(null)
+  const formateurs = getFormateurs()
+  const gestionnaires = getGestionnaires()
 
   const totalValidated = WORKFLOW_PHASES.filter(p => isPhaseValidated(p.id, statuts)).length
 
@@ -992,10 +994,17 @@ function WorkflowsTab({ session, statuts, onUpdate, onAddRelance, onResolveRelan
                           )
                         }
 
+                        const responsableNom = getResponsableNom(substep, session, { formateurs, gestionnaires })
+
                         return (
                           <div key={substep.id} className={`wf-step wf-step-${isDone ? 'done' : status}`}>
                             <div className="wf-step-body">
                               <div className="wf-step-label">{substep.label}</div>
+                              {responsableNom && (
+                                <span className={`wf-step-responsable wf-step-responsable-${substep.responsable}`}>
+                                  {substep.responsable === 'formateur' ? '🧑‍🏫' : substep.responsable === 'gestionnaire' ? '🗂️' : substep.responsable === 'commercial' ? '💼' : '⚙️'} {responsableNom}
+                                </span>
+                              )}
                               {substep.type === 'quizz' && nbInscrits > 0 && (
                                 <div className="wf-quizz-progress">
                                   <div className="wf-quizz-progress-bar-wrap">
