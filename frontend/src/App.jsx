@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getSession, getCurrentUser, logout, ROLES } from './data/auth'
 import Login from './pages/Login'
 import Passation from './pages/Passation'
+import AccueilAdmin from './pages/AccueilAdmin'
 import CatalogueAFS from './pages/CatalogueAFS'
 import Sessions from './pages/Sessions'
 import Stagiaires from './pages/Stagiaires'
@@ -33,12 +34,13 @@ import { scanRappels } from './data/rappels'
 import { getInitialNavState, pushNavState, replaceNavState, readNavState } from './lib/navigation'
 import './App.css'
 
-const NAV_DEFAULT = { page: 'catalogue', sessionId: null, view: null, tab: null }
+const NAV_DEFAULT = { page: 'accueil', sessionId: null, view: null, tab: null }
 
 const NAV_ADMIN = [
   {
     group: 'Formation',
     items: [
+      { id: 'accueil',    label: 'Accueil',            icon: '🏠' },
       { id: 'catalogue',  label: 'Catalogue AFS',     icon: '📚' },
       { id: 'sessions',   label: 'Sessions',           icon: '🎓' },
       { id: 'calendrier', label: 'Calendrier',         icon: '📅' },
@@ -98,6 +100,9 @@ function RoleBadge({ role }) {
 function PageContent({ currentPage, onNavigate, nav, onNavigateNav }) {
   return (
     <>
+      {currentPage === 'accueil'      && (
+        <AccueilAdmin onOpenSession={sessionId => onNavigateNav({ page: 'sessions', sessionId, view: 'detail', tab: null })} />
+      )}
       {currentPage === 'catalogue'    && <CatalogueAFS />}
       {currentPage === 'sessions'     && <Sessions onNavigate={onNavigate} nav={nav} onNavigateNav={onNavigateNav} />}
       {currentPage === 'stagiaires'   && <Stagiaires />}
@@ -301,7 +306,7 @@ export default function App() {
       return
     }
     setUser(getCurrentUser())
-    navigate({ page: 'catalogue' }, { replace: true })
+    navigate({ page: 'accueil' }, { replace: true })
   }
 
   function handleLogout() {
@@ -317,7 +322,7 @@ export default function App() {
     return <AccueilPublic onLogin={() => setPage('login')} />
   }
 
-  const currentPage = nav.page || 'catalogue'
+  const currentPage = nav.page || 'accueil'
   // Tout utilisateur admin est un gestionnaire (Sarah ou un autre) — on résout son identité
   // par email pour rattacher le centre de notifications au bon destinataire.
   const gestionnaireCourant = getGestionnaires().find(g => g.email?.toLowerCase() === user?.email?.toLowerCase())
