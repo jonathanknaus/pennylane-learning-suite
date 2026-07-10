@@ -26,6 +26,7 @@ import QuestionnaireBesoin from './pages/QuestionnaireBesoin'
 import Parametres from './pages/Parametres'
 import Webinaires from './pages/Webinaires'
 import BilanAnnuel from './pages/BilanAnnuel'
+import Pipeline from './pages/Pipeline'
 import Reclamations from './pages/Reclamations'
 import Devis from './pages/Devis'
 import CentreNotifications from './components/CentreNotifications'
@@ -64,6 +65,7 @@ const NAV_ADMIN = [
   {
     group: 'Gestion',
     items: [
+      { id: 'pipeline',     label: 'Indicateurs',           icon: '📈' },
       { id: 'devis',        label: 'Devis',                icon: '📝' },
       { id: 'facturation',  label: 'Facturation',          icon: '🧾' },
       { id: 'bilan',        label: 'Bilan annuel',          icon: '📊' },
@@ -113,6 +115,7 @@ function PageContent({ currentPage, onNavigate, nav, onNavigateNav }) {
       {currentPage === 'calendrier'   && <Calendrier />}
       {currentPage === 'devis'        && <Devis />}
       {currentPage === 'facturation'  && <Facturation />}
+      {currentPage === 'pipeline'     && <Pipeline />}
       {currentPage === 'bilan'        && <BilanAnnuel />}
       {currentPage === 'reclamations' && <Reclamations />}
       {currentPage === 'documents'    && <Documents />}

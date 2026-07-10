@@ -105,6 +105,10 @@ function computeBilanSession(sessionId) {
   const inscriptions = getInscriptionsBySession(sessionId).filter(i => i.statut !== 'annule')
   const stagiaires = getStagiaires()
 
+  const nbPresents = inscriptions.filter(i => i.presence === true).length
+  const tauxPresence = inscriptions.length > 0 ? Math.round((nbPresents / inscriptions.length) * 100) : null
+  const nbAbsents = inscriptions.length - nbPresents
+
   const reponsesChaud = getAllReponsesChaudBySession(sessionId)
   const moyennesChaud = reponsesChaud.map(r => r.moyenne).filter(m => m !== null)
   const satisfactionMoyenne = moyennesChaud.length
@@ -127,14 +131,16 @@ function computeBilanSession(sessionId) {
   const tauxAtteinteObjectifs = scores.length
     ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length)
     : null
+  const nbAtteignentObjectifs = scores.filter(s => s >= 70).length
 
   return {
     session,
     nbInscrits: inscriptions.length,
+    nbPresents, nbAbsents, tauxPresence,
     satisfactionMoyenne, tauxSatisfaction, nbReponsesChaud: reponsesChaud.length,
     tauxRecommandation, nbReponsesFroid: reponsesFroid.length,
     incidents,
-    tauxAtteinteObjectifs, nbResultats: resultats.length,
+    tauxAtteinteObjectifs, nbResultats: resultats.length, nbAtteignentObjectifs,
     stagiaires,
   }
 }
@@ -207,7 +213,7 @@ export default function BilanAnnuel() {
       <div className="bilan-topbar">
         <div>
           <h1 className="bilan-title">Bilan pédagogique et financier</h1>
-          <p className="bilan-sub">Synthèse annuelle — Indicateur Qualiopi n°18</p>
+          <p className="bilan-sub">Synthèse annuelle — Indicateur Qualiopi 18 · Bilan pédagogique et financier</p>
         </div>
         <div className="bilan-topbar-right">
           <select className="bilan-year-select" value={year} onChange={e => setYear(parseInt(e.target.value))}>
@@ -441,28 +447,41 @@ function BilanSessionView() {
 
       <div className="bilan-grid">
         <div className="bilan-card">
-          <h3>Satisfaction stagiaires</h3>
-          {bilan.satisfactionMoyenne !== null ? (
-            <>
-              <div className="bilan-score-big">
-                <span style={{ color: bilan.satisfactionMoyenne >= 8 ? '#10B981' : bilan.satisfactionMoyenne >= 6 ? '#F59E0B' : '#EF4444' }}>
-                  {bilan.satisfactionMoyenne}
-                </span>
-                <span className="bilan-score-max">/10</span>
+          <div className="bilan-qualiopi-badge-row">
+            <span className="bilan-qualiopi-ref">Indicateur 5</span>
+            <span className="bilan-qualiopi-ref">Indicateur 30</span>
+          </div>
+          <h3>Satisfaction et présence</h3>
+          <div className="bilan-session-metrics">
+            <div className="bilan-metric">
+              <div className="bilan-metric-val" style={{ color: bilan.tauxPresence >= 80 ? '#10B981' : bilan.tauxPresence >= 60 ? '#F59E0B' : '#EF4444' }}>
+                {bilan.tauxPresence !== null ? `${bilan.tauxPresence}%` : '—'}
               </div>
-              <p className="bilan-score-detail">
-                {bilan.nbReponsesChaud}/{bilan.nbInscrits} réponse{bilan.nbReponsesChaud > 1 ? 's' : ''} · {bilan.tauxSatisfaction}% de taux de réponse
-              </p>
-            </>
-          ) : (
-            <p className="bilan-empty-msg">Aucune enquête à chaud complétée</p>
-          )}
+              <div className="bilan-metric-label">Taux de présence</div>
+              {bilan.tauxPresence !== null && (
+                <div className="bilan-metric-detail">{bilan.nbPresents} présent{bilan.nbPresents > 1 ? 's' : ''} / {bilan.nbInscrits} inscrit{bilan.nbInscrits > 1 ? 's' : ''}</div>
+              )}
+            </div>
+            <div className="bilan-metric">
+              <div className="bilan-metric-val" style={{ color: bilan.satisfactionMoyenne >= 8 ? '#10B981' : bilan.satisfactionMoyenne >= 6 ? '#F59E0B' : '#EF4444' }}>
+                {bilan.satisfactionMoyenne !== null ? `${bilan.satisfactionMoyenne}/10` : '—'}
+              </div>
+              <div className="bilan-metric-label">Satisfaction à chaud</div>
+              {bilan.satisfactionMoyenne !== null && (
+                <div className="bilan-metric-detail">{bilan.nbReponsesChaud}/{bilan.nbInscrits} réponse{bilan.nbReponsesChaud > 1 ? 's' : ''} · {bilan.tauxSatisfaction}% de taux de réponse</div>
+              )}
+            </div>
+          </div>
           {bilan.tauxRecommandation !== null && (
-            <p className="bilan-score-detail">Taux de recommandation (à froid) : <strong>{bilan.tauxRecommandation}%</strong> ({bilan.nbReponsesFroid} réponse{bilan.nbReponsesFroid > 1 ? 's' : ''})</p>
+            <p className="bilan-score-detail" style={{ marginTop: 8 }}>Recommandation (à froid) : <strong>{bilan.tauxRecommandation}%</strong> ({bilan.nbReponsesFroid} réponse{bilan.nbReponsesFroid > 1 ? 's' : ''})</p>
           )}
+          {bilan.satisfactionMoyenne === null && <p className="bilan-empty-msg">Aucune enquête à chaud complétée</p>}
         </div>
 
         <div className="bilan-card">
+          <div className="bilan-qualiopi-badge-row">
+            <span className="bilan-qualiopi-ref">Indicateur 5</span>
+          </div>
           <h3>Résultats d'évaluation</h3>
           {bilan.tauxAtteinteObjectifs !== null ? (
             <>
@@ -472,7 +491,8 @@ function BilanSessionView() {
                 </span>
                 <span className="bilan-score-max">%</span>
               </div>
-              <p className="bilan-score-detail">Taux d'atteinte des objectifs · {bilan.nbResultats} évaluation{bilan.nbResultats > 1 ? 's' : ''} post-formation</p>
+              <p className="bilan-score-detail">Taux d'atteinte des objectifs · {bilan.nbAtteignentObjectifs}/{bilan.nbResultats} apprenant{bilan.nbResultats > 1 ? 's' : ''} ≥ 70%</p>
+              <p className="bilan-score-detail">{bilan.nbResultats} évaluation{bilan.nbResultats > 1 ? 's' : ''} post-formation complétée{bilan.nbResultats > 1 ? 's' : ''}</p>
             </>
           ) : (
             <p className="bilan-empty-msg">Aucune évaluation post-formation complétée</p>
@@ -480,6 +500,9 @@ function BilanSessionView() {
         </div>
 
         <div className="bilan-card bilan-card-full">
+          <div className="bilan-qualiopi-badge-row">
+            <span className="bilan-qualiopi-ref">Indicateur 31</span>
+          </div>
           <h3>Incidents ou signalements ({bilan.incidents.length})</h3>
           {bilan.incidents.length === 0 ? (
             <p className="bilan-empty-msg">Aucun incident ou signalement enregistré pour cette session.</p>
@@ -500,6 +523,9 @@ function BilanSessionView() {
       </div>
 
       <div className="bilan-session-form">
+        <div className="bilan-qualiopi-badge-row" style={{ marginBottom: 8 }}>
+          <span className="bilan-qualiopi-ref">Indicateur 32</span>
+        </div>
         <h3>Synthèse qualitative</h3>
         <div className="form-group">
           <label>Points positifs essentiels signalés</label>
@@ -556,19 +582,31 @@ function BilanSessionPrint({ bilan, champs, of }) {
         </div>
       </div>
 
-      <div className="bilan-print-section-title">Satisfaction stagiaires</div>
+      <div className="bilan-print-section-title">Indicateur 5 — Atteinte des objectifs et présence</div>
       <table className="bilan-print-fin-table">
         <tbody>
-          <tr><td>Taux de satisfaction global</td><td><strong>{bilan.satisfactionMoyenne !== null ? `${bilan.satisfactionMoyenne}/10` : '—'}</strong></td></tr>
-          <tr><td>Taux de recommandation</td><td>{bilan.tauxRecommandation !== null ? `${bilan.tauxRecommandation}%` : '—'}</td></tr>
-          <tr><td>Points positifs essentiels signalés</td><td>{champs.points_positifs || '—'}</td></tr>
-          <tr><td>Points à améliorer</td><td>{champs.points_ameliorer || '—'}</td></tr>
-          <tr><td>Besoins complémentaires</td><td>{champs.besoins_complementaires || '—'}</td></tr>
-          <tr><td>Précisions</td><td>{champs.precisions_satisfaction || '—'}</td></tr>
+          <tr><td>Nombre d'inscrits</td><td>{bilan.nbInscrits}</td></tr>
+          <tr><td>Nombre de présents</td><td>{bilan.nbPresents}</td></tr>
+          <tr><td>Taux de présence</td><td><strong>{bilan.tauxPresence !== null ? `${bilan.tauxPresence}%` : '—'}</strong></td></tr>
+          <tr><td>Taux d'atteinte des objectifs (post-test)</td><td><strong>{bilan.tauxAtteinteObjectifs !== null ? `${bilan.tauxAtteinteObjectifs}%` : '—'}</strong></td></tr>
+          <tr><td>Apprenants ≥ 70%</td><td>{bilan.tauxAtteinteObjectifs !== null ? `${bilan.nbAtteignentObjectifs} / ${bilan.nbResultats}` : '—'}</td></tr>
+          <tr><td>Précisions sur l'évaluation</td><td>{champs.precisions_evaluation || '—'}</td></tr>
         </tbody>
       </table>
 
-      <div className="bilan-print-section-title">Incidents ou signalements</div>
+      <div className="bilan-print-section-title">Indicateurs 5 & 30 — Satisfaction stagiaires</div>
+      <table className="bilan-print-fin-table">
+        <tbody>
+          <tr><td>Taux de satisfaction global (à chaud)</td><td><strong>{bilan.satisfactionMoyenne !== null ? `${bilan.satisfactionMoyenne}/10` : '—'}</strong></td></tr>
+          <tr><td>Taux de recommandation (à froid)</td><td>{bilan.tauxRecommandation !== null ? `${bilan.tauxRecommandation}%` : '—'}</td></tr>
+          <tr><td>Points positifs essentiels signalés</td><td>{champs.points_positifs || '—'}</td></tr>
+          <tr><td>Points à améliorer</td><td>{champs.points_ameliorer || '—'}</td></tr>
+          <tr><td>Besoins complémentaires</td><td>{champs.besoins_complementaires || '—'}</td></tr>
+          <tr><td>Précisions sur la satisfaction</td><td>{champs.precisions_satisfaction || '—'}</td></tr>
+        </tbody>
+      </table>
+
+      <div className="bilan-print-section-title">Indicateur 31 — Incidents ou signalements</div>
       {bilan.incidents.length === 0 ? (
         <p className="bilan-print-empty">Aucun incident ou signalement.</p>
       ) : (
@@ -582,15 +620,7 @@ function BilanSessionPrint({ bilan, champs, of }) {
         </table>
       )}
 
-      <div className="bilan-print-section-title">Résultats d'évaluation</div>
-      <table className="bilan-print-fin-table">
-        <tbody>
-          <tr><td>Taux d'atteinte des objectifs</td><td><strong>{bilan.tauxAtteinteObjectifs !== null ? `${bilan.tauxAtteinteObjectifs}%` : '—'}</strong></td></tr>
-          <tr><td>Précisions</td><td>{champs.precisions_evaluation || '—'}</td></tr>
-        </tbody>
-      </table>
-
-      <div className="bilan-print-section-title">Actions d'amélioration envisagées</div>
+      <div className="bilan-print-section-title">Indicateur 32 — Bilan pédagogique et actions d'amélioration</div>
       <table className="bilan-print-fin-table">
         <tbody>
           <tr><td>Action</td><td>{champs.actions_amelioration || '—'}</td></tr>
