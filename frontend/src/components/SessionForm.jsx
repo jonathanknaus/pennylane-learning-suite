@@ -48,6 +48,7 @@ export default function SessionForm({ session, onSaved, onCancel }) {
         lien_reunion: f.lien_reunion || '',
         qualiopi: f.qualiopi,
         formateur: f.formateur,
+        modules: [...f.modules],
       }]
     }))
   }
@@ -358,6 +359,43 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                             onChange={() => updateOccurrence(idx, 'qualiopi', q.id)} />
                           {q.label}
                         </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>
+                      Modules dispensés ce jour
+                      <span className="modules-count">{(occ.modules ?? form.modules).length} sélectionné{(occ.modules ?? form.modules).length > 1 ? 's' : ''}</span>
+                    </label>
+                    <p className="form-hint" style={{ fontSize: 12, color: 'var(--texte-secondaire)', marginTop: -4, marginBottom: 8 }}>
+                      Par défaut, reprend les modules de la session principale. Décochez pour définir un programme différent pour cette date.
+                    </p>
+                    <div className="modules-picker occurrence-modules-picker">
+                      {THEMATIQUES.map(thematique => (
+                        <div key={thematique.id} className="modules-group">
+                          <div className="modules-group-title">{thematique.emoji} {thematique.titre}</div>
+                          <div className="modules-group-items">
+                            {thematique.modules.map(module => {
+                              const occModules = occ.modules ?? form.modules
+                              const selected = occModules.includes(module.id)
+                              return (
+                                <button
+                                  type="button"
+                                  key={module.id}
+                                  className={`module-pick-btn ${selected ? 'selected' : ''}`}
+                                  onClick={() => {
+                                    const base = occ.modules ?? form.modules
+                                    const next = selected ? base.filter(m => m !== module.id) : [...base, module.id]
+                                    updateOccurrence(idx, 'modules', next)
+                                  }}
+                                >
+                                  {selected ? '✓ ' : ''}{module.titre}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>

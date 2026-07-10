@@ -192,14 +192,20 @@ function shuffle5(pool) {
   return [...pool].sort(() => Math.random() - 0.5)
 }
 
-// Génère un questionnaire (pré ou post) pour une session multi-modules
-// Les 5 questions de chaque module sont posées, dans un ordre aléatoire différent à chaque passation
-export function genererQuestionnaire(moduleIds) {
+// Génère un questionnaire (pré ou post) pour une session multi-modules — les
+// questions de chaque module sélectionné sont combinées. Au post-test, les
+// questions déjà posées au pré-test (excludeIds) sont écartées si la banque du
+// module en contient suffisamment d'autres, pour ne pas reposer les mêmes items.
+export function genererQuestionnaire(moduleIds, type, excludeIds = []) {
   const questions = []
   for (const moduleId of moduleIds) {
     const banque = getBanqueModule(moduleId)
     if (!banque.length) continue
-    shuffle5(banque).forEach(q => questions.push({ ...q, moduleId }))
+    const pool = type === 'post'
+      ? banque.filter(q => !excludeIds.includes(q.id))
+      : banque
+    const source = pool.length > 0 ? pool : banque
+    shuffle5(source).forEach(q => questions.push({ ...q, moduleId }))
   }
   return questions
 }

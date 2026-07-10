@@ -2147,6 +2147,7 @@ function DocumentsTab({ session, inscriptions, stagiaires }) {
       formateur: o.formateur ?? session.formateur,
       lien_reunion: o.lien_reunion ?? session.lien_reunion,
       qualiopi: o.qualiopi ?? session.qualiopi,
+      modules: o.modules,
       label: `J${i + 2} — ${formatDateLong(o.date)}`,
     }))
   ]
@@ -2155,10 +2156,13 @@ function DocumentsTab({ session, inscriptions, stagiaires }) {
     if (idx === 0) return data
     const occ = allOccurrences[idx]
     const format = FORMATS.find(f => f.id === occ.format) || data.format
+    const occModuleIds = occ.modules ?? session.modules ?? []
+    const modules = occModuleIds.map(id => getAllModules().find(m => m.id === id)).filter(Boolean)
     return {
       ...data,
       dateFormatee: formatDateLong(occ.date),
       format,
+      modules,
       session: {
         ...data.session,
         date: occ.date,
@@ -2168,6 +2172,7 @@ function DocumentsTab({ session, inscriptions, stagiaires }) {
         formateur: occ.formateur,
         lien_reunion: occ.lien_reunion,
         qualiopi: occ.qualiopi,
+        modules: occModuleIds,
       }
     }
   }
