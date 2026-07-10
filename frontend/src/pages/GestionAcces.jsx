@@ -373,10 +373,14 @@ export default function GestionAcces() {
                 <tbody>
                   {users.map(u => {
                     const profil = getAllProfils().find(p => p.id === u.profilId)
+                    const protege = !!u.protected
                     return (
-                      <tr key={u.id}>
+                      <tr key={u.id} className={protege ? 'acces-row-protected' : ''}>
                         <td>
-                          <div className="acces-user-name">{u.prenom} {u.nom}</div>
+                          <div className="acces-user-name">
+                            {u.prenom} {u.nom}
+                            {protege && <span className="acces-badge-protected" title="Compte protégé — ne peut pas être modifié ni supprimé">🔒</span>}
+                          </div>
                           {u.telephone && <div className="acces-user-tel">{u.telephone}</div>}
                         </td>
                         <td className="acces-cell-email">{u.email}</td>
@@ -398,8 +402,14 @@ export default function GestionAcces() {
                           <PermSummary perms={u.permsPersonnalisees ? u.perms : profil?.perms} />
                         </td>
                         <td className="acces-cell-actions">
-                          <button className="btn-icon-sm" onClick={() => setModalUser(u)} title="Modifier">✏️</button>
-                          <button className="btn-icon-sm danger" onClick={() => setConfirmDel({ type: 'user', id: u.id, label: `${u.prenom} ${u.nom}` })} title="Supprimer">✕</button>
+                          {protege ? (
+                            <span className="acces-protected-hint">Compte protégé</span>
+                          ) : (
+                            <>
+                              <button className="btn-icon-sm" onClick={() => setModalUser(u)} title="Modifier">✏️</button>
+                              <button className="btn-icon-sm danger" onClick={() => setConfirmDel({ type: 'user', id: u.id, label: `${u.prenom} ${u.nom}` })} title="Supprimer">✕</button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     )
@@ -426,12 +436,14 @@ export default function GestionAcces() {
                     <div className="acces-profil-card-label">{p.label}</div>
                     {p.builtin && <span className="acces-badge-builtin">Profil type</span>}
                   </div>
-                  {!p.builtin && (
-                    <div className="acces-profil-card-actions">
-                      <button className="btn-icon-sm" onClick={() => setModalProfil(p)} title="Modifier">✏️</button>
-                      <button className="btn-icon-sm danger" onClick={() => setConfirmDel({ type: 'profil', id: p.id, label: p.label })} title="Supprimer">✕</button>
-                    </div>
-                  )}
+                  <div className="acces-profil-card-actions">
+                    <button className="btn-icon-sm" onClick={() => setModalProfil(p)} title="Modifier">✏️</button>
+                    <button
+                      className="btn-icon-sm danger"
+                      onClick={() => setConfirmDel({ type: 'profil', id: p.id, label: p.label, isBuiltin: !!p.builtin })}
+                      title="Supprimer"
+                    >✕</button>
+                  </div>
                 </div>
                 {p.description && <p className="acces-profil-card-desc">{p.description}</p>}
                 <PermSummaryCompact perms={p.perms} />
@@ -462,6 +474,11 @@ export default function GestionAcces() {
         <div className="acces-modal-overlay" onClick={() => setConfirmDel(null)}>
           <div className="acces-confirm" onClick={e => e.stopPropagation()}>
             <p>Supprimer <strong>{confirmDel.label}</strong> ?</p>
+            {confirmDel.isBuiltin && (
+              <p className="acces-confirm-warn">
+                Ce profil type sera retiré de la liste. Les utilisateurs qui y sont assignés conserveront leur profil mentionné, mais il n'apparaîtra plus dans les choix.
+              </p>
+            )}
             <div className="acces-confirm-actions">
               <button className="btn-secondary" onClick={() => setConfirmDel(null)}>Annuler</button>
               <button className="btn-danger" onClick={() => confirmDel.type === 'user' ? handleDeleteUser(confirmDel.id) : handleDeleteProfil(confirmDel.id)}>

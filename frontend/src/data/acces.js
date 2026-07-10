@@ -114,14 +114,27 @@ export const PROFILS_DEFAUT = {
   },
 }
 
-// ── Persistance profils personnalisés ─────────────────────────────────────────
+// ── Persistance profils ────────────────────────────────────────────────────────
+// Les profils custom peuvent surcharger un profil builtin (même id).
+// Les profils builtin supprimés sont mémorisés dans KEY_PROFILS_DELETED.
+
+const KEY_PROFILS_DELETED = 'pls_acces_profils_deleted'
+
+function getProfilsDeleted() {
+  try { return new Set(JSON.parse(localStorage.getItem(KEY_PROFILS_DELETED) || '[]')) } catch { return new Set() }
+}
 
 export function getProfilsCustom() {
   try { return JSON.parse(localStorage.getItem(KEY_PROFILS) || '[]') } catch { return [] }
 }
 
 export function getAllProfils() {
-  return [...Object.values(PROFILS_DEFAUT), ...getProfilsCustom()]
+  const customs = getProfilsCustom()
+  const customIds = new Set(customs.map(p => p.id))
+  const deleted = getProfilsDeleted()
+  // Builtin non supprimés et non surchargés par un custom
+  const builtins = Object.values(PROFILS_DEFAUT).filter(p => !customIds.has(p.id) && !deleted.has(p.id))
+  return [...builtins, ...customs]
 }
 
 export function saveProfil(profil) {
@@ -134,14 +147,45 @@ export function saveProfil(profil) {
 }
 
 export function deleteProfil(id) {
+  // Supprime du store custom
   const list = getProfilsCustom().filter(p => p.id !== id)
   localStorage.setItem(KEY_PROFILS, JSON.stringify(list))
+  // Si c'était un builtin, le marquer comme supprimé
+  if (PROFILS_DEFAUT[id]) {
+    const deleted = getProfilsDeleted()
+    deleted.add(id)
+    localStorage.setItem(KEY_PROFILS_DELETED, JSON.stringify([...deleted]))
+  }
 }
 
 // ── Persistance utilisateurs ──────────────────────────────────────────────────
 
+const COMPTE_KNAUS = {
+  id: 'usr_knaus_jk',
+  nom: 'KNAUS',
+  prenom: 'Jonathan',
+  email: 'jonathan.knaus@pennylane.com',
+  telephone: '',
+  identifiant: 'KNAUS_PLS',
+  password: '••••••••••',
+  profilId: 'administrateur',
+  permsPersonnalisees: false,
+  perms: null,
+  mustChangePassword: false,
+  protected: true,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+}
+
 export function getUsers() {
-  try { return JSON.parse(localStorage.getItem(KEY_USERS) || '[]') } catch { return [] }
+  try {
+    const stored = JSON.parse(localStorage.getItem(KEY_USERS) || '[]')
+    // Injecter le compte protégé s'il n'est pas déjà dans le store
+    if (!stored.find(u => u.id === COMPTE_KNAUS.id)) {
+      return [COMPTE_KNAUS, ...stored]
+    }
+    return stored
+  } catch { return [COMPTE_KNAUS] }
 }
 
 export function saveUser(user) {
