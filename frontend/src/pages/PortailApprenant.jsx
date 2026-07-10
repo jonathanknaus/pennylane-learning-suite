@@ -54,7 +54,7 @@ function LoginApprenant({ onLogin }) {
             {loading ? 'Connexion…' : 'Accéder à mon espace →'}
           </button>
         </form>
-        <div className="pa-login-footer">AFS Pennylane Learning Suite · Espace apprenants</div>
+        <div className="pa-login-footer">Pennylane Learning Suite · Espace apprenants</div>
       </div>
     </div>
   )
@@ -294,7 +294,7 @@ export default function PortailApprenant() {
       )}
 
       <div className="pa-footer">
-        Espace apprenant · AFS Pennylane Learning Suite · Accès personnel et confidentiel
+        Espace apprenant · Pennylane Learning Suite · Accès personnel et confidentiel
       </div>
     </div>
   )

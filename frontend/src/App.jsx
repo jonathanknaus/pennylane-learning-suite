@@ -215,7 +215,7 @@ export default function App() {
             <PennylaneLogo />
             <span className="logo-text">pennylane</span>
           </div>
-          <span className="logo-suite">Learning Suite · AFS</span>
+          <span className="logo-suite">Learning Suite</span>
         </div>
         <Passation
           sessionId={quizParams.sessionId}
@@ -233,7 +233,7 @@ export default function App() {
       <div className="quiz-public-wrap">
         <div className="quiz-public-header">
           <div className="logo-wordmark"><PennylaneLogo /><span className="logo-text">pennylane</span></div>
-          <span className="logo-suite">Learning Suite · AFS</span>
+          <span className="logo-suite">Learning Suite</span>
         </div>
         <PortailFormateur />
       </div>
@@ -246,7 +246,7 @@ export default function App() {
       <div className="quiz-public-wrap">
         <div className="quiz-public-header">
           <div className="logo-wordmark"><PennylaneLogo /><span className="logo-text">pennylane</span></div>
-          <span className="logo-suite">Learning Suite · AFS</span>
+          <span className="logo-suite">Learning Suite</span>
         </div>
         <PortailCabinet />
       </div>
@@ -259,7 +259,7 @@ export default function App() {
       <div className="quiz-public-wrap">
         <div className="quiz-public-header">
           <div className="logo-wordmark"><PennylaneLogo /><span className="logo-text">pennylane</span></div>
-          <span className="logo-suite">Learning Suite · AFS</span>
+          <span className="logo-suite">Learning Suite</span>
         </div>
         <PortailApprenant />
       </div>
@@ -272,7 +272,7 @@ export default function App() {
       <div className="quiz-public-wrap">
         <div className="quiz-public-header">
           <div className="logo-wordmark"><PennylaneLogo /><span className="logo-text">pennylane</span></div>
-          <span className="logo-suite">Learning Suite · AFS</span>
+          <span className="logo-suite">Learning Suite</span>
         </div>
         <QuestionnaireBesoin sessionId={besoinParams.sessionId} token={besoinParams.token} />
       </div>
@@ -288,7 +288,7 @@ export default function App() {
             <PennylaneLogo />
             <span className="logo-text">pennylane</span>
           </div>
-          <span className="logo-suite">Learning Suite · AFS</span>
+          <span className="logo-suite">Learning Suite</span>
         </div>
         <EvalComplete
           sessionId={evalParams.sessionId}
@@ -339,7 +339,7 @@ export default function App() {
             <span className="logo-text">pennylane</span>
           </div>
           <div className="logo-sep" />
-          <span className="logo-suite">AFS</span>
+          <span className="logo-suite">PLS</span>
         </div>
 
         <nav className="sidebar-nav">

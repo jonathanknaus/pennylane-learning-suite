@@ -64,7 +64,7 @@ function LoginFormateur({ onLogin }) {
             {loading ? 'Connexion…' : 'Accéder à mon espace →'}
           </button>
         </form>
-        <div className="pf-login-footer">AFS Pennylane Learning Suite · Accès formateurs</div>
+        <div className="pf-login-footer">Pennylane Learning Suite · Accès formateurs</div>
       </div>
     </div>
   )
@@ -297,7 +297,7 @@ export default function PortailFormateur() {
       )}
 
       <div className="pf-footer">
-        Portail formateur · AFS Pennylane Learning Suite · Accès personnel et confidentiel
+        Portail formateur · Pennylane Learning Suite · Accès personnel et confidentiel
       </div>
     </div>
   )

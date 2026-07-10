@@ -146,7 +146,7 @@ export default function QuestionnaireBesoin({ sessionId, token }) {
         </div>
 
         <div className="qb-footer">
-          Questionnaire de besoin · AFS Pennylane Learning Suite · Accès confidentiel
+          Questionnaire de besoin · Pennylane Learning Suite · Accès confidentiel
         </div>
       </div>
     )
@@ -188,7 +188,7 @@ export default function QuestionnaireBesoin({ sessionId, token }) {
         </div>
 
         <div className="qb-footer">
-          Questionnaire de besoin · AFS Pennylane Learning Suite · Accès confidentiel
+          Questionnaire de besoin · Pennylane Learning Suite · Accès confidentiel
         </div>
       </div>
     )
@@ -257,7 +257,7 @@ export default function QuestionnaireBesoin({ sessionId, token }) {
       </form>
 
       <div className="qb-footer">
-        Questionnaire de besoin · AFS Pennylane Learning Suite · Accès confidentiel
+        Questionnaire de besoin · Pennylane Learning Suite · Accès confidentiel
       </div>
     </div>
   )

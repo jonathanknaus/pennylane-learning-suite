@@ -108,7 +108,7 @@ export default function Emargement({ data }) {
       <div className="doc-footer">
         <div className="doc-footer-left">
           <div>Pennylane — 4 Rue Jules Lefebvre, 75009 Paris</div>
-          <div>afs@pennylane.com</div>
+          <div>afs-training@pennylane.com</div>
         </div>
         <div className="doc-footer-right">
           <div className="doc-footer-qualiopi">

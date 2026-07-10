@@ -38,7 +38,7 @@ export default function Login({ onLogin, onWebinaires }) {
           </svg>
           <span className="login-wordmark">pennylane</span>
         </div>
-        <h1 className="login-title">Learning Suite · AFS</h1>
+        <h1 className="login-title">Learning Suite</h1>
         <p className="login-subtitle">Accès sécurisé</p>
 
         <form className="login-form" onSubmit={handleSubmit}>

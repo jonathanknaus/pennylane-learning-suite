@@ -52,7 +52,7 @@ function LoginCabinet({ onLogin }) {
             Accéder à mon espace →
           </button>
         </form>
-        <div className="pc-login-footer">Espace cabinet · AFS Pennylane Learning Suite</div>
+        <div className="pc-login-footer">Espace cabinet · Pennylane Learning Suite</div>
       </div>
     </div>
   )
@@ -323,7 +323,7 @@ export default function PortailCabinet() {
         <div className="pc-empty">Aucune session trouvée pour cet email.</div>
       )}
 
-      <div className="pc-footer">Espace cabinet · AFS Pennylane Learning Suite · Accès personnel et confidentiel</div>
+      <div className="pc-footer">Espace cabinet · Pennylane Learning Suite · Accès personnel et confidentiel</div>
     </div>
   )
 }

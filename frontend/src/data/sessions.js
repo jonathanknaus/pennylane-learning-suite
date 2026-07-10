@@ -5,7 +5,7 @@ export const FORMATS = Object.entries(TARIFS)
   .map(([id, t]) => ({ id, ...t }))
 
 export const FORMATEURS = [
-  { id: 'f1', nom: 'Équipe AFS', email: 'afs@pennylane.com' },
+  { id: 'f1', nom: 'Équipe AFS', email: 'afs-training@pennylane.com' },
 ]
 
 // Recalculé à chaque appel (pas un const figé), pour inclure les modules
