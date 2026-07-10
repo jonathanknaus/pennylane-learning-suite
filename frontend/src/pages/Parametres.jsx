@@ -3,6 +3,7 @@ import { getParametres, saveParametres, CHAMPS_OF, TEMPLATE_ACCES_CABINET_DEFAUT
 import { getThematiques } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
 import { getQuestionsQB, saveQuestionsQB, resetQuestionsQB, DEFAULT_QUESTIONS_QB } from '../data/questionnaire-besoin'
+import GestionAcces from './GestionAcces'
 import './Parametres.css'
 import './BanqueQuestions.css'
 
@@ -563,6 +564,7 @@ const ONGLETS = [
   { id: 'questions', label: 'Banque de questions' },
   { id: 'qbesoin',   label: 'Questionnaire de besoin' },
   { id: 'mails',     label: 'Modèles de mails' },
+  { id: 'acces',     label: 'Accès utilisateurs' },
 ]
 
 export default function Parametres() {
@@ -593,6 +595,7 @@ export default function Parametres() {
           {onglet === 'questions' && <BanqueQuestions />}
           {onglet === 'qbesoin'   && <QuestionnaireBesoinEditor />}
           {onglet === 'mails'     && <MailAccesCabinetEditor />}
+          {onglet === 'acces'     && <GestionAcces />}
         </div>
       </div>
     </div>
