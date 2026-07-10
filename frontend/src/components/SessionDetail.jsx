@@ -16,6 +16,7 @@ import { getLienBesoin, getBesoin, verrouillerBesoin, deverrouillerBesoin, regen
 import { getParametres, interpolerTemplate } from '../data/parametres'
 import { getSessionData } from '../data/documents'
 import { getDevisBySession, getDevisActifBySession, saveDevis, deleteDevis, calculerDevis, STATUTS_DEVIS, createDevisFromSession, convertirEnFacture, nextNumeroDevis } from '../data/devis'
+import { getReclamations, saveReclamation, deleteReclamation, TYPES_REMONTEE, CANAUX_REMONTEE, STATUTS_RECLAMATION } from '../data/reclamations'
 import { getFacturesBySession, saveFacture, deleteFacture, calculerFacture, STATUTS_FACTURE, TYPES_FACTURE, createFactureFromSession } from '../data/factures'
 import DevisDoc from './documents/DevisDoc'
 import Facture from './documents/Facture'
@@ -254,6 +255,9 @@ export default function SessionDetail({ session, onClose, onEdit, onNavigateApp,
             <button className={`detail-tab ${tab === 'finance' ? 'active' : ''}`} onClick={() => setTab('finance')}>
               <img src="/pennylane-learning-suite/illustrations/invoice-xs.png" alt="" className="tab-icon" />
               Devis & Factures
+            </button>
+            <button className={`detail-tab ${tab === 'incidents' ? 'active' : ''}`} onClick={() => setTab('incidents')}>
+              Incidents
             </button>
           </div>
 
@@ -509,6 +513,10 @@ export default function SessionDetail({ session, onClose, onEdit, onNavigateApp,
 
           {tab === 'finance' && (
             <FinanceTab session={session} />
+          )}
+
+          {tab === 'incidents' && (
+            <IncidentsTab sessionId={session.id} />
           )}
         </div>
 
@@ -1663,6 +1671,205 @@ function SatisfactionTab({ session, inscriptions, stagiaires, onStartEnquete }) 
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ====================================================
+// Onglet Incidents / Réclamations / Aléas
+// ====================================================
+
+const EMPTY_INCIDENT = {
+  type: 'alea',
+  statut: 'ouvert',
+  date_remontee: new Date().toISOString().slice(0, 10),
+  canal: 'direct',
+  emetteur_nom: '',
+  emetteur_role: '',
+  description: '',
+  action_corrective: '',
+  responsable: '',
+  date_resolution: '',
+  notes: '',
+}
+
+function IncidentsTab({ sessionId }) {
+  const [incidents, setIncidents] = useState(() => getReclamations().filter(r => r.session_id === sessionId))
+  const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState(null)
+  const [form, setForm] = useState({ ...EMPTY_INCIDENT })
+
+  function refresh() {
+    setIncidents(getReclamations().filter(r => r.session_id === sessionId))
+  }
+
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
+
+  function handleNew() {
+    setEditId(null)
+    setForm({ ...EMPTY_INCIDENT, date_remontee: new Date().toISOString().slice(0, 10) })
+    setShowForm(true)
+  }
+
+  function handleEdit(inc) {
+    setEditId(inc.id)
+    setForm({ ...inc })
+    setShowForm(true)
+  }
+
+  function handleDelete(id) {
+    if (!window.confirm('Supprimer cet incident ?')) return
+    deleteReclamation(id)
+    refresh()
+  }
+
+  function handleSave(e) {
+    e.preventDefault()
+    if (!form.description.trim()) return
+    saveReclamation({ ...form, session_id: sessionId, id: editId || null })
+    setShowForm(false)
+    setEditId(null)
+    refresh()
+  }
+
+  function handleCancel() {
+    setShowForm(false)
+    setEditId(null)
+  }
+
+  return (
+    <div className="incidents-tab">
+      <div className="incidents-header">
+        <div>
+          <h2>Incidents, réclamations et aléas</h2>
+          <p className="incidents-sub">{incidents.length} enregistrement{incidents.length > 1 ? 's' : ''} · Indicateur Qualiopi 31</p>
+        </div>
+        {!showForm && (
+          <button className="btn-primary" onClick={handleNew}>+ Ajouter</button>
+        )}
+      </div>
+
+      {showForm && (
+        <form className="incident-form" onSubmit={handleSave}>
+          <div className="incident-form-title">{editId ? 'Modifier' : 'Nouvel incident'}</div>
+
+          <div className="incident-type-row">
+            {TYPES_REMONTEE.map(t => (
+              <button
+                key={t.id} type="button"
+                className={`incident-type-btn ${form.type === t.id ? 'active' : ''}`}
+                style={form.type === t.id ? { background: t.bg, color: t.color, borderColor: t.color } : {}}
+                onClick={() => set('type', t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Date</label>
+              <input type="date" value={form.date_remontee} onChange={e => set('date_remontee', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Canal</label>
+              <select value={form.canal} onChange={e => set('canal', e.target.value)}>
+                {CANAUX_REMONTEE.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Statut</label>
+              <select value={form.statut} onChange={e => set('statut', e.target.value)}>
+                {STATUTS_RECLAMATION.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Émetteur (nom)</label>
+              <input type="text" placeholder="Cabinet Dupont / Jean Martin…" value={form.emetteur_nom} onChange={e => set('emetteur_nom', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Rôle</label>
+              <input type="text" placeholder="Responsable formation, apprenant…" value={form.emetteur_role} onChange={e => set('emetteur_role', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Description *</label>
+            <textarea rows={3} placeholder="Décrivez l'incident, la réclamation ou l'aléa…" value={form.description} onChange={e => set('description', e.target.value)} required />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Action corrective</label>
+              <textarea rows={2} placeholder="Mesure prise ou envisagée…" value={form.action_corrective} onChange={e => set('action_corrective', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Responsable du suivi</label>
+              <input type="text" placeholder="Nom du responsable…" value={form.responsable} onChange={e => set('responsable', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Date de résolution</label>
+              <input type="date" value={form.date_resolution} onChange={e => set('date_resolution', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Notes internes</label>
+              <input type="text" placeholder="Remarques complémentaires…" value={form.notes} onChange={e => set('notes', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="incident-form-actions">
+            <button type="button" className="btn-secondary" onClick={handleCancel}>Annuler</button>
+            <button type="submit" className="btn-primary">{editId ? 'Enregistrer' : 'Créer l\'incident'}</button>
+          </div>
+        </form>
+      )}
+
+      {incidents.length === 0 && !showForm ? (
+        <div className="incidents-empty">
+          <p>Aucun incident, réclamation ou aléa enregistré pour cette session.</p>
+          <button className="btn-secondary" onClick={handleNew}>+ Déclarer un incident</button>
+        </div>
+      ) : (
+        <div className="incidents-list">
+          {incidents.sort((a, b) => (b.date_remontee || '').localeCompare(a.date_remontee || '')).map(inc => {
+            const type = TYPES_REMONTEE.find(t => t.id === inc.type)
+            const statut = STATUTS_RECLAMATION.find(s => s.id === inc.statut)
+            return (
+              <div key={inc.id} className="incident-card">
+                <div className="incident-card-top">
+                  <div className="incident-card-badges">
+                    {type && <span className="badge-pill small" style={{ color: type.color, background: type.bg }}>{type.label}</span>}
+                    {statut && <span className="badge-pill small" style={{ color: statut.color, background: statut.bg }}>{statut.label}</span>}
+                  </div>
+                  <div className="incident-card-meta">
+                    <span>{inc.date_remontee ? new Date(inc.date_remontee + 'T12:00:00').toLocaleDateString('fr-FR') : '—'}</span>
+                    {inc.emetteur_nom && <span>· {inc.emetteur_nom}{inc.emetteur_role ? ` (${inc.emetteur_role})` : ''}</span>}
+                  </div>
+                  <div className="incident-card-actions">
+                    <button className="btn-icon-sm" onClick={() => handleEdit(inc)} title="Modifier">✏️</button>
+                    <button className="btn-icon-sm danger" onClick={() => handleDelete(inc.id)} title="Supprimer">✕</button>
+                  </div>
+                </div>
+                <p className="incident-desc">{inc.description}</p>
+                {inc.action_corrective && (
+                  <div className="incident-action">
+                    <span className="incident-action-label">Action corrective :</span> {inc.action_corrective}
+                    {inc.responsable && <span className="incident-resp"> · {inc.responsable}</span>}
+                    {inc.date_resolution && <span className="incident-resp"> · résolu le {new Date(inc.date_resolution + 'T12:00:00').toLocaleDateString('fr-FR')}</span>}
+                  </div>
+                )}
+                {inc.notes && <p className="incident-notes">{inc.notes}</p>}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
