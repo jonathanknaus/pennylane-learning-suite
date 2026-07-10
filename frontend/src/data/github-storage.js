@@ -1,4 +1,4 @@
-const REPO = 'jonathanknaus/pennylane-learning-suite'
+const REPO = 'jonathanknaus/veille-juridique'
 const FILE_PATH = 'data/veille-sarah.json'
 const BRANCH = 'main'
 const TOKEN = import.meta.env.VITE_GITHUB_DATA_TOKEN
