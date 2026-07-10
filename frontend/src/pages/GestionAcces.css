@@ -303,14 +303,39 @@
 .perm-row:hover { background: var(--gris); }
 .perm-row.perm-row-on { background: #DAFBF2; }
 .perm-row.perm-row-on:hover { background: #C0F5E8; }
-.perm-checkbox {
-  accent-color: #00BD57;
-  width: 16px; height: 16px;
+.perm-check {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  border: 2px solid #CBD5E0;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  outline-offset: 2px;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+  padding: 0;
 }
-.perm-checkbox:focus-visible { outline: 2px solid #00BD57; }
-.perm-checkbox:disabled { cursor: not-allowed; opacity: 0.45; }
+.perm-check:hover:not(.perm-check-readonly) { border-color: #00BD57; }
+.perm-check.perm-check-on {
+  background: #00BD57;
+  border-color: #00BD57;
+}
+.perm-check.perm-check-on.perm-check-readonly {
+  background: #00BD57;
+  border-color: #00BD57;
+  opacity: 1;
+}
+.perm-check.perm-check-readonly {
+  cursor: default;
+  border-color: #D1D5DB;
+  background: #F9FAFB;
+}
+.perm-check-svg {
+  width: 10px; height: 10px;
+  color: #fff;
+  display: block;
+}
 
 /* ── Compte protégé ── */
 .acces-row-protected td { background: #FAFFF7 !important; }

@@ -6,6 +6,26 @@ import {
 } from '../data/acces'
 import './GestionAcces.css'
 
+// ── Case à cocher custom ─────────────────────────────────────────────────────
+
+function PermCheck({ checked, onChange, readOnly }) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={readOnly ? undefined : onChange}
+      className={`perm-check ${checked ? 'perm-check-on' : ''} ${readOnly ? 'perm-check-readonly' : ''}`}
+    >
+      {checked && (
+        <svg viewBox="0 0 12 10" fill="none" className="perm-check-svg">
+          <polyline points="1.5,5 4.5,8.5 10.5,1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 // ── Matrice de permissions ────────────────────────────────────────────────────
 
 function PermMatrix({ perms, onChange, readOnly }) {
@@ -13,7 +33,6 @@ function PermMatrix({ perms, onChange, readOnly }) {
     if (readOnly) return
     const cur = perms[moduleId] || emptyPerm()
     let next = { ...cur, [champ]: !cur[champ] }
-    // Cohérence : accès requis pour lecture/écriture ; écriture implique lecture
     if (champ === 'acces' && !next.acces) next = { acces: false, lecture: false, ecriture: false }
     if (champ === 'lecture' && next.lecture && !next.acces) next.acces = true
     if (champ === 'ecriture' && next.ecriture) { next.acces = true; next.lecture = true }
@@ -39,12 +58,10 @@ function PermMatrix({ perms, onChange, readOnly }) {
                 <div className="perm-col-module">{item.label}</div>
                 {['acces', 'lecture', 'ecriture'].map(champ => (
                   <div key={champ} className="perm-col-check">
-                    <input
-                      type="checkbox"
+                    <PermCheck
                       checked={!!p[champ]}
                       onChange={() => toggle(item.id, champ)}
-                      disabled={readOnly}
-                      className="perm-checkbox"
+                      readOnly={readOnly}
                     />
                   </div>
                 ))}
