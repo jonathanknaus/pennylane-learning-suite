@@ -1,6 +1,17 @@
 {
-  "fetchedAt": "2026-07-06T17:18:31.341Z",
+  "fetchedAt": "2026-07-13T13:39:52.540Z",
   "articles": [
+    {
+      "id": "france-competences__metiers-emergents-ou-en-particuliere-evolution-france-competences-elargit-son-7%e1%b5%89-appel-a-con",
+      "titre": "Métiers émergents ou en particulière évolution : lancement d'un appel à contributions",
+      "resume": "",
+      "source_id": "france-competences",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-07-13",
+      "url": "https://www.francecompetences.fr/fiche/metiers-emergents-ou-en-particuliere-evolution-france-competences-elargit-son-7%e1%b5%89-appel-a-contributions/",
+      "lu": false
+    },
     {
       "id": "france-competences__decisions-denregistrement-aux-repertoires-nationaux-juin-2026",
       "titre": "Décisions d’enregistrement aux répertoires nationaux – Juin 2026",
@@ -8,7 +19,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-07-06",
+      "date": "2026-07-13",
       "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-juin-2026/",
       "lu": false
     },
@@ -19,8 +30,173 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-07-06",
+      "date": "2026-07-13",
       "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-mai-2026/",
+      "lu": false
+    },
+    {
+      "id": "france-competences__enquete-nationale-aupres-des-organismes-certificateurs-et-des-organismes-de-formation-habilites",
+      "titre": "Observation et évaluation Enquête nationale auprès des organismes certificateurs et des organismes de formation habilités",
+      "resume": "",
+      "source_id": "france-competences",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-07-13",
+      "url": "https://www.francecompetences.fr/fiche/enquete-nationale-aupres-des-organismes-certificateurs-et-des-organismes-de-formation-habilites/",
+      "lu": false
+    },
+    {
+      "id": "france-competences__la-grande-bibliotheque-de-france-competences-referencee-par-lademe-academie",
+      "titre": "Observation et évaluation Actualités 09.07.2026",
+      "resume": "",
+      "source_id": "france-competences",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-07-13",
+      "url": "https://www.francecompetences.fr/fiche/la-grande-bibliotheque-de-france-competences-referencee-par-lademe-academie/",
+      "lu": false
+    },
+    {
+      "id": "centre-inffo__la-formation-ne-suffit-pas-a-garantir-une-reconversion-des-femmes-sorties-de-lemploi-dans-lunivers-du-nume",
+      "titre": "La formation ne suffit pas à garantir une reconversion des femmes sorties de l'emploi dans l'univers du numérique",
+      "resume": "",
+      "source_id": "centre-inffo",
+      "thematique": "qualiopi",
+      "niveau": "urgent",
+      "date": "2026-07-13",
+      "url": "https://www.centre-inffo.fr/site-centre-inffo/la-formation-ne-suffit-pas-a-garantir-une-reconversion-des-femmes-sorties-de-lemploi-dans-lunivers-du-numerique",
+      "lu": false
+    },
+    {
+      "id": "centre-inffo__les-injonctions-a-la-reconversion-professionnelles-sont-fortes-mais-les-moyens-pour-y-parvenir-sont-insuff",
+      "titre": "Fabienne Maillard : « Les injonctions à la reconversion professionnelles sont fortes, mais les moyens pour y parvenir sont insuffisants »",
+      "resume": "",
+      "source_id": "centre-inffo",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-07-13",
+      "url": "https://www.centre-inffo.fr/site-centre-inffo/actualites-centre-inffo/le-quotidien-de-la-formation-actualite-formation-professionnelle-apprentissage/actualites-2026/les-injonctions-a-la-reconversion-professionnelles-sont-fortes-mais-les-moyens-pour-y-parvenir-sont-insuffisants",
+      "lu": false
+    },
+    {
+      "id": "centre-inffo__france-experimentation-vient-denregistrer-son-500%e1%b5%89-dossier",
+      "titre": "France Expérimentation vient d'enregistrer son 500ᵉ dossier",
+      "resume": "",
+      "source_id": "centre-inffo",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-07-13",
+      "url": "https://www.centre-inffo.fr/site-centre-inffo/actualites-centre-inffo/le-quotidien-de-la-formation-actualite-formation-professionnelle-apprentissage/actualites-2026/france-experimentation-vient-denregistrer-son-500%e1%b5%89-dossier",
+      "lu": false
+    },
+    {
+      "id": "centre-inffo__les-agents-publics-se-declarent-en-attente-de-formations-a-lia",
+      "titre": "Les agents publics se déclarent en attente de formations à l'IA",
+      "resume": "",
+      "source_id": "centre-inffo",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-07-13",
+      "url": "https://www.centre-inffo.fr/site-centre-inffo/actualites-centre-inffo/le-quotidien-de-la-formation-actualite-formation-professionnelle-apprentissage/actualites-2026/les-agents-publics-se-declarent-en-attente-de-formations-a-lia",
+      "lu": false
+    },
+    {
+      "id": "centre-inffo__richard-lainet-capitaine-penitentiaire",
+      "titre": "Richard Lainet, capitaine pénitentiaire",
+      "resume": "",
+      "source_id": "centre-inffo",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-07-12",
+      "url": "https://www.centre-inffo.fr/site-centre-inffo/inffo-formation/articles-dinffo-formation/richard-lainet-capitaine-penitentiaire",
+      "lu": false
+    },
+    {
+      "id": "cnil__revoir-le-webinaire-nouveau-teleservice-sante-et-recherche-ce-qui-change-pour-vos-demandes",
+      "titre": "Revoir le webinaire : Nouveau téléservice santé et recherche, ce qui change pour vos demandes d’autorisation",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-10",
+      "url": "https://www.cnil.fr/fr/revoir-le-webinaire-nouveau-teleservice-sante-et-recherche-ce-qui-change-pour-vos-demandes",
+      "lu": false
+    },
+    {
+      "id": "cnil__controle-de-lactivite-des-personnes-employees",
+      "titre": "Travail, ressources humaines : le contrôle de l’activité des personnes employées",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "important",
+      "date": "2026-07-09",
+      "url": "https://www.cnil.fr/fr/controle-de-lactivite-des-personnes-employees",
+      "lu": false
+    },
+    {
+      "id": "cnil__cepd-ia-generative-chaines-blocs",
+      "titre": "Le CEPD met en lumière l’anonymisation et le moissonnage pour l’IA générative et adopte la version finale des lignes directrices sur la chaîne de blocs",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-09",
+      "url": "https://www.cnil.fr/fr/cepd-ia-generative-chaines-blocs",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__bilan-de-la-mesure-2025-de-la-representativite-des-organisations-syndicales-et-patronales",
+      "titre": "Bilan de la mesure 2025 de la représentativité des organisations syndicales et patronales",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-07-09",
+      "url": "https://travail-emploi.gouv.fr/bilan-de-la-mesure-2025-de-la-representativite-des-organisations-syndicales-et-patronales",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__fortes-chaleurs-mesures-de-prevention-et-actions-de-linspection-du-travail",
+      "titre": "Fortes chaleurs : mesures de prévention et actions de l'inspection du travail",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-07-08",
+      "url": "https://travail-emploi.gouv.fr/fortes-chaleurs-mesures-de-prevention-et-actions-de-linspection-du-travail",
+      "lu": false
+    },
+    {
+      "id": "agefiph__le-cnc-lagefiph-et-ladami-devoilent-les-23-laureats-de",
+      "titre": "Le CNC, l’Agefiph et l’Adami dévoilent les 23 lauréats de l’appel à projets « Les uns et les autres » 2026",
+      "resume": "",
+      "source_id": "agefiph",
+      "thematique": "opco",
+      "niveau": "info",
+      "date": "2026-07-08",
+      "url": "https://www.agefiph.fr/espace-presse/tous-les-documents-presse/le-cnc-lagefiph-et-ladami-devoilent-les-23-laureats-de",
+      "lu": false
+    },
+    {
+      "id": "cnil__geolocalisation-applications-mobiles-proteger-vos-donnees",
+      "titre": "Géolocalisation et applications mobiles : comment protéger vos données ?",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-07",
+      "url": "https://www.cnil.fr/fr/geolocalisation-applications-mobiles-proteger-vos-donnees",
+      "lu": false
+    },
+    {
+      "id": "cnil__geolocalisation-applications-mobiles-quelles-regles",
+      "titre": "Géolocalisation et applications mobiles : quelles règles pour protéger les données des utilisateurs ?",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-07",
+      "url": "https://www.cnil.fr/fr/geolocalisation-applications-mobiles-quelles-regles",
       "lu": false
     },
     {
@@ -123,17 +299,6 @@
       "lu": false
     },
     {
-      "id": "cnil__enquete-dpo-ia",
-      "titre": "Le métier de DPO à l’heure de l’intelligence artificielle : publication des résultats de l’enquête",
-      "resume": "",
-      "source_id": "cnil",
-      "thematique": "rgpd",
-      "niveau": "info",
-      "date": "2026-07-03",
-      "url": "https://www.cnil.fr/fr/enquete-dpo-ia",
-      "lu": false
-    },
-    {
       "id": "ministere-travail__traite-des-etres-humains-trois-condamnations-penales-confirmees-en-appel",
       "titre": "Traite des êtres humains : trois condamnations pénales confirmées en appel",
       "resume": "",
@@ -153,6 +318,17 @@
       "niveau": "important",
       "date": "2026-07-03",
       "url": "https://www.agefiph.fr/centre-aide/controle-et-taxation-forfaitaire",
+      "lu": false
+    },
+    {
+      "id": "cnil__enquete-dpo-ia",
+      "titre": "Le métier de DPO à l’heure de l’intelligence artificielle : publication des résultats de l’enquête",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-03",
+      "url": "https://www.cnil.fr/fr/enquete-dpo-ia",
       "lu": false
     },
     {
@@ -178,17 +354,6 @@
       "lu": false
     },
     {
-      "id": "cnil__vehicules-connectes-utilisation-de-vos-donnees",
-      "titre": "Véhicules connectés : dans quelles conditions vos données de localisation peuvent être utilisées ?",
-      "resume": "",
-      "source_id": "cnil",
-      "thematique": "rgpd",
-      "niveau": "info",
-      "date": "2026-06-30",
-      "url": "https://www.cnil.fr/fr/vehicules-connectes-utilisation-de-vos-donnees",
-      "lu": false
-    },
-    {
       "id": "ministere-travail__conclusions-de-talents-de-france",
       "titre": "Conclusions de Talents de France",
       "resume": "",
@@ -208,6 +373,17 @@
       "niveau": "info",
       "date": "2026-06-30",
       "url": "https://travail-emploi.gouv.fr/evaluation-du-programme-inclusion-par-le-travail-independant-donnees-personnelles",
+      "lu": false
+    },
+    {
+      "id": "cnil__vehicules-connectes-utilisation-de-vos-donnees",
+      "titre": "Véhicules connectés : dans quelles conditions vos données de localisation peuvent être utilisées ?",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-06-30",
+      "url": "https://www.cnil.fr/fr/vehicules-connectes-utilisation-de-vos-donnees",
       "lu": false
     },
     {
