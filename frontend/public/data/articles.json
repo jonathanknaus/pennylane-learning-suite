@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-07-20T09:19:48.339Z",
+  "fetchedAt": "2026-07-27T09:57:02.533Z",
   "articles": [
     {
       "id": "france-competences__decisions-denregistrement-aux-repertoires-nationaux-juillet-2026",
@@ -8,7 +8,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-07-20",
+      "date": "2026-07-27",
       "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-juillet-2026/",
       "lu": false
     },
@@ -19,7 +19,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-07-20",
+      "date": "2026-07-27",
       "url": "https://www.francecompetences.fr/fiche/metiers-emergents-ou-en-particuliere-evolution-france-competences-elargit-son-7%e1%b5%89-appel-a-contributions/",
       "lu": false
     },
@@ -30,7 +30,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-07-20",
+      "date": "2026-07-27",
       "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-juin-2026/",
       "lu": false
     },
@@ -41,7 +41,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-07-20",
+      "date": "2026-07-27",
       "url": "https://www.francecompetences.fr/fiche/la-grande-bibliotheque-de-france-competences-referencee-par-lademe-academie/",
       "lu": false
     },
@@ -52,8 +52,63 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-07-20",
+      "date": "2026-07-27",
       "url": "https://www.francecompetences.fr/fiche/enquete-nationale-aupres-des-organismes-certificateurs-et-des-organismes-de-formation-habilites/",
+      "lu": false
+    },
+    {
+      "id": "cnil__webinaire-pixels-de-suivi-fournisseurs-prestataires",
+      "titre": "Revoir le webinaire - Fournisseurs et prestataires de l’écosystème « pixels » : comment implémenter la recommandation CNIL ?",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-22",
+      "url": "https://www.cnil.fr/fr/webinaire-pixels-de-suivi-fournisseurs-prestataires",
+      "lu": false
+    },
+    {
+      "id": "cnil__faq-recommandation-pixels-courriers-electroniques",
+      "titre": "Questions-réponses - recommandation relative aux pixels dans les courriers électroniques de la CNIL",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-22",
+      "url": "https://www.cnil.fr/fr/faq-recommandation-pixels-courriers-electroniques",
+      "lu": false
+    },
+    {
+      "id": "cnil__ordre-du-jour-de-la-seance-pleniere-du-21-juillet-2026",
+      "titre": "Ordre du jour de la séance plénière du 21 juillet 2026",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-21",
+      "url": "https://www.cnil.fr/fr/ordre-du-jour-de-la-seance-pleniere-du-21-juillet-2026",
+      "lu": false
+    },
+    {
+      "id": "cnil__cepd-base-juridique-interregulation",
+      "titre": "Le CEPD demande une base légale pour le partage d’informations entre régulateurs",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-20",
+      "url": "https://www.cnil.fr/fr/cepd-base-juridique-interregulation",
+      "lu": false
+    },
+    {
+      "id": "cnil__ia-agentique-cnil-cianum-note",
+      "titre": "IA agentique et données personnelles : la CNIL et le Conseil de l’IA et du Numérique publient une note exploratoire",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-07-20",
+      "url": "https://www.cnil.fr/fr/ia-agentique-cnil-cianum-note",
       "lu": false
     },
     {
@@ -200,6 +255,17 @@
       "lu": false
     },
     {
+      "id": "ministere-travail__bilan-de-la-mesure-2025-de-la-representativite-des-organisations-syndicales-et-patronales",
+      "titre": "Bilan de la mesure 2025 de la représentativité des organisations syndicales et patronales",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-07-09",
+      "url": "https://travail-emploi.gouv.fr/bilan-de-la-mesure-2025-de-la-representativite-des-organisations-syndicales-et-patronales",
+      "lu": false
+    },
+    {
       "id": "cnil__controle-de-lactivite-des-personnes-employees",
       "titre": "Travail, ressources humaines : le contrôle de l’activité des personnes employées",
       "resume": "",
@@ -219,17 +285,6 @@
       "niveau": "info",
       "date": "2026-07-09",
       "url": "https://www.cnil.fr/fr/cepd-ia-generative-chaines-blocs",
-      "lu": false
-    },
-    {
-      "id": "ministere-travail__bilan-de-la-mesure-2025-de-la-representativite-des-organisations-syndicales-et-patronales",
-      "titre": "Bilan de la mesure 2025 de la représentativité des organisations syndicales et patronales",
-      "resume": "",
-      "source_id": "ministere-travail",
-      "thematique": "legislatif",
-      "niveau": "info",
-      "date": "2026-07-09",
-      "url": "https://travail-emploi.gouv.fr/bilan-de-la-mesure-2025-de-la-representativite-des-organisations-syndicales-et-patronales",
       "lu": false
     },
     {
