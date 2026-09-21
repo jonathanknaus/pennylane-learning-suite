@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-09-14T12:10:51.323Z",
+  "fetchedAt": "2026-09-21T12:19:21.940Z",
   "articles": [
     {
       "id": "france-competences__decisions-denregistrement-aux-repertoires-nationaux-juillet-2026",
@@ -8,7 +8,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-09-14",
+      "date": "2026-09-21",
       "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-juillet-2026/",
       "lu": false
     },
@@ -19,7 +19,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-09-14",
+      "date": "2026-09-21",
       "url": "https://www.francecompetences.fr/fiche/metiers-emergents-ou-en-particuliere-evolution-france-competences-elargit-son-7%e1%b5%89-appel-a-contributions/",
       "lu": false
     },
@@ -30,19 +30,96 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-09-14",
+      "date": "2026-09-21",
       "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-juin-2026/",
       "lu": false
     },
     {
       "id": "france-competences__france-competences-publie-le-referentiel-complet-des-niveaux-de-prise-en-charge-des-contrats-dappren",
-      "titre": "Financement de la formation et de l’apprentissage France compétences publie le référentiel complet des niveaux de prise en charge des contrats d’apprentissage (NPEC)",
+      "titre": "Financement de la formation et de l’apprentissage Le référentiel complet des niveaux de prise en charge des contrats d’apprentissage",
       "resume": "",
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "important",
-      "date": "2026-09-14",
+      "date": "2026-09-21",
       "url": "https://www.francecompetences.fr/fiche/france-competences-publie-le-referentiel-complet-des-niveaux-de-prise-en-charge-des-contrats-dapprentissage-npec/",
+      "lu": false
+    },
+    {
+      "id": "france-competences__semaines-de-levolution-professionnelle-2026",
+      "titre": "Conseil en évolution professionnelle Semaines de l’évolution professionnelle 2026 18.09.2026",
+      "resume": "",
+      "source_id": "france-competences",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-09-21",
+      "url": "https://www.francecompetences.fr/fiche/semaines-de-levolution-professionnelle-2026/",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__le-conge-de-paternite-et-daccueil-de-lenfant",
+      "titre": "Le congé de paternité et d'accueil de l'enfant",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-09-21",
+      "url": "https://travail-emploi.gouv.fr/le-conge-de-paternite-et-daccueil-de-lenfant",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__le-conge-dadoption",
+      "titre": "Le congé d'adoption",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-09-21",
+      "url": "https://travail-emploi.gouv.fr/le-conge-dadoption",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__le-conge-de-maternite",
+      "titre": "Le congé de maternité",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-09-21",
+      "url": "https://travail-emploi.gouv.fr/le-conge-de-maternite",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__lautorisation-de-conduite-des-appareils-de-levage",
+      "titre": "L'autorisation de conduite des appareils de levage",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-09-18",
+      "url": "https://travail-emploi.gouv.fr/lautorisation-de-conduite-des-appareils-de-levage",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__la-prevention-des-risques-lies-lamiante",
+      "titre": "La prévention des risques liés à l'amiante",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-09-18",
+      "url": "https://travail-emploi.gouv.fr/la-prevention-des-risques-lies-lamiante",
+      "lu": false
+    },
+    {
+      "id": "cnil__ordre-du-jour-de-la-seance-pleniere-du-17-septembre-2026",
+      "titre": "Ordre du jour de la séance plénière du 17 septembre 2026",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-09-17",
+      "url": "https://www.cnil.fr/fr/ordre-du-jour-de-la-seance-pleniere-du-17-septembre-2026",
       "lu": false
     },
     {
