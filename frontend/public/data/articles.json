@@ -1,6 +1,17 @@
 {
-  "fetchedAt": "2026-09-28T13:15:46.603Z",
+  "fetchedAt": "2026-10-05T13:58:46.573Z",
   "articles": [
+    {
+      "id": "france-competences__decisions-denregistrement-aux-repertoires-nationaux-septembre-2026",
+      "titre": "Décisions d’enregistrement aux répertoires nationaux – Septembre 2026",
+      "resume": "",
+      "source_id": "france-competences",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-10-05",
+      "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-septembre-2026/",
+      "lu": false
+    },
     {
       "id": "france-competences__decisions-denregistrement-aux-repertoires-nationaux-juillet-2026",
       "titre": "Décisions d’enregistrement aux répertoires nationaux – Juillet 2026",
@@ -8,7 +19,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-09-28",
+      "date": "2026-10-05",
       "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-juillet-2026/",
       "lu": false
     },
@@ -19,19 +30,8 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-09-28",
+      "date": "2026-10-05",
       "url": "https://www.francecompetences.fr/fiche/metiers-emergents-ou-en-particuliere-evolution-france-competences-elargit-son-7%e1%b5%89-appel-a-contributions/",
-      "lu": false
-    },
-    {
-      "id": "france-competences__decisions-denregistrement-aux-repertoires-nationaux-juin-2026",
-      "titre": "Décisions d’enregistrement aux répertoires nationaux – Juin 2026",
-      "resume": "",
-      "source_id": "france-competences",
-      "thematique": "qualiopi",
-      "niveau": "info",
-      "date": "2026-09-28",
-      "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-juin-2026/",
       "lu": false
     },
     {
@@ -41,7 +41,7 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "important",
-      "date": "2026-09-28",
+      "date": "2026-10-05",
       "url": "https://www.francecompetences.fr/fiche/france-competences-publie-le-referentiel-complet-des-niveaux-de-prise-en-charge-des-contrats-dapprentissage-npec/",
       "lu": false
     },
@@ -52,8 +52,118 @@
       "source_id": "france-competences",
       "thematique": "qualiopi",
       "niveau": "info",
-      "date": "2026-09-28",
+      "date": "2026-10-05",
       "url": "https://www.francecompetences.fr/fiche/semaines-de-levolution-professionnelle-2026/",
+      "lu": false
+    },
+    {
+      "id": "cnil__violations-de-donnees-personnelles-cas-indemnite",
+      "titre": "Violations de données personnelles : dans quels cas peut-on être indemnisé ?",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-10-02",
+      "url": "https://www.cnil.fr/fr/violations-de-donnees-personnelles-cas-indemnite",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__conventions-collectives-nomenclatures",
+      "titre": "Conventions collectives : nomenclatures",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-10-02",
+      "url": "https://travail-emploi.gouv.fr/conventions-collectives-nomenclatures",
+      "lu": false
+    },
+    {
+      "id": "cnil__ordre-du-jour-de-la-seance-pleniere-du-1er-octobre-2026",
+      "titre": "Ordre du jour de la séance plénière du 1er octobre 2026",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "info",
+      "date": "2026-10-01",
+      "url": "https://www.cnil.fr/fr/ordre-du-jour-de-la-seance-pleniere-du-1er-octobre-2026",
+      "lu": false
+    },
+    {
+      "id": "cnil__cybermois-2026",
+      "titre": "Cybermois 2026 : la CNIL et Cybermalveillance.gouv.fr publient une nouvelle ressource pour adopter les bons réflexes face à une violation de données",
+      "resume": "",
+      "source_id": "cnil",
+      "thematique": "rgpd",
+      "niveau": "important",
+      "date": "2026-10-01",
+      "url": "https://www.cnil.fr/fr/cybermois-2026",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__budget-relatif-au-projet-de-loi-de-finances-pour-2027",
+      "titre": "Budget relatif au projet de loi de finances pour 2027",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "urgent",
+      "date": "2026-10-01",
+      "url": "https://travail-emploi.gouv.fr/budget-relatif-au-projet-de-loi-de-finances-pour-2027",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__deffinum-preparer-les-competences-de-demain-en-transformant-la-formation-aujourdhui",
+      "titre": "DEFFINUM : préparer les compétences de demain en transformant la formation aujourd’hui",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-10-01",
+      "url": "https://travail-emploi.gouv.fr/deffinum-preparer-les-competences-de-demain-en-transformant-la-formation-aujourdhui",
+      "lu": false
+    },
+    {
+      "id": "agefiph__la-france-mutualiste-renforce-son-engagement-pour-lemploi",
+      "titre": "La France Mutualiste renforce son engagement pour l’emploi des personnes handicapées aux côtés de l'Agefiph",
+      "resume": "",
+      "source_id": "agefiph",
+      "thematique": "opco",
+      "niveau": "urgent",
+      "date": "2026-10-01",
+      "url": "https://www.agefiph.fr/espace-presse/tous-les-documents-presse/la-france-mutualiste-renforce-son-engagement-pour-lemploi",
+      "lu": false
+    },
+    {
+      "id": "agefiph__trouver-une-formation-accessible-devient-plus-simple-sur",
+      "titre": "Trouver une formation accessible devient plus simple sur l’outil « QuiForme »",
+      "resume": "",
+      "source_id": "agefiph",
+      "thematique": "opco",
+      "niveau": "info",
+      "date": "2026-10-01",
+      "url": "https://www.agefiph.fr/espace-presse/tous-les-documents-presse/trouver-une-formation-accessible-devient-plus-simple-sur",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__la-reforme-des-retraites-de-2023",
+      "titre": "La réforme des retraites de 2023",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "important",
+      "date": "2026-09-30",
+      "url": "https://travail-emploi.gouv.fr/la-reforme-des-retraites-de-2023",
+      "lu": false
+    },
+    {
+      "id": "ministere-travail__mobiliser-les-employeurs-en-faveur-de-lapprentissage",
+      "titre": "Faire de l'apprentissage un levier de réussite pour tous les jeunes et les entreprises",
+      "resume": "",
+      "source_id": "ministere-travail",
+      "thematique": "legislatif",
+      "niveau": "info",
+      "date": "2026-09-30",
+      "url": "https://travail-emploi.gouv.fr/mobiliser-les-employeurs-en-faveur-de-lapprentissage",
       "lu": false
     },
     {
@@ -65,6 +175,17 @@
       "niveau": "info",
       "date": "2026-09-28",
       "url": "https://www.cnil.fr/fr/air2026",
+      "lu": false
+    },
+    {
+      "id": "france-competences__decisions-denregistrement-aux-repertoires-nationaux-juin-2026",
+      "titre": "Décisions d’enregistrement aux répertoires nationaux – Juin 2026",
+      "resume": "",
+      "source_id": "france-competences",
+      "thematique": "qualiopi",
+      "niveau": "info",
+      "date": "2026-09-28",
+      "url": "https://www.francecompetences.fr/fiche/decisions-denregistrement-aux-repertoires-nationaux-juin-2026/",
       "lu": false
     },
     {
