@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getSession, getCurrentUser, logout, ROLES } from './data/auth'
+import { getSession, getCurrentUser, logout, ROLES, aAcces } from './data/auth'
 import Login from './pages/Login'
 import Passation from './pages/Passation'
 import AccueilAdmin from './pages/AccueilAdmin'
@@ -326,6 +326,29 @@ export default function App() {
   }
 
   const currentPage = nav.page || 'accueil'
+
+  // Navigation filtrée par les droits du profil : on masque les modules sans
+  // accès, et on retire un groupe entièrement vide.
+  // ⚠️ C'est un filtrage d'affichage, pas une frontière de sécurité : les
+  // données vivent en localStorage. Voir l'avertissement dans firebase-auth.js.
+  const navVisible = NAV_ADMIN
+    .map(g => ({ ...g, items: g.items.filter(p => aAcces(p.id)) }))
+    .filter(g => g.items.length > 0)
+
+  const pagesAutorisees = navVisible.flatMap(g => g.items.map(p => p.id))
+  // Paramètres ne fait pas partie de NAV_ADMIN (lien séparé en pied de sidebar),
+  // mais la matrice a bien un module 'parametres' : on le gère explicitement.
+  const voitParametres = aAcces('parametres')
+
+  // Modules réellement gouvernés par la matrice. Toute page hors de cette liste
+  // (portails, écrans publics…) n'est pas filtrée et doit s'afficher telle quelle :
+  // sans ce garde-fou, la redirection renvoyait Paramètres vers l'accueil.
+  const modulesGouvernes = [...NAV_ADMIN.flatMap(g => g.items.map(p => p.id)), 'parametres']
+  const autorisees = voitParametres ? [...pagesAutorisees, 'parametres'] : pagesAutorisees
+
+  const pageAffichee = (modulesGouvernes.includes(currentPage) && !autorisees.includes(currentPage))
+    ? (pagesAutorisees[0] || 'accueil')
+    : currentPage
   // Tout utilisateur admin est un gestionnaire (Sarah ou un autre) — on résout son identité
   // par email pour rattacher le centre de notifications au bon destinataire.
   const gestionnaireCourant = getGestionnaires().find(g => g.email?.toLowerCase() === user?.email?.toLowerCase())
@@ -346,13 +369,13 @@ export default function App() {
         </div>
 
         <nav className="sidebar-nav">
-          {NAV_ADMIN.map(({ group, items }) => (
+          {navVisible.map(({ group, items }) => (
             <div key={group} className="sidebar-group">
               <div className="sidebar-group-label">{group}</div>
               {items.map(p => (
                 <button
                   key={p.id}
-                  className={`sidebar-link ${currentPage === p.id ? 'active' : ''}`}
+                  className={`sidebar-link ${pageAffichee === p.id ? 'active' : ''}`}
                   onClick={() => navigate({ page: p.id })}
                 >
                   <span className="sidebar-icon">{p.icon}</span>
@@ -364,13 +387,15 @@ export default function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <button
-            className={`sidebar-link ${currentPage === 'parametres' ? 'active' : ''}`}
-            onClick={() => navigate({ page: 'parametres' })}
-          >
-            <span className="sidebar-icon">⚙️</span>
-            Paramètres
-          </button>
+          {voitParametres && (
+            <button
+              className={`sidebar-link ${pageAffichee === 'parametres' ? 'active' : ''}`}
+              onClick={() => navigate({ page: 'parametres' })}
+            >
+              <span className="sidebar-icon">⚙️</span>
+              Paramètres
+            </button>
+          )}
           <div className="sidebar-user">
             <RoleBadge role={user?.role} />
             <button className="btn-logout" onClick={handleLogout}>Déconnexion</button>
@@ -382,8 +407,8 @@ export default function App() {
       <div className="sidebar-content">
         <header className="content-topbar">
           <div className="content-topbar-title">
-            {NAV_ADMIN.flatMap(g => g.items).find(p => p.id === currentPage)?.label
-              || (currentPage === 'parametres' ? 'Paramètres' : '')}
+            {NAV_ADMIN.flatMap(g => g.items).find(p => p.id === pageAffichee)?.label
+              || (pageAffichee === 'parametres' ? 'Paramètres' : '')}
           </div>
           <div className="content-topbar-right">
             {gestionnaireCourant && (
@@ -399,7 +424,7 @@ export default function App() {
           </div>
         </header>
         <div className="sidebar-content-inner">
-          <PageContent currentPage={currentPage} onNavigate={p => navigate({ page: p })} nav={nav} onNavigateNav={navigate} />
+          <PageContent currentPage={pageAffichee} onNavigate={p => navigate({ page: p })} nav={nav} onNavigateNav={navigate} />
         </div>
       </div>
     </div>

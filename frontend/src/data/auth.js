@@ -1,6 +1,6 @@
 import { auth as authApi } from './api.js'
 import {
-  connexionGoogle, deconnexionGoogle, lireAcces, resoudreProfil, PROFILS,
+  connexionGoogle, deconnexionGoogle, lireAcces, lireProfils, resoudreProfil, PROFILS,
 } from './firebase-auth.js'
 
 export const ROLES = {
@@ -35,15 +35,17 @@ export async function loginWithGoogle() {
   const email = (utilisateur.email || '').toLowerCase()
 
   let liste = []
+  let profils = null
   try {
-    liste = await lireAcces()
-  } catch (err) {
-    // Lecture refusée = le domaine n'est pas autorisé par les règles.
+    // Les deux lectures sont arbitrées par les règles : un domaine non autorisé
+    // échoue ici, côté serveur, et pas dans l'interface.
+    ;[liste, profils] = await Promise.all([lireAcces(), lireProfils()])
+  } catch {
     await deconnexionGoogle().catch(() => {})
     throw new Error(`Le compte ${email} n'est pas autorisé à accéder à cet outil.`)
   }
 
-  const resolu = resoudreProfil(email, liste)
+  const resolu = resoudreProfil(email, liste, profils)
   if (!resolu) {
     await deconnexionGoogle().catch(() => {})
     throw new Error(`Le compte ${email} n'a pas d'accès attribué. Contacte un administrateur.`)
@@ -60,11 +62,33 @@ export async function loginWithGoogle() {
       photo: utilisateur.photoURL || '',
       role: resolu.role,
       profilId: resolu.profil,
-      profilLabel: PROFILS[resolu.profil]?.label || resolu.profil,
+      profilLabel: profils?.[resolu.profil]?.label || PROFILS[resolu.profil]?.label || resolu.profil,
+      perms: resolu.perms,
+      permsPersonnalisees: !!resolu.entree?.permsPersonnalisees,
     },
   }
   localStorage.setItem(SESSION_KEY, JSON.stringify(data))
   return resolu.role
+}
+
+// ── Droits de l'utilisateur connecté ─────────────────────────────────────────
+// Pilote l'affichage. Voir l'avertissement en tête de firebase-auth.js : ce
+// n'est pas une frontière de sécurité tant qu'il n'y a pas de backend.
+
+export function permsCourantes() {
+  return getCurrentUser()?.perms || null
+}
+
+export function aAcces(moduleId) {
+  const p = permsCourantes()
+  if (!p) return true // session antérieure aux permissions : ne rien casser
+  return !!p[moduleId]?.acces
+}
+
+export function peutEcrire(moduleId) {
+  const p = permsCourantes()
+  if (!p) return true
+  return !!p[moduleId]?.ecriture
 }
 
 export function getSession() {

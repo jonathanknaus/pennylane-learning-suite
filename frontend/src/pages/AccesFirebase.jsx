@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react'
 import {
-  ecouterAcces, enregistrerAcces, supprimerAcces, estAdminRacine, PROFILS, ADMINS_RACINE,
+  ecouterAcces, ecouterProfils, enregistrerAcces, supprimerAcces, estAdminRacine,
+  permsEffectives, normaliserPerms, PROFILS_IDS, PROFILS_DEFAUT, ADMINS_RACINE,
 } from '../data/firebase-auth'
 import { getCurrentUser } from '../data/auth'
+import PermMatrix, { ResumePerms } from '../components/PermMatrix'
 
-const VIDE = { email: '', nom: '', prenom: '', profil: 'formateur_interne', actif: true }
+const VIDE = {
+  email: '', nom: '', prenom: '', profil: 'formateur_interne',
+  actif: true, permsPersonnalisees: false, perms: null,
+}
 
 // Écran de gestion des accès, branché en temps réel sur la base Firebase.
 // La liste est partagée avec l'outil de veille : un accès accordé ici y vaut aussi.
 export default function AccesFirebase() {
   const [liste, setListe] = useState([])
+  const [profils, setProfils] = useState(PROFILS_DEFAUT)
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState('')
   const [edition, setEdition] = useState(null)
@@ -20,18 +26,19 @@ export default function AccesFirebase() {
   const peutEcrire = estAdminRacine(moi?.email)
 
   useEffect(() => {
-    const stop = ecouterAcces(
+    const stopAcces = ecouterAcces(
       entrees => {
         setListe(entrees.sort((a, b) => (a.nom || a.email).localeCompare(b.nom || b.email)))
         setChargement(false)
         setErreur('')
       },
-      err => {
-        setChargement(false)
-        setErreur(`Lecture impossible : ${err.message}`)
-      },
+      err => { setChargement(false); setErreur(`Lecture impossible : ${err.message}`) },
     )
-    return () => { if (typeof stop === 'function') stop() }
+    const stopProfils = ecouterProfils(setProfils, () => {})
+    return () => {
+      if (typeof stopAcces === 'function') stopAcces()
+      if (typeof stopProfils === 'function') stopProfils()
+    }
   }, [])
 
   async function sauvegarder(entree) {
@@ -91,6 +98,7 @@ export default function AccesFirebase() {
                 <th>Nom</th>
                 <th>Email</th>
                 <th>Profil</th>
+                <th>Droits</th>
                 <th>Statut</th>
                 {peutEcrire && <th style={{ textAlign: 'right' }}>Actions</th>}
               </tr>
@@ -98,6 +106,7 @@ export default function AccesFirebase() {
             <tbody>
               {liste.map(e => {
                 const protege = estAdminRacine(e.email)
+                const profilDef = profils[e.profil] || PROFILS_DEFAUT[e.profil]
                 return (
                   <tr key={e.id} className={e.actif === false ? 'acces-fb-inactif' : ''}>
                     <td>
@@ -109,9 +118,13 @@ export default function AccesFirebase() {
                     <td className="acces-cell-email">{e.email}</td>
                     <td>
                       <span className={`acces-profil-badge acces-profil-${e.profil}`}>
-                        {PROFILS[e.profil]?.label || e.profil}
+                        {profilDef?.label || e.profil}
                       </span>
+                      {e.permsPersonnalisees && (
+                        <span className="acces-badge-custom">personnalisé</span>
+                      )}
                     </td>
+                    <td><ResumePerms perms={permsEffectives(e, profils)} /></td>
                     <td>
                       {e.actif === false
                         ? <span className="acces-badge-warn">Désactivé</span>
@@ -140,6 +153,7 @@ export default function AccesFirebase() {
       {edition && (
         <ModalAcces
           entree={edition}
+          profils={profils}
           onClose={() => setEdition(null)}
           onSave={sauvegarder}
         />
@@ -163,12 +177,28 @@ export default function AccesFirebase() {
   )
 }
 
-function ModalAcces({ entree, onClose, onSave }) {
+function ModalAcces({ entree, profils, onClose, onSave }) {
   const [form, setForm] = useState({ ...VIDE, ...entree })
   const [erreur, setErreur] = useState('')
   const nouveau = !entree.id
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
+
+  const profilCourant = profils[form.profil] || PROFILS_DEFAUT[form.profil]
+
+  // Bascule vers des droits personnalisés : on part de ceux du profil type,
+  // pour que l'administrateur ajuste au lieu de repartir de zéro.
+  function basculerPerso(actif) {
+    set('permsPersonnalisees', actif)
+    if (actif && !form.perms) set('perms', normaliserPerms(profilCourant?.perms))
+    if (!actif) set('perms', null)
+  }
+
+  function changerProfil(id) {
+    set('profil', id)
+    // Sans personnalisation, les droits suivent le nouveau profil.
+    if (!form.permsPersonnalisees) set('perms', null)
+  }
 
   function valider() {
     const email = form.email.trim().toLowerCase()
@@ -183,7 +213,7 @@ function ModalAcces({ entree, onClose, onSave }) {
 
   return (
     <div className="acces-modal-overlay" onClick={onClose}>
-      <div className="acces-modal" onClick={e => e.stopPropagation()}>
+      <div className="acces-modal acces-modal-large" onClick={e => e.stopPropagation()}>
         <div className="acces-modal-header">
           <h2>{nouveau ? 'Nouvel accès' : 'Modifier l\'accès'}</h2>
           <button className="acces-modal-close" onClick={onClose}>✕</button>
@@ -217,13 +247,15 @@ function ModalAcces({ entree, onClose, onSave }) {
           </div>
 
           <div className="acces-form-section">
-            <div className="acces-form-section-title">Profil</div>
-            <select className="modale-input" value={form.profil} onChange={e => set('profil', e.target.value)}>
-              {Object.entries(PROFILS).map(([id, p]) => (
-                <option key={id} value={id}>{p.label}</option>
+            <div className="acces-form-section-title">Profil type</div>
+            <select className="modale-input" value={form.profil} onChange={e => changerProfil(e.target.value)}>
+              {PROFILS_IDS.map(id => (
+                <option key={id} value={id}>
+                  {(profils[id] || PROFILS_DEFAUT[id])?.label || id}
+                </option>
               ))}
             </select>
-            <p className="acces-profil-desc">{PROFILS[form.profil]?.description}</p>
+            <p className="acces-profil-desc">{profilCourant?.description}</p>
 
             <label className="acces-custom-toggle">
               <input type="checkbox" checked={form.actif !== false}
@@ -233,6 +265,25 @@ function ModalAcces({ entree, onClose, onSave }) {
             <p className="acces-pwd-hint">
               Désactiver conserve la fiche mais bloque la connexion. Utile pour une absence.
             </p>
+          </div>
+
+          <div className="acces-form-section">
+            <label className="acces-custom-toggle">
+              <input type="checkbox" checked={!!form.permsPersonnalisees}
+                onChange={e => basculerPerso(e.target.checked)} />
+              Personnaliser les droits de cette personne
+            </label>
+            <p className="acces-pwd-hint">
+              {form.permsPersonnalisees
+                ? 'Ces droits remplacent ceux du profil type. Les futures modifications du profil ne s\'appliqueront plus à cette personne.'
+                : `Cette personne suit les droits du profil « ${profilCourant?.label} ». Toute évolution du profil s'appliquera automatiquement.`}
+            </p>
+            <PermMatrix
+              perms={form.permsPersonnalisees ? form.perms : profilCourant?.perms}
+              readOnly={!form.permsPersonnalisees}
+              onChange={(moduleId, perm) =>
+                setForm(f => ({ ...f, perms: { ...(f.perms || {}), [moduleId]: perm } }))}
+            />
           </div>
 
           {erreur && <p className="acces-erreur">{erreur}</p>}
