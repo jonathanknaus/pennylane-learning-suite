@@ -1,3 +1,8 @@
+// Persistance partagée : chaque écriture locale est doublée d'une poussée vers
+// Firebase, et une synchronisation descendante (demarrerSync dans App.jsx) tient
+// le cache à jour. L'API reste synchrone et inchangée pour les écrans.
+import { pousser } from './store-firebase'
+
 const STAGIAIRES_KEY = 'pls_stagiaires'
 const INSCRIPTIONS_KEY = 'pls_inscriptions'
 
@@ -17,6 +22,7 @@ export function saveStagiaire(stagiaire) {
     list.push({ ...stagiaire, id: `stag_${Date.now()}`, createdAt: new Date().toISOString() })
   }
   localStorage.setItem(STAGIAIRES_KEY, JSON.stringify(list))
+  pousser('pls_stagiaires', list)
   return list
 }
 
@@ -24,15 +30,18 @@ export function createStagiaire(data) {
   const nouveau = { ...data, id: `stag_${Date.now()}`, createdAt: new Date().toISOString() }
   const list = [...getStagiaires(), nouveau]
   localStorage.setItem(STAGIAIRES_KEY, JSON.stringify(list))
+  pousser('pls_stagiaires', list)
   return nouveau
 }
 
 export function deleteStagiaire(id) {
   const list = getStagiaires().filter(s => s.id !== id)
   localStorage.setItem(STAGIAIRES_KEY, JSON.stringify(list))
+  pousser('pls_stagiaires', list)
   // Supprimer aussi les inscriptions de ce stagiaire
   const inscriptions = getInscriptions().filter(i => i.stagiaireId !== id)
   localStorage.setItem(INSCRIPTIONS_KEY, JSON.stringify(inscriptions))
+  pousser('pls_inscriptions', inscriptions)
   return list
 }
 
@@ -63,6 +72,7 @@ export function inscrire(sessionId, stagiaireId) {
     createdAt: new Date().toISOString(),
   })
   localStorage.setItem(INSCRIPTIONS_KEY, JSON.stringify(list))
+  pousser('pls_inscriptions', list)
   return list
 }
 
@@ -71,6 +81,7 @@ export function desinscrire(sessionId, stagiaireId) {
     i => !(i.sessionId === sessionId && i.stagiaireId === stagiaireId)
   )
   localStorage.setItem(INSCRIPTIONS_KEY, JSON.stringify(list))
+  pousser('pls_inscriptions', list)
   return list
 }
 
@@ -81,6 +92,7 @@ export function updatePresence(sessionId, stagiaireId, presence) {
       : i
   )
   localStorage.setItem(INSCRIPTIONS_KEY, JSON.stringify(list))
+  pousser('pls_inscriptions', list)
   return list
 }
 
@@ -91,6 +103,7 @@ export function updateStatutInscription(sessionId, stagiaireId, statut) {
       : i
   )
   localStorage.setItem(INSCRIPTIONS_KEY, JSON.stringify(list))
+  pousser('pls_inscriptions', list)
   return list
 }
 
@@ -119,6 +132,7 @@ export function seedDemoStagiaires() {
     { id: 'stag_demo_5', prenom: 'Camille', nom: 'Petit', email: 'camille.petit@expertise-sud.fr', telephone: '', fonction: 'Assistant comptable', cabinet: 'Groupe Expertise Sud', createdAt: new Date().toISOString() },
   ]
   localStorage.setItem(STAGIAIRES_KEY, JSON.stringify(demos))
+  pousser('pls_stagiaires', demos)
 
   // Inscriptions de démo
   const inscriptions = [
@@ -130,4 +144,5 @@ export function seedDemoStagiaires() {
     { id: 'ins_demo_6', sessionId: 's_demo_3', stagiaireId: 'stag_demo_5', statut: 'confirme', presence: true, createdAt: new Date().toISOString() },
   ]
   localStorage.setItem(INSCRIPTIONS_KEY, JSON.stringify(inscriptions))
+  pousser('pls_inscriptions', inscriptions)
 }

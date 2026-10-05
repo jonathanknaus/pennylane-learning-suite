@@ -32,6 +32,7 @@ import Devis from './pages/Devis'
 import CentreNotifications from './components/CentreNotifications'
 import { getGestionnaires, getGestionnaireDefaut } from './data/gestionnaires'
 import { scanRappels, scanFermetureExtranet } from './data/rappels'
+import { demarrerSync } from './data/store-firebase'
 import { getInitialNavState, pushNavState, replaceNavState, readNavState } from './lib/navigation'
 import './App.css'
 
@@ -208,6 +209,20 @@ export default function App() {
   }
 
   useEffect(() => { scanRappels(); scanFermetureExtranet() }, [])
+
+  // Synchronisation descendante du premier lot migré. Le cache local reste la
+  // source de lecture des écrans — ceci le tient à jour avec ce que les autres
+  // postes, et le portail cabinet, ont écrit.
+  //
+  // Garde-fou dans ecouterPartage : au premier instantané, une collection vide
+  // côté Firebase ne vide jamais le cache. Ouvrir l'application avant d'avoir
+  // lancé le transfert ne détruit donc rien.
+  useEffect(() => demarrerSync([
+    'pls_sessions',
+    'pls_stagiaires',
+    'pls_inscriptions',
+    'pls_entreprises',
+  ]), [])
 
   // Lien quiz public : rendu sans auth, sans sidebar
   if (quizParams) {

@@ -102,6 +102,56 @@ export function ecouterPartage(cle, callback, onErreur) {
   return () => { annule = true; if (stop) stop() }
 }
 
+// ── Pont pour les modules synchrones ─────────────────────────────────────────
+//
+// Les 21 écrans qui consomment getSessions(), getStagiaires()… le font de façon
+// synchrone. Rendre ces API asynchrones imposerait de réécrire tous les appels
+// et toute la logique de rendu : beaucoup de risque pour peu de gain.
+//
+// On garde donc l'API telle quelle — la lecture rend le cache, instantanément —
+// et seule la persistance change : l'écriture part aussi vers Firebase, et une
+// synchronisation descendante tient le cache à jour en arrière-plan.
+//
+// Limite assumée : l'écran ne se rafraîchit pas de lui-même quand une autre
+// personne modifie la donnée ; le cache est à jour au rendu suivant ou en
+// changeant d'écran. C'est le comportement qu'avait la veille avant son passage
+// en temps réel, et il se durcira plus tard sans toucher aux écrans.
+
+let dernieresErreurs = {}
+
+export function derniereErreurSync(cle) {
+  return cle ? dernieresErreurs[cle] || null : { ...dernieresErreurs }
+}
+
+// Écriture « au mieux » : l'appelant est synchrone et ne peut pas attendre.
+// Un échec est enregistré et visible, jamais avalé en silence.
+export function pousser(cle, valeur) {
+  if (!estPartageable(cle)) return
+  authPrete()
+    .then(() => set(ref(baseDeDonnees(), chemin(cle)), valeur))
+    .then(() => { delete dernieresErreurs[cle] })
+    .catch(err => {
+      dernieresErreurs[cle] = { message: err?.message || String(err), quand: new Date().toISOString() }
+      console.warn(`[sync] écriture de ${cle} refusée :`, err?.message || err)
+    })
+}
+
+// Branche la synchronisation descendante des collections indiquées.
+// À appeler une fois au démarrage de l'application.
+export function demarrerSync(cles) {
+  const arrets = cles.filter(estPartageable).map(cle =>
+    ecouterPartage(
+      cle,
+      () => {}, // le cache est déjà mis à jour par ecouterPartage
+      err => {
+        dernieresErreurs[cle] = { message: err?.message || String(err), quand: new Date().toISOString() }
+        console.warn(`[sync] lecture de ${cle} refusée :`, err?.message || err)
+      },
+    ),
+  )
+  return () => arrets.forEach(a => { try { a() } catch {} })
+}
+
 // ── Transfert initial ────────────────────────────────────────────────────────
 
 // Inventorie ce que contient le localStorage de ce poste, sans rien envoyer.

@@ -1,3 +1,8 @@
+// Persistance partagée : chaque écriture locale est doublée d'une poussée vers
+// Firebase, et une synchronisation descendante (demarrerSync dans App.jsx) tient
+// le cache à jour. L'API reste synchrone et inchangée pour les écrans.
+import { pousser } from './store-firebase'
+
 import { TARIFS, getAllModules } from './catalogue-afs'
 
 export const FORMATS = Object.entries(TARIFS)
@@ -40,12 +45,14 @@ export function saveSession(session) {
     sessions.push({ ...session, id: `s_${Date.now()}`, createdAt: new Date().toISOString() })
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions))
+  pousser('pls_sessions', sessions)
   return sessions
 }
 
 export function deleteSession(id) {
   const sessions = getSessions().filter(s => s.id !== id)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions))
+  pousser('pls_sessions', sessions)
   return sessions
 }
 
@@ -123,4 +130,5 @@ export function seedDemoSessions() {
     },
   ]
   localStorage.setItem(STORAGE_KEY, JSON.stringify(demos))
+  pousser('pls_sessions', demos)
 }

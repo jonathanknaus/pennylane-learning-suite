@@ -1,3 +1,8 @@
+// Persistance partagée : chaque écriture locale est doublée d'une poussée vers
+// Firebase, et une synchronisation descendante (demarrerSync dans App.jsx) tient
+// le cache à jour. L'API reste synchrone et inchangée pour les écrans.
+import { pousser } from './store-firebase'
+
 const KEY = 'pls_entreprises'
 
 export function getEntreprises() {
@@ -14,12 +19,14 @@ export function saveEntreprise(entreprise) {
     list.push({ ...entreprise, id: `ent_${Date.now()}`, createdAt: new Date().toISOString() })
   }
   localStorage.setItem(KEY, JSON.stringify(list))
+  pousser('pls_entreprises', list)
   return list
 }
 
 export function deleteEntreprise(id) {
   const list = getEntreprises().filter(e => e.id !== id)
   localStorage.setItem(KEY, JSON.stringify(list))
+  pousser('pls_entreprises', list)
   return list
 }
 
@@ -73,4 +80,5 @@ export function seedDemoEntreprises() {
     },
   ]
   localStorage.setItem(KEY, JSON.stringify(demos))
+  pousser('pls_entreprises', demos)
 }
