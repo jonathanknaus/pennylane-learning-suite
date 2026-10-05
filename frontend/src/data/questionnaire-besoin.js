@@ -44,6 +44,20 @@ export const DEFAULT_QUESTIONS_QB = [
     required: false,
   },
   {
+    // Demande de Sarah (2026-10-05). Sert aussi de trace pour l'accessibilité
+    // et le référent handicap (clause 10 de la convention).
+    //
+    // Volontairement NON obligatoire : une situation de handicap relève de la
+    // donnée de santé, donc sensible au sens du RGPD. On invite à la signaler
+    // pour pouvoir adapter, on ne contraint personne à la déclarer.
+    id: 'prerequis_handicap',
+    label: 'Prérequis et adaptations',
+    question: 'Existe-t-il des prérequis spécifiques ou des situations de handicap dont nous devrions avoir connaissance pour adapter nos modalités ?',
+    type: 'textarea',
+    placeholder: 'Ex. : besoin de supports en gros caractères, salle accessible, rythme adapté, prérequis technique sur un outil…',
+    required: false,
+  },
+  {
     id: 'attentes_specifiques',
     label: 'Attentes spécifiques',
     question: 'Avez-vous des attentes particulières sur le déroulement ou le format de la formation ?',
@@ -64,7 +78,23 @@ export const DEFAULT_QUESTIONS_QB = [
 export function getQuestionsQB() {
   try {
     const stored = JSON.parse(localStorage.getItem(KEY_QUESTIONS) || 'null')
-    return stored || DEFAULT_QUESTIONS_QB
+    if (!Array.isArray(stored) || stored.length === 0) return DEFAULT_QUESTIONS_QB
+
+    // Une liste personnalisée masquait les nouvelles questions par défaut :
+    // elles n'apparaissaient qu'après réinitialisation, donc en perdant les
+    // personnalisations. On complète désormais la liste stockée avec les
+    // questions par défaut absentes, en respectant leur position d'origine.
+    const connues = new Set(stored.map(q => q?.id).filter(Boolean))
+    const manquantes = DEFAULT_QUESTIONS_QB.filter(q => !connues.has(q.id))
+    if (manquantes.length === 0) return stored
+
+    const fusion = [...stored]
+    for (const q of manquantes) {
+      const position = DEFAULT_QUESTIONS_QB.findIndex(d => d.id === q.id)
+      const index = Math.min(position, fusion.length)
+      fusion.splice(index, 0, q)
+    }
+    return fusion
   } catch { return DEFAULT_QUESTIONS_QB }
 }
 

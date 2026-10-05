@@ -66,6 +66,56 @@ export function scanRappels() {
   }
 }
 
+// Date d'échéance des accès apprenant : 3 mois après la session, conformément
+// à la clause 4 de la convention de formation.
+export function echeanceAccesSupports(dateSession) {
+  if (!dateSession) return null
+  const d = new Date(dateSession)
+  if (Number.isNaN(d.getTime())) return null
+  // setMonth ne borne PAS au dernier jour du mois cible : un 31 janvier + 3 mois
+  // donnerait « 31 avril », que JavaScript fait basculer au 1er mai. On met donc
+  // le jour à 1 avant de décaler, puis on le replace en le bornant.
+  const jour = d.getDate()
+  const echeance = new Date(d)
+  echeance.setDate(1)
+  echeance.setMonth(echeance.getMonth() + 3)
+  const dernierJourDuMois = new Date(echeance.getFullYear(), echeance.getMonth() + 1, 0).getDate()
+  echeance.setDate(Math.min(jour, dernierJourDuMois))
+  return echeance
+}
+
+// Rappelle de fermer l'extranet 3 mois après la session.
+//
+// ⚠️ Pourquoi un rappel et non un automatisme : la fermeture se fait dans
+// SmartOF, qui est en consultation seule — on n'y écrit jamais. Le rappel est
+// donc la contrepartie de la clause 4 de la convention, qui promet une
+// désactivation des accès au bout de 3 mois. Sans ce garde-fou, l'organisme
+// s'engagerait sur une échéance que personne ne déclencherait.
+export function scanFermetureExtranet() {
+  const maintenant = Date.now()
+
+  for (const session of getSessions()) {
+    if (session.statut === 'annule') continue
+    const echeance = echeanceAccesSupports(session.date)
+    if (!echeance || maintenant < echeance.getTime()) continue
+
+    const libelle = session.client || session.titre || `Session ${session.id}`
+    const message = `Les accès aux supports de ${libelle} ont dépassé les 3 mois prévus par la convention (échéance du ${echeance.toLocaleDateString('fr-FR')}). Désactive l'extranet de cette session dans SmartOF.`
+
+    if (session.gestionnaireId) {
+      addNotificationOnce({
+        destinataireType: 'gestionnaire',
+        destinataireId: resolveResponsable(session.gestionnaireId),
+        type: 'fermeture_extranet',
+        sessionId: session.id,
+        titre: 'Extranet à fermer (3 mois écoulés)',
+        message,
+        dedupeKey: `fermeture_extranet_${session.id}`,
+      })
+    }
+  }
+}
+
 export function getGestionnairesEmails() {
   return getGestionnaires().map(g => ({ id: g.id, nom: `${g.prenom} ${g.nom}`, email: g.email }))
 }

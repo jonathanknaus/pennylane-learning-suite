@@ -31,7 +31,7 @@ import Reclamations from './pages/Reclamations'
 import Devis from './pages/Devis'
 import CentreNotifications from './components/CentreNotifications'
 import { getGestionnaires, getGestionnaireDefaut } from './data/gestionnaires'
-import { scanRappels } from './data/rappels'
+import { scanRappels, scanFermetureExtranet } from './data/rappels'
 import { getInitialNavState, pushNavState, replaceNavState, readNavState } from './lib/navigation'
 import './App.css'
 
@@ -207,7 +207,7 @@ export default function App() {
     else pushNavState(next)
   }
 
-  useEffect(() => { scanRappels() }, [])
+  useEffect(() => { scanRappels(); scanFermetureExtranet() }, [])
 
   // Lien quiz public : rendu sans auth, sans sidebar
   if (quizParams) {
