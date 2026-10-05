@@ -38,6 +38,27 @@
   font-size: 14px;
 }
 
+/* ── Accès Firebase (temps réel) ── */
+.acces-fb-bandeau {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--texte-secondaire);
+}
+.acces-fb-lecture {
+  font-size: 12.5px;
+  color: #92400E;
+  background: #FEF3C7;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+.acces-fb-inactif td { opacity: 0.5; }
+
 /* ── Table utilisateurs ── */
 .acces-users-table-wrap {
   overflow-x: auto;

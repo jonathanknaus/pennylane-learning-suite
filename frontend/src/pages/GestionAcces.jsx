@@ -4,6 +4,7 @@ import {
   getAllProfils, getProfilsCustom, saveProfil, deleteProfil,
   MODULES_ACCES, PROFILS_DEFAUT, emptyPerms, emptyPerm,
 } from '../data/acces'
+import AccesFirebase from './AccesFirebase'
 import './GestionAcces.css'
 
 // ── Case à cocher custom ─────────────────────────────────────────────────────
@@ -358,85 +359,15 @@ export default function GestionAcces() {
 
       <div className="acces-sub-tabs">
         <button className={`acces-sub-tab ${subOnglet === 'utilisateurs' ? 'active' : ''}`} onClick={() => setSubOnglet('utilisateurs')}>
-          Utilisateurs ({users.length})
+          Utilisateurs
         </button>
         <button className={`acces-sub-tab ${subOnglet === 'profils' ? 'active' : ''}`} onClick={() => setSubOnglet('profils')}>
           Profils
         </button>
       </div>
 
-      {/* ── Onglet Utilisateurs ── */}
-      {subOnglet === 'utilisateurs' && (
-        <div>
-          <div className="acces-toolbar">
-            <button className="btn-primary" onClick={() => setModalUser({ _new: true })}>+ Nouvel utilisateur</button>
-          </div>
-
-          {users.length === 0 ? (
-            <div className="acces-empty">Aucun utilisateur configuré. Créez le premier compte.</div>
-          ) : (
-            <div className="acces-users-table-wrap">
-              <table className="acces-table">
-                <thead>
-                  <tr>
-                    <th>Nom / Prénom</th>
-                    <th>Email</th>
-                    <th>Identifiant</th>
-                    <th>Profil</th>
-                    <th>Permissions</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(u => {
-                    const profil = getAllProfils().find(p => p.id === u.profilId)
-                    const protege = !!u.protected
-                    return (
-                      <tr key={u.id} className={protege ? 'acces-row-protected' : ''}>
-                        <td>
-                          <div className="acces-user-name">
-                            {u.prenom} {u.nom}
-                            {protege && <span className="acces-badge-protected" title="Compte protégé — ne peut pas être modifié ni supprimé">🔒</span>}
-                          </div>
-                          {u.telephone && <div className="acces-user-tel">{u.telephone}</div>}
-                        </td>
-                        <td className="acces-cell-email">{u.email}</td>
-                        <td>
-                          <code className="acces-identifiant">{u.identifiant}</code>
-                          {u.mustChangePassword && (
-                            <span className="acces-badge-warn">pwd à changer</span>
-                          )}
-                        </td>
-                        <td>
-                          <span className={`acces-profil-badge acces-profil-${u.profilId}`}>
-                            {profil?.label || u.profilId}
-                          </span>
-                          {u.permsPersonnalisees && (
-                            <span className="acces-badge-custom">personnalisé</span>
-                          )}
-                        </td>
-                        <td>
-                          <PermSummary perms={u.permsPersonnalisees ? u.perms : profil?.perms} />
-                        </td>
-                        <td className="acces-cell-actions">
-                          {protege ? (
-                            <span className="acces-protected-hint">Compte protégé</span>
-                          ) : (
-                            <>
-                              <button className="btn-icon-sm" onClick={() => setModalUser(u)} title="Modifier">✏️</button>
-                              <button className="btn-icon-sm danger" onClick={() => setConfirmDel({ type: 'user', id: u.id, label: `${u.prenom} ${u.nom}` })} title="Supprimer">✕</button>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+      {/* ── Onglet Utilisateurs — liste Firebase, temps réel, partagée avec la veille ── */}
+      {subOnglet === 'utilisateurs' && <AccesFirebase />}
 
       {/* ── Onglet Profils ── */}
       {subOnglet === 'profils' && (
