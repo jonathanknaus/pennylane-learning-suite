@@ -74,7 +74,7 @@ export default function MigrationFirebase() {
     const sortie = []
     for (const ligne of aTransferer) {
       try {
-        sortie.push(await transfererCle(ligne.cle, { ecraser }))
+        sortie.push(await transfererCle(ligne.cle, { ecraser, emailAuteur: moi?.email }))
       } catch (err) {
         sortie.push({ cle: ligne.cle, statut: 'echec', message: err?.message || String(err) })
       }
@@ -105,6 +105,19 @@ export default function MigrationFirebase() {
       <div className="param-section-header">
         <h2>Migration vers Firebase</h2>
         <p>Transfert des données de ce poste vers la base partagée</p>
+      </div>
+
+      <div className="mig-alerte">
+        <strong>⚠️ Vérifie d'abord où sont tes vraies données.</strong>
+        <p>
+          Le stockage local dépend de l'adresse du site : <code>localhost</code> et
+          le site déployé en ont chacun un, totalement séparés. Lance le transfert
+          depuis l'adresse où tu travailles habituellement, sinon tu migrerais des
+          données de test.
+        </p>
+        <p>
+          Tu es actuellement sur <code>{window.location.origin}</code>.
+        </p>
       </div>
 
       <div className="mig-explique">

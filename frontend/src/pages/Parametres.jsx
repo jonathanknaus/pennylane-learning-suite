@@ -566,6 +566,7 @@ const ONGLETS = [
   { id: 'qbesoin',   label: 'Questionnaire de besoin' },
   { id: 'mails',     label: 'Modèles de mails' },
   { id: 'acces',     label: 'Accès utilisateurs' },
+  { id: 'migration', label: 'Migration Firebase' },
 ]
 
 export default function Parametres() {
@@ -597,6 +598,7 @@ export default function Parametres() {
           {onglet === 'qbesoin'   && <QuestionnaireBesoinEditor />}
           {onglet === 'mails'     && <MailAccesCabinetEditor />}
           {onglet === 'acces'     && <GestionAcces />}
+          {onglet === 'migration' && <MigrationFirebase />}
         </div>
       </div>
     </div>

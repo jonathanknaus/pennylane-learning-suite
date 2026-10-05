@@ -49,3 +49,21 @@
   padding: 2px 7px;
   color: var(--texte-secondaire);
 }
+
+.mig-alerte {
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #78350F;
+  line-height: 1.55;
+}
+.mig-alerte p { margin: 8px 0 0; }
+.mig-alerte code {
+  font-family: 'Courier New', monospace;
+  background: rgba(0,0,0,0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}

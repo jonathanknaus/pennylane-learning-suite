@@ -24,6 +24,10 @@ const RACINE = 'donnees'
 
 // Collections volontairement NON partagées : propres à un poste ou à une
 // session de navigateur, elles n'ont aucun sens ailleurs.
+// Déjà migrées vers un nœud dédié : les transférer dans donnees/ créerait un
+// doublon inutile et trompeur.
+export const CLES_DEJA_MIGREES = ['pls_traitements']
+
 export const CLES_LOCALES = [
   'pls_session',
   'pls_portail_app_session',
@@ -36,10 +40,43 @@ export const CLES_LOCALES = [
 ]
 
 export function estPartageable(cle) {
-  return cle.startsWith('pls_') && !CLES_LOCALES.includes(cle)
+  return cle.startsWith('pls_')
+    && !CLES_LOCALES.includes(cle)
+    && !CLES_DEJA_MIGREES.includes(cle)
 }
 
 function chemin(cle) { return `${RACINE}/${cle}` }
+function cheminMeta(cle) { return `${RACINE}/_meta/${cle}` }
+
+// Une collection n'est tirée depuis Firebase que si elle a été explicitement
+// DÉCLARÉE migrée. Sans cela, ouvrir l'application depuis un poste dont le
+// cache local est la vraie référence ferait écraser ses données par celles,
+// éventuellement partielles, déjà présentes en base.
+//
+// Le cas concret qui a imposé ce garde-fou : localhost et le site déployé ont
+// des stockages locaux distincts. Transférer depuis l'un puis ouvrir l'autre
+// écrasait les données du second.
+const marqueurs = {}
+
+export async function estMigree(cle) {
+  if (cle in marqueurs) return marqueurs[cle]
+  await authPrete()
+  try {
+    const snap = await get(ref(baseDeDonnees(), cheminMeta(cle)))
+    marqueurs[cle] = !!snap.val()?.migreLe
+  } catch {
+    marqueurs[cle] = false
+  }
+  return marqueurs[cle]
+}
+
+async function marquerMigree(cle, emailAuteur) {
+  await set(ref(baseDeDonnees(), cheminMeta(cle)), {
+    migreLe: new Date().toISOString(),
+    migrePar: String(emailAuteur || '').toLowerCase(),
+  })
+  marqueurs[cle] = true
+}
 
 // ── Cache local ──────────────────────────────────────────────────────────────
 
@@ -80,25 +117,30 @@ export function ecouterPartage(cle, callback, onErreur) {
   let stop = null
   let annule = false
   let premier = true
-  authPrete().then(() => {
-    if (annule) return
-    stop = onValue(
-      ref(baseDeDonnees(), chemin(cle)),
-      snap => {
-        const v = snap.val()
-        const vide = v === null || v === undefined
-          || (Array.isArray(v) && v.length === 0)
-          || (typeof v === 'object' && Object.keys(v).length === 0)
-        // Premier instantané vide = collection pas encore migrée : on conserve
-        // le cache local plutôt que de l'écraser.
-        if (premier && vide) { premier = false; return }
-        premier = false
-        ecrireCache(cle, v)
-        callback(v)
-      },
-      err => { if (onErreur) onErreur(err) },
-    )
-  })
+  authPrete()
+    .then(() => estMigree(cle))
+    .then(migree => {
+      if (annule) return
+      // Collection pas encore déclarée migrée : on n'écoute pas. Le cache local
+      // reste intact, c'est lui qui fait foi jusqu'au transfert.
+      if (!migree) return
+      stop = onValue(
+        ref(baseDeDonnees(), chemin(cle)),
+        snap => {
+          const v = snap.val()
+          const vide = v === null || v === undefined
+            || (Array.isArray(v) && v.length === 0)
+            || (typeof v === 'object' && Object.keys(v).length === 0)
+          // Deuxième filet : une collection marquée migrée mais vide ne vide
+          // jamais le cache au premier instantané.
+          if (premier && vide) { premier = false; return }
+          premier = false
+          ecrireCache(cle, v)
+          callback(v)
+        },
+        err => { if (onErreur) onErreur(err) },
+      )
+    })
   return () => { annule = true; if (stop) stop() }
 }
 
@@ -181,7 +223,7 @@ export function inventaireLocal() {
 // Envoie une collection locale vers Firebase.
 // `ecraser` à false : n'écrit que si la collection est absente ou vide côté
 // Firebase, pour qu'un second passage ne détruise pas un travail déjà fait.
-export async function transfererCle(cle, { ecraser = false } = {}) {
+export async function transfererCle(cle, { ecraser = false, emailAuteur } = {}) {
   if (!estPartageable(cle)) return { cle, statut: 'ignoree' }
   const locale = lireCache(cle, null)
   if (locale === null) return { cle, statut: 'vide_en_local' }
@@ -197,6 +239,7 @@ export async function transfererCle(cle, { ecraser = false } = {}) {
     if (occupee) return { cle, statut: 'deja_presente' }
   }
   await set(r, locale)
+  await marquerMigree(cle, emailAuteur)
   return { cle, statut: 'transferee' }
 }
 
