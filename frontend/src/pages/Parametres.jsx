@@ -4,6 +4,7 @@ import { getThematiques } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
 import { getQuestionsQB, saveQuestionsQB, resetQuestionsQB, DEFAULT_QUESTIONS_QB } from '../data/questionnaire-besoin'
 import GestionAcces from './GestionAcces'
+import MigrationFirebase from './MigrationFirebase'
 import './Parametres.css'
 import './BanqueQuestions.css'
 

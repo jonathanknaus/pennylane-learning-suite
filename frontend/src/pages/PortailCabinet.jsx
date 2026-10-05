@@ -1,35 +1,66 @@
 import { useState, useEffect } from 'react'
-import { getSessions, STATUTS, MODALITES, FORMATS } from '../data/sessions'
-import { getFormateurs } from '../data/formateurs'
-import { verifyCodeCabinet, getBesoin, saveBesoinReponses, addPrecisionBesoin, getQuestionsQB } from '../data/questionnaire-besoin'
+import { getQuestionsQB } from '../data/questionnaire-besoin'
+import {
+  surChangementAuth, deconnexionGoogle, envoyerLienConnexion,
+  arriveParLienConnexion, terminerConnexionParLien,
+} from '../data/firebase-auth'
+import {
+  lireMonCabinet, ecouterApprenants, enregistrerApprenant, supprimerApprenant,
+  enregistrerBesoin, lireBesoin, QUESTIONS_EXCLUES,
+} from '../data/cabinets-firebase'
 import './PortailCabinet.css'
 
-const SESSION_KEY = 'pls_portail_cabinet_session'
+// Espace cabinet.
+//
+// Connexion par lien email : le cabinet saisit son adresse, reçoit un lien,
+// clique. Aucun mot de passe, aucun code à retenir, et aucun secret dans le
+// code de l'application. Remplace l'ancien code à 6 caractères, qui ne pouvait
+// fonctionner que dans le navigateur où il avait été généré — donc jamais chez
+// le cabinet.
+//
+// Le cabinet peut : décrire son besoin de formation, et déclarer ses apprenants.
+// Ses sessions ne sont pas listées : elles vivent encore sur le poste de
+// l'équipe AFS et ne sont pas partagées.
 
-function savePortailSession(email) { localStorage.setItem(SESSION_KEY, email) }
-function getPortailSession() { return localStorage.getItem(SESSION_KEY) || null }
-function clearPortailSession() { localStorage.removeItem(SESSION_KEY) }
-
-function formatDate(iso) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
-// ── Login ────────────────────────────────────────────────────────────────────
-function LoginCabinet({ onLogin }) {
+// ── Demande du lien ──────────────────────────────────────────────────────────
+function DemandeLien() {
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [error, setError] = useState('')
+  const [envoye, setEnvoye] = useState(false)
+  const [erreur, setErreur] = useState('')
+  const [enCours, setEnCours] = useState(false)
 
-  function handleSubmit(e) {
+  async function demander(e) {
     e.preventDefault()
-    setError('')
-    const sessions = getSessions()
-    const hasSession = sessions.some(s => s.contact_email?.toLowerCase() === email.toLowerCase())
-    if (!hasSession) { setError('Aucune session trouvée pour cet email.'); return }
-    if (!verifyCodeCabinet(email, code)) { setError('Code d\'accès incorrect.'); return }
-    savePortailSession(email.toLowerCase())
-    onLogin(email.toLowerCase())
+    setEnCours(true)
+    setErreur('')
+    try {
+      await envoyerLienConnexion(email)
+      setEnvoye(true)
+    } catch (err) {
+      setErreur(err?.message || 'Envoi impossible. Vérifiez l\'adresse saisie.')
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  if (envoye) {
+    return (
+      <div className="pc-login-wrap">
+        <div className="pc-login-card">
+          <div className="pc-login-icon">📬</div>
+          <h2 className="pc-login-title">Vérifiez votre boîte mail</h2>
+          <p className="pc-login-sub">
+            Un lien de connexion vient d'être envoyé à <strong>{email}</strong>.
+            Cliquez dessus pour accéder à votre espace. Le lien est valable une heure
+            et ne fonctionne qu'une fois.
+          </p>
+          <button className="pc-login-btn" onClick={() => setEnvoye(false)}>
+            Utiliser une autre adresse
+          </button>
+          <div className="pc-login-footer">Espace cabinet · Pennylane Learning Suite</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -37,19 +68,26 @@ function LoginCabinet({ onLogin }) {
       <div className="pc-login-card">
         <div className="pc-login-icon">🏢</div>
         <h2 className="pc-login-title">Espace cabinet</h2>
-        <p className="pc-login-sub">Connectez-vous avec l'email du contact et le code d'accès communiqué par l'équipe AFS.</p>
-        <form onSubmit={handleSubmit} className="pc-login-form">
+        <p className="pc-login-sub">
+          Saisissez l'adresse email communiquée à l'équipe AFS. Vous recevrez un
+          lien de connexion, sans mot de passe à créer.
+        </p>
+        <form onSubmit={demander} className="pc-login-form">
           <div className="pc-login-field">
-            <label>Email du contact</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="contact@cabinet.fr" autoComplete="email" required />
+            <label htmlFor="pc-email">Votre adresse email</label>
+            <input
+              id="pc-email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="contact@cabinet.fr"
+              autoComplete="email"
+              required
+            />
           </div>
-          <div className="pc-login-field">
-            <label>Code d'accès</label>
-            <input type="text" value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="ex. AFS2K4" autoComplete="off" maxLength={8} required />
-          </div>
-          {error && <div className="pc-login-error">{error}</div>}
-          <button type="submit" className="pc-login-btn" disabled={!email || !code}>
-            Accéder à mon espace →
+          {erreur && <div className="pc-login-error">{erreur}</div>}
+          <button type="submit" className="pc-login-btn" disabled={!email || enCours}>
+            {enCours ? 'Envoi…' : 'Recevoir mon lien de connexion →'}
           </button>
         </form>
         <div className="pc-login-footer">Espace cabinet · Pennylane Learning Suite</div>
@@ -58,239 +96,286 @@ function LoginCabinet({ onLogin }) {
   )
 }
 
-// ── Questionnaire intégré ─────────────────────────────────────────────────────
-function QuestionnaireInline({ sessionId }) {
-  const QUESTIONS = getQuestionsQB()
-  const [besoin, setBesoin] = useState(() => getBesoin(sessionId))
-  const [form, setForm] = useState(() => getBesoin(sessionId)?.reponses || {})
-  const [errors, setErrors] = useState({})
-  const [submitted, setSubmitted] = useState(false)
-  const [precision, setPrecision] = useState('')
-  const [precisionSent, setPrecisionSent] = useState(false)
-
-  const isVerrouille = besoin?.verrouille
-  const hasReponses = besoin?.reponses && Object.keys(besoin.reponses).length > 0
-
-  function validate() {
-    const e = {}
-    QUESTIONS.filter(q => q.required).forEach(q => {
-      const v = form[q.id]
-      if (!v || (typeof v === 'string' && !v.trim())) e[q.id] = 'Ce champ est requis'
-    })
-    return e
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault()
-    const errs = validate()
-    if (Object.keys(errs).length > 0) { setErrors(errs); return }
-    saveBesoinReponses(sessionId, form)
-    setBesoin(getBesoin(sessionId))
-    setSubmitted(true)
-  }
-
-  function handlePrecision(e) {
-    e.preventDefault()
-    if (!precision.trim()) return
-    addPrecisionBesoin(sessionId, precision.trim())
-    setBesoin(getBesoin(sessionId))
-    setPrecision('')
-    setPrecisionSent(true)
-    setTimeout(() => setPrecisionSent(false), 3000)
-  }
-
-  // Verrouillé — lecture seule + précisions
-  if (isVerrouille) {
-    return (
-      <div className="pc-qb-wrap">
-        <div className="pc-qb-badge-lock">🔒 Réponses validées — non modifiables</div>
-        <div className="pc-qb-reponses">
-          {QUESTIONS.map(q => {
-            const rep = besoin?.reponses?.[q.id]
-            if (!rep) return null
-            return (
-              <div key={q.id} className="pc-qb-reponse-item">
-                <div className="pc-qb-reponse-label">{q.label}</div>
-                <div className="pc-qb-reponse-val">{rep}</div>
-              </div>
-            )
-          })}
-        </div>
-
-        {(besoin?.precisions || []).length > 0 && (
-          <div className="pc-qb-precisions">
-            <div className="pc-qb-precisions-title">Précisions complémentaires</div>
-            {besoin.precisions.map((p, i) => (
-              <div key={i} className="pc-qb-precision-item">
-                <div className="pc-qb-precision-texte">{p.texte}</div>
-                <div className="pc-qb-precision-meta">Ajouté le {formatDate(p.ajoutAt)}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="pc-qb-precision-section">
-          <div className="pc-qb-precision-desc">Vous pouvez ajouter des précisions complémentaires ci-dessous.</div>
-          <form onSubmit={handlePrecision} className="pc-qb-precision-form">
-            <textarea
-              value={precision}
-              onChange={e => setPrecision(e.target.value)}
-              placeholder="Ajoutez une précision, un contexte complémentaire…"
-              rows={3}
-            />
-            <button type="submit" className="pc-btn-primary" disabled={!precision.trim()}>
-              {precisionSent ? '✓ Précision ajoutée !' : 'Ajouter cette précision'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )
-  }
-
-  // Réponses déjà envoyées (en attente de validation)
-  if (submitted || hasReponses) {
-    return (
-      <div className="pc-qb-wrap">
-        <div className="pc-qb-badge-soumis">✓ Réponses transmises — en attente de validation</div>
-        <div className="pc-qb-reponses">
-          {QUESTIONS.map(q => {
-            const rep = besoin?.reponses?.[q.id] || form[q.id]
-            if (!rep) return null
-            return (
-              <div key={q.id} className="pc-qb-reponse-item">
-                <div className="pc-qb-reponse-label">{q.label}</div>
-                <div className="pc-qb-reponse-val">{rep}</div>
-              </div>
-            )
-          })}
-        </div>
-        {besoin?.soumisAt && <div className="pc-qb-soumis-date">Envoyé le {formatDate(besoin.soumisAt)}</div>}
-      </div>
-    )
-  }
-
-  // Formulaire vierge
-  return (
-    <div className="pc-qb-wrap">
-      <p className="pc-qb-intro">Remplissez ce questionnaire pour nous permettre de préparer votre formation au mieux.</p>
-      <form onSubmit={handleSubmit} className="pc-qb-form">
-        {QUESTIONS.map((q, i) => (
-          <div key={q.id} className={`pc-qb-question ${errors[q.id] ? 'error' : ''}`}>
-            <div className="pc-qb-question-num">{i + 1}</div>
-            <div className="pc-qb-question-body">
-              <label className="pc-qb-question-label">
-                {q.question}
-                {q.required && <span className="pc-qb-required"> *</span>}
-              </label>
-              {q.type === 'textarea' && (
-                <textarea
-                  value={form[q.id] || ''}
-                  onChange={e => { setForm(f => ({ ...f, [q.id]: e.target.value })); setErrors(err => ({ ...err, [q.id]: '' })) }}
-                  placeholder={q.placeholder}
-                  rows={3}
-                />
-              )}
-              {q.type === 'radio' && (
-                <div className="pc-qb-radio-group">
-                  {(q.options || []).map(opt => (
-                    <label key={opt} className={`pc-qb-radio-option ${form[q.id] === opt ? 'selected' : ''}`}>
-                      <input
-                        type="radio"
-                        name={q.id}
-                        value={opt}
-                        checked={form[q.id] === opt}
-                        onChange={() => { setForm(f => ({ ...f, [q.id]: opt })); setErrors(err => ({ ...err, [q.id]: '' })) }}
-                      />
-                      {opt}
-                    </label>
-                  ))}
-                </div>
-              )}
-              {errors[q.id] && <div className="pc-qb-field-error">{errors[q.id]}</div>}
-            </div>
-          </div>
-        ))}
-        <div className="pc-qb-submit-row">
-          <button type="submit" className="pc-btn-submit">Envoyer mes réponses →</button>
-          <span className="pc-qb-submit-note">* Champs obligatoires</span>
-        </div>
-      </form>
-    </div>
-  )
-}
-
-// ── Carte session ─────────────────────────────────────────────────────────────
-function SessionCabinet({ session }) {
-  const [open, setOpen] = useState(false)
-  const statut = STATUTS.find(s => s.id === session.statut) || STATUTS[0]
-  const format = FORMATS.find(f => f.id === session.format)
-  const formateurs = getFormateurs()
-  const formateur = formateurs.find(f => f.id === session.formateurId)
-  const besoin = getBesoin(session.id)
-  const hasReponses = besoin?.reponses && Object.keys(besoin.reponses).length > 0
-  const isVerrouille = besoin?.verrouille
-
-  const dateFormatee = session.date
-    ? new Date(session.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    : '—'
-
-  return (
-    <div className="pc-session-card">
-      <div className="pc-session-head">
-        <div className="pc-session-titre-row">
-          <span className="pc-session-statut" style={{ background: statut.color + '20', color: statut.color }}>{statut.label}</span>
-          <h3 className="pc-session-titre">{session.titre}</h3>
-        </div>
-        <div className="pc-session-infos">
-          <span>📅 {dateFormatee}{session.heure ? ` · ${session.heure}` : ''}</span>
-          {format && <span>⏱ {format.label} · {format.duree}</span>}
-          <span>📡 {MODALITES.find(m => m.id === session.modalite)?.label || session.modalite}</span>
-          {formateur && <span>🧑‍🏫 {formateur.prenom} {formateur.nom}</span>}
-        </div>
-      </div>
-
-      <div className="pc-qb-section">
-        <div className="pc-qb-section-header" onClick={() => setOpen(o => !o)}>
-          <div className="pc-qb-section-title-row">
-            <span className="pc-qb-section-icon">📋</span>
-            <span className="pc-qb-section-title">Questionnaire de besoin</span>
-            {isVerrouille
-              ? <span className="pc-qb-pill lock">🔒 Validé</span>
-              : hasReponses
-                ? <span className="pc-qb-pill soumis">✓ Transmis</span>
-                : <span className="pc-qb-pill todo">À remplir</span>
-            }
-          </div>
-          <span className="pc-qb-toggle">{open ? '▲' : '▼'}</span>
-        </div>
-        {open && <QuestionnaireInline sessionId={session.id} />}
-      </div>
-    </div>
-  )
-}
-
-// ── Portail principal ─────────────────────────────────────────────────────────
-export default function PortailCabinet() {
-  const [email, setEmail] = useState(() => getPortailSession())
-  const [sessions, setSessions] = useState([])
+// ── Questionnaire de besoin ──────────────────────────────────────────────────
+function Besoin({ cabinet }) {
+  const questions = getQuestionsQB()
+  const [reponses, setReponses] = useState({})
+  const [enregistre, setEnregistre] = useState(null)
+  const [erreur, setErreur] = useState('')
 
   useEffect(() => {
-    if (!email) return
-    const all = getSessions()
-    const siennes = all.filter(s => s.contact_email?.toLowerCase() === email)
-    setSessions(siennes.sort((a, b) => (b.date || '').localeCompare(a.date || '')))
-  }, [email])
+    lireBesoin(cabinet.id, 'general')
+      .then(v => {
+        if (v?.reponses) setReponses(v.reponses)
+        if (v?.soumisLe) setEnregistre(v.soumisLe)
+      })
+      .catch(() => {})
+  }, [cabinet.id])
 
-  function handleLogout() {
-    clearPortailSession()
-    setEmail(null)
+  async function soumettre() {
+    setErreur('')
+    try {
+      await enregistrerBesoin(cabinet.id, 'general', reponses)
+      setEnregistre(new Date().toISOString())
+    } catch (err) {
+      setErreur(err?.message || 'Enregistrement impossible.')
+    }
   }
 
-  if (!email) return <LoginCabinet onLogin={e => setEmail(e)} />
+  return (
+    <div className="pc-section">
+      <div className="pc-section-title">Votre besoin de formation</div>
+      {enregistre && (
+        <p className="pc-note">
+          Dernier envoi le {new Date(enregistre).toLocaleString('fr-FR')}. Vous pouvez
+          compléter vos réponses à tout moment.
+        </p>
+      )}
+      {questions.map(q => (
+        <div key={q.id} className="pc-field">
+          <label htmlFor={`q-${q.id}`}>
+            {q.question}
+            {QUESTIONS_EXCLUES.includes(q.id) && (
+              <span className="pc-field-hint">
+                {' '}— à évoquer directement avec votre interlocuteur AFS, cette
+                réponse n'est pas conservée ici.
+              </span>
+            )}
+          </label>
+          {QUESTIONS_EXCLUES.includes(q.id) ? (
+            <p className="pc-exclu">
+              Pour toute adaptation liée à un prérequis ou à une situation de handicap,
+              contactez votre interlocuteur AFS. Nous ne collectons pas cette
+              information par ce formulaire.
+            </p>
+          ) : q.type === 'radio' ? (
+            <select
+              id={`q-${q.id}`}
+              value={reponses[q.id] || ''}
+              onChange={e => setReponses(r => ({ ...r, [q.id]: e.target.value }))}
+            >
+              <option value="">—</option>
+              {(q.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          ) : (
+            <textarea
+              id={`q-${q.id}`}
+              rows={3}
+              placeholder={q.placeholder || ''}
+              value={reponses[q.id] || ''}
+              onChange={e => setReponses(r => ({ ...r, [q.id]: e.target.value }))}
+            />
+          )}
+        </div>
+      ))}
+      {erreur && <div className="pc-login-error">{erreur}</div>}
+      <button className="pc-login-btn" onClick={soumettre}>Enregistrer mes réponses</button>
+    </div>
+  )
+}
 
-  const sessionsAVenir = sessions.filter(s => ['brouillon', 'confirme', 'en_cours'].includes(s.statut))
-  const sessionsPassees = sessions.filter(s => s.statut === 'termine')
-  const nomCabinet = sessions[0]?.client_nom || sessions[0]?.client || email
+// ── Apprenants ───────────────────────────────────────────────────────────────
+const APPRENANT_VIDE = { nom: '', prenom: '', email: '', fonction: '' }
+
+function Apprenants({ cabinet }) {
+  const [liste, setListe] = useState([])
+  const [form, setForm] = useState(APPRENANT_VIDE)
+  const [erreur, setErreur] = useState('')
+
+  useEffect(() => {
+    const stop = ecouterApprenants(cabinet.id, setListe, err => setErreur(err.message))
+    return () => { if (typeof stop === 'function') stop() }
+  }, [cabinet.id])
+
+  async function ajouter() {
+    setErreur('')
+    try {
+      await enregistrerApprenant(cabinet.id, form)
+      setForm(APPRENANT_VIDE)
+    } catch (err) {
+      setErreur(err?.message || 'Enregistrement impossible.')
+    }
+  }
+
+  async function retirer(id) {
+    if (!confirm('Retirer cet apprenant de la liste ?')) return
+    try { await supprimerApprenant(cabinet.id, id) } catch (err) { setErreur(err.message) }
+  }
+
+  return (
+    <div className="pc-section">
+      <div className="pc-section-title">Vos apprenants ({liste.length})</div>
+      <p className="pc-note">
+        Déclarez les personnes à former. L'équipe AFS les reprendra pour organiser
+        les sessions et établir les documents.
+      </p>
+
+      {liste.length > 0 && (
+        <table className="pc-table">
+          <thead>
+            <tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Fonction</th><th></th></tr>
+          </thead>
+          <tbody>
+            {liste.map(a => (
+              <tr key={a.id}>
+                <td>{a.nom}</td>
+                <td>{a.prenom}</td>
+                <td>{a.email || '—'}</td>
+                <td>{a.fonction || '—'}</td>
+                <td>
+                  <button className="pc-suppr" onClick={() => retirer(a.id)} title="Retirer">✕</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <div className="pc-form-row">
+        <input placeholder="Nom *" value={form.nom}
+          onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
+        <input placeholder="Prénom *" value={form.prenom}
+          onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} />
+        <input type="email" placeholder="Email" value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+        <input placeholder="Fonction" value={form.fonction}
+          onChange={e => setForm(f => ({ ...f, fonction: e.target.value }))} />
+        <button className="pc-add" onClick={ajouter} disabled={!form.nom || !form.prenom}>
+          Ajouter
+        </button>
+      </div>
+      {erreur && <div className="pc-login-error">{erreur}</div>}
+    </div>
+  )
+}
+
+// ── Confirmation d'adresse (lien ouvert sur un autre appareil) ───────────────
+//
+// Cas courant : le cabinet demande le lien sur son ordinateur et le clique depuis
+// l'application mail de son téléphone. L'adresse mémorisée n'est pas sur cet
+// appareil ; Firebase exige alors de la confirmer. Inutile de lui faire tout
+// recommencer, il suffit de la redemander.
+function ConfirmerAdresse({ onConfirme }) {
+  const [email, setEmail] = useState('')
+  const [erreur, setErreur] = useState('')
+  const [enCours, setEnCours] = useState(false)
+
+  async function valider(e) {
+    e.preventDefault()
+    setEnCours(true)
+    setErreur('')
+    try {
+      await onConfirme(email)
+    } catch (err) {
+      setErreur(err?.message || 'Adresse incorrecte, ou lien expiré.')
+      setEnCours(false)
+    }
+  }
+
+  return (
+    <div className="pc-login-wrap">
+      <div className="pc-login-card">
+        <div className="pc-login-icon">✉️</div>
+        <h2 className="pc-login-title">Confirmez votre adresse</h2>
+        <p className="pc-login-sub">
+          Vous ouvrez ce lien depuis un autre appareil que celui de la demande.
+          Rappelez-nous l'adresse à laquelle vous l'avez reçu.
+        </p>
+        <form onSubmit={valider} className="pc-login-form">
+          <div className="pc-login-field">
+            <label htmlFor="pc-confirm">Votre adresse email</label>
+            <input id="pc-confirm" type="email" value={email} required
+              onChange={e => setEmail(e.target.value)} placeholder="contact@cabinet.fr" />
+          </div>
+          {erreur && <div className="pc-login-error">{erreur}</div>}
+          <button type="submit" className="pc-login-btn" disabled={!email || enCours}>
+            {enCours ? 'Vérification…' : 'Continuer →'}
+          </button>
+        </form>
+        <div className="pc-login-footer">Espace cabinet · Pennylane Learning Suite</div>
+      </div>
+    </div>
+  )
+}
+
+// ── Portail ──────────────────────────────────────────────────────────────────
+export default function PortailCabinet() {
+  const [etat, setEtat] = useState('chargement') // chargement | anonyme | refuse | pret
+  const [cabinet, setCabinet] = useState(null)
+  const [emailConnecte, setEmailConnecte] = useState('')
+  const [erreur, setErreur] = useState('')
+
+  // Retour du lien : on termine la connexion avant tout.
+  useEffect(() => {
+    if (!arriveParLienConnexion()) return
+    terminerConnexionParLien().catch(err => {
+      if (err?.emailRequis) { setEtat('confirmer'); return }
+      setErreur(err?.message || 'Ce lien n\'est plus valable. Demandez-en un nouveau.')
+    })
+  }, [])
+
+  useEffect(() => {
+    return surChangementAuth(async utilisateur => {
+      if (!utilisateur?.email) {
+        // Ne pas court-circuiter l'écran de confirmation en cours.
+        setEtat(e => (e === 'confirmer' ? e : 'anonyme'))
+        return
+      }
+      setEmailConnecte(utilisateur.email)
+      try {
+        const fiche = await lireMonCabinet(utilisateur.email)
+        if (!fiche) { setEtat('refuse'); return }
+        setCabinet(fiche)
+        setEtat('pret')
+      } catch {
+        // Lecture refusée par les règles : aucun accès n'a été accordé.
+        setEtat('refuse')
+      }
+    })
+  }, [])
+
+  async function deconnecter() {
+    await deconnexionGoogle().catch(() => {})
+    setCabinet(null)
+    setEtat('anonyme')
+  }
+
+  if (etat === 'chargement') {
+    return <div className="pc-login-wrap"><div className="pc-login-card">Chargement…</div></div>
+  }
+
+  if (etat === 'confirmer') {
+    return (
+      <ConfirmerAdresse
+        onConfirme={async email => { await terminerConnexionParLien(email) }}
+      />
+    )
+  }
+
+  if (etat === 'anonyme') {
+    return (
+      <>
+        {erreur && <div className="pc-banniere-erreur">{erreur}</div>}
+        <DemandeLien />
+      </>
+    )
+  }
+
+  if (etat === 'refuse') {
+    return (
+      <div className="pc-login-wrap">
+        <div className="pc-login-card">
+          <div className="pc-login-icon">🔒</div>
+          <h2 className="pc-login-title">Accès non ouvert</h2>
+          <p className="pc-login-sub">
+            L'adresse <strong>{emailConnecte}</strong> n'a pas d'espace cabinet actif.
+            Contactez votre interlocuteur AFS pour qu'il vous en ouvre un.
+          </p>
+          <button className="pc-login-btn" onClick={deconnecter}>Changer d'adresse</button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="pc-wrap">
@@ -298,32 +383,19 @@ export default function PortailCabinet() {
         <div className="pc-identity">
           <div className="pc-avatar">🏢</div>
           <div>
-            <div className="pc-name">{nomCabinet}</div>
-            <div className="pc-email">{sessions[0]?.contact_nom || email}</div>
+            <div className="pc-name">{cabinet.nom || 'Votre cabinet'}</div>
+            <div className="pc-email">{cabinet.email}</div>
           </div>
         </div>
-        <button className="pc-logout-btn" onClick={handleLogout}>Déconnexion</button>
+        <button className="pc-logout-btn" onClick={deconnecter}>Déconnexion</button>
       </div>
 
-      {sessionsAVenir.length > 0 && (
-        <div className="pc-section">
-          <div className="pc-section-title">Formations à venir</div>
-          {sessionsAVenir.map(s => <SessionCabinet key={s.id} session={s} />)}
-        </div>
-      )}
+      <Besoin cabinet={cabinet} />
+      <Apprenants cabinet={cabinet} />
 
-      {sessionsPassees.length > 0 && (
-        <div className="pc-section">
-          <div className="pc-section-title">Formations passées</div>
-          {sessionsPassees.map(s => <SessionCabinet key={s.id} session={s} />)}
-        </div>
-      )}
-
-      {sessions.length === 0 && (
-        <div className="pc-empty">Aucune session trouvée pour cet email.</div>
-      )}
-
-      <div className="pc-footer">Espace cabinet · Pennylane Learning Suite · Accès personnel et confidentiel</div>
+      <div className="pc-footer">
+        Espace cabinet · Pennylane Learning Suite · Accès personnel et confidentiel
+      </div>
     </div>
   )
 }

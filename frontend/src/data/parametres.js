@@ -4,16 +4,15 @@ export const TEMPLATE_ACCES_CABINET_DEFAUT = {
   objet: `Vos accès — Espace cabinet AFS Pennylane`,
   corps: `Bonjour {{contact_nom}},
 
-Votre espace cabinet AFS Pennylane est maintenant disponible.
+Votre espace cabinet AFS Pennylane est maintenant ouvert.
 
-Vous pouvez y accéder à tout moment pour consulter vos formations et remplir le questionnaire de besoin.
+Vous pourrez y décrire votre besoin de formation et déclarer les personnes à former.
 
 🔗 Lien d'accès : {{lien}}
 
-🔑 Email : {{contact_email}}
-🔑 Code d'accès : {{code}}
+Aucun mot de passe à créer : saisissez simplement votre adresse {{contact_email}} sur cette page, et vous recevrez un lien de connexion par email.
 
-Conservez ces informations, elles vous permettront de vous connecter à tout moment.
+Si vous avez besoin d'une adaptation liée à un prérequis ou à une situation de handicap, signalez-le nous directement : nous ne recueillons pas cette information par le formulaire.
 
 Cordialement,
 {{of_signataire}}

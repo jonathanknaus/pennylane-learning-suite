@@ -173,3 +173,55 @@
   border-radius: 10px; font-size: 14px; font-weight: 800; transition: opacity 0.15s;
 }
 .pc-btn-submit:hover { opacity: 0.85; }
+
+/* ── Espace cabinet : formulaires et tableau ── */
+.pc-note { font-size: 12.5px; color: var(--texte-secondaire); margin-bottom: 14px; line-height: 1.5; }
+.pc-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.pc-field label { font-size: 13px; font-weight: 600; color: var(--texte); line-height: 1.45; }
+.pc-field-hint { font-weight: 400; color: var(--texte-secondaire); font-style: italic; }
+.pc-field textarea, .pc-field select {
+  font-family: inherit; font-size: 14px; color: var(--texte);
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; background: var(--gris); resize: vertical;
+}
+.pc-field textarea:focus, .pc-field select:focus {
+  border-color: var(--bg-dark); outline: none; background: var(--blanc);
+}
+.pc-exclu {
+  font-size: 12.5px; color: #92400E; background: #FEF3C7;
+  border-radius: 8px; padding: 10px 14px; line-height: 1.5;
+}
+
+.pc-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 16px; }
+.pc-table th {
+  text-align: left; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--texte-secondaire);
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+}
+.pc-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+.pc-suppr {
+  background: none; border: none; color: #C53030;
+  font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 5px;
+}
+.pc-suppr:hover { background: #FFF5F5; }
+
+.pc-form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pc-form-row input {
+  flex: 1; min-width: 130px;
+  font-family: inherit; font-size: 13.5px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 9px 11px; background: var(--gris);
+}
+.pc-form-row input:focus { border-color: var(--bg-dark); outline: none; background: var(--blanc); }
+.pc-add {
+  background: var(--bg-dark); color: var(--blanc);
+  border: none; border-radius: 8px; padding: 10px 18px;
+  font-family: inherit; font-size: 13.5px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+.pc-add:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.pc-banniere-erreur {
+  background: #FEE2E2; color: #991B1B;
+  font-size: 13px; padding: 12px 18px; text-align: center;
+}
