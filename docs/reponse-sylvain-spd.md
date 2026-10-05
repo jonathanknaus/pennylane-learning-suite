@@ -4,7 +4,9 @@
 2026-10-05 11h59.
 **Langue** : rédigé en anglais, comme son message. Dis-moi si tu préfères le français.
 
-> ⚠️ Rien n'est envoyé. À relire, ajuster, puis poster toi-même.
+> ✅ **Envoyé le 2026-10-05**, posté en fil dans `#portal-request-connect-smartof-pennylane-1148`.
+> Conservé ici comme trace de la position tenue. **En attente de la réponse de Sylvain** : file du
+> ticket IT, nom du coffre d'entreprise, et arbitrage sur la rotation du mot de passe.
 
 ---
 

@@ -35,12 +35,18 @@ Documentation officielle de l'éditeur :
 [Swagger API SmartOF](https://europe-west3-afs-pennylane-mobileo.cloudfunctions.net/docs/swagger/).
 Analyse complète du périmètre : [docs/smartof-api.md](../../docs/smartof-api.md).
 
-## Les deux scripts
+## Les scripts
 
 | Script | Rôle |
 |---|---|
-| `obtenir-jeton.sh` | vérifie l'authentification de bout en bout, puis fait un GET de contrôle |
+| `identifiants.sh` | range la clé, l'identifiant et le mot de passe dans le trousseau macOS (`enregistrer` / `verifier` / `supprimer`) |
+| `_secrets.sh` | relit ces secrets depuis le trousseau à l'exécution — jamais sur disque |
+| `obtenir-jeton.sh` | vérifie l'authentification de bout en bout, puis fait une lecture de contrôle |
 | `lecture-seule.sh` | appelle une route de consultation. **Lance-le sans argument pour voir la liste des routes autorisées.** |
+| `trouver-auth.sh` | détermine le schéma d'authentification attendu par l'API (utilisé lors de la cartographie) |
+| `exporter.sh` | export brut d'une ressource vers `export/` (gitignoré) |
+| `generer-catalogue.mjs` | transforme l'export des produits en `frontend/src/data/catalogue-smartof.js` |
+| `comparer-tarifs.mjs` | compare les tarifs des fiches SmartOF à la grille AFS |
 
 ## Pourquoi une liste blanche
 
@@ -64,19 +70,24 @@ de données d'apprenants.
 ```
 chmod +x lecture-seule.sh
 ./lecture-seule.sh /un-chemin
-./lecture-seule.sh /un-chemin limit=1
 ```
+
+⚠️ Les routes `list` **n'acceptent aucun paramètre** — ni filtre, ni pagination, ni `limit`
+(vérifié dans le Swagger). Chaque appel ramène donc **toute** la collection : 264 apprenants et
+267 Ko pour `apprenant/list`. D'où la consigne ci-dessous.
 
 Le script :
 
-- ne fait que des **GET** — aucune méthode mutante n'est possible ;
+- n'appelle que des routes de la **liste blanche** — toute route contenant `create`, `update` ou
+  `delete` est refusée avant même l'authentification. ⚠️ Les appels eux-mêmes sont des **POST**,
+  puisque l'API est de style RPC : c'est la liste blanche qui protège, pas la méthode HTTP ;
 - n'affiche **jamais** le secret ;
 - n'affiche **jamais les valeurs** des champs, seulement leurs noms et types, pour cartographier
   l'API sans exposer de données personnelles ;
 - affiche le corps de la réponse uniquement en cas de 401/403, car le message d'erreur indique
   généralement le schéma d'authentification attendu.
 
-Commencer par `limit=1`, un appel à la fois. Les CGS prévoient une limitation du nombre de
+Un appel à la fois. Les CGS prévoient une limitation du nombre de
 requêtes et qualifient l'usage anormal d'abus : pas de boucle, pas de synchro agressive.
 
 ## Si l'authentification échoue

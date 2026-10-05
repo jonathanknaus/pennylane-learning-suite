@@ -77,13 +77,24 @@ function save(data)  {
 }
 ```
 
-Garde-fou important : une collection n'est tirée depuis Firebase que si elle est **déclarée
-migrée** (`CLES_DEJA_MIGREES`). Sans cela, ouvrir l'application depuis un poste dont le cache local
-est la référence écraserait ses données. `localhost` et le site déployé ont des stockages distincts.
+Garde-fou important : une collection n'est tirée depuis Firebase que si elle porte le **marqueur de
+migration** `donnees/_meta/<cle>/migreLe`, posé par `transfererCle()` et vérifié par `estMigree()`.
+Sans ce marqueur, `ecouterPartage()` ne s'abonne même pas : le cache local fait foi et rien ne peut
+l'écraser. Motif : `localhost` et le site déployé ont des stockages locaux **distincts**, donc
+transférer depuis l'un puis ouvrir l'autre écraserait les données du second.
+
+⚠️ **Ne pas confondre avec `CLES_DEJA_MIGREES`**, qui est une liste d'**exclusion** : les clés qui
+vivent déjà dans un nœud dédié et qu'il ne faut donc pas verser dans `donnees/`. `pls_traitements`
+y figure parce qu'elle habite `veille/traitements` — elle n'est pas « déclarée migrée », elle est
+écartée du transfert générique.
 
 **Dette connue** : la plupart des modules de `src/data/` écrivent encore en localStorage brut. La
-migration se fait clé par clé (`transfererCle`, `verifierTransfert`). Une seule clé est déclarée
-migrée à ce jour : `pls_traitements`.
+migration se fait clé par clé (`transfererCle`, `verifierTransfert`). **Aucune collection n'est
+déclarée migrée à ce jour** — le transfert initial n'a pas été lancé, volontairement : PLS ne
+contient que des données de démonstration, et les pousser n'aurait aucun intérêt.
+
+Déjà instrumentées en écriture (poussée vers Firebase à chaque sauvegarde), en attente du
+transfert : `pls_sessions`, `pls_stagiaires`, `pls_inscriptions`, `pls_entreprises`.
 
 ---
 
