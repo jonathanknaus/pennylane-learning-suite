@@ -16,17 +16,17 @@
 // référence et valeur précédente. Un prix commercial qui change sans trace est
 // indéfendable, en litige comme en contrôle.
 //
-// STOCKAGE — état transitoire assumé : localStorage, comme catalogue-config.js
-// et devis.js. Le backend passant sur Firebase, ce module devra basculer sur la
-// Realtime Database (voir cabinets-firebase.js pour le pattern). Tout l'accès au
-// stockage est isolé dans load()/save() pour que la bascule ne touche qu'eux.
-// Deux conséquences d'ici là : un tarif négocié ne suit pas d'un poste à l'autre,
-// et les droits ci-dessous ne sont pas une frontière de sécurité — voir
-// l'avertissement en tête de firebase-auth.js. Les règles de database.rules.json
-// devront reprendre la même logique côté serveur.
+// STOCKAGE — passe par store-firebase.js : Firebase est la source de vérité,
+// le localStorage sert de cache d'affichage. Un tarif négocié depuis un poste
+// doit être visible depuis un autre, ce que le seul localStorage ne permettait pas.
+//
+// ⚠️ Les droits évalués ci-dessous ne sont pas une frontière de sécurité — voir
+// l'avertissement en tête de firebase-auth.js. La marge de 20 % devra être
+// reprise dans database.rules.json pour devenir une contrainte serveur.
 
 import { estimer } from './tarification.js'
 import { getCurrentUser } from './auth.js'
+import { lireCache, pousser } from './store-firebase.js'
 
 const KEY = 'pls_tarifs_negocies'
 
@@ -44,18 +44,17 @@ export const PROFILS_AVEC_MARGE = ['formateur_interne']
 export const cleProduit = (produitId) => `produit:${produitId}`
 export const cleSession = (sessionId) => `session:${sessionId}`
 
-// --- Stockage (à basculer sur Firebase) --------------------------------------
+// --- Stockage ----------------------------------------------------------------
 
 function load() {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || '{}')
-  } catch {
-    return {}
-  }
+  return lireCache(KEY, {}) || {}
 }
 
 function save(data) {
+  // Cache d'abord, pour que l'interface se rafraîchisse sans attendre le réseau…
   localStorage.setItem(KEY, JSON.stringify(data))
+  // …puis Firebase, qui reste la source de vérité partagée entre les postes.
+  pousser(KEY, data)
 }
 
 // --- Droits ------------------------------------------------------------------
