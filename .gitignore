@@ -24,3 +24,6 @@ Thumbs.db
 # Database
 *.sqlite
 *.db
+
+# Exports bruts depuis SmartOF (données de catalogue, régénérables)
+scripts/smartof/export/

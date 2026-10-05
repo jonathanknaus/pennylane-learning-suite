@@ -1,3 +1,5 @@
+import { THEMATIQUES_SMARTOF, GENERE_LE } from './catalogue-smartof'
+
 export const TARIFS = {
   session_1h: { label: "Session 1h", duree: "1h", visio: 200, presentiel: null, participants_max: 15, modules: "1 ou 2 modules" },
   session_2h: { label: "Session 2h", duree: "2h", visio: 400, presentiel: null, participants_max: 15, modules: "3 à 4 modules" },
@@ -348,17 +350,65 @@ export function getThematiquesCustom() {
   return loadCustom().thematiques
 }
 
-// Fusionne les thématiques statiques et personnalisées ; si une thématique custom
-// reprend l'id d'une thématique statique, ses modules sont ajoutés à la suite.
+// Date de référence du catalogue d'origine : dernier commit de ce fichier avant
+// l'arrivée des modules SmartOF. Sert de createdAt par défaut aux modules
+// historiques, qui n'en portaient pas, pour les rendre triables et archivables.
+export const DATE_CATALOGUE_INITIAL = '2026-07-10'
+
+// Provenances possibles d'un module, pour le tri et l'archivage.
+export const SOURCES_MODULE = {
+  pls: { id: 'pls', label: 'Catalogue initial PLS' },
+  custom: { id: 'custom', label: 'Ajouté à la main' },
+  smartof: { id: 'smartof', label: 'SmartOF' },
+}
+
+// Garantit que tout module expose createdAt et source, sans écraser ceux qui les
+// portent déjà (les modules SmartOF arrivent avec leur vraie date de création).
+function marquer(module, source, dateParDefaut) {
+  return {
+    ...module,
+    source: module.source || source,
+    createdAt: module.createdAt || dateParDefaut,
+  }
+}
+
+// Fusionne les thématiques statiques, celles importées de SmartOF et les
+// personnalisées. Si deux thématiques partagent un id, leurs modules sont
+// concaténés : rien n'est écrasé, tout s'ajoute.
 export function getThematiques() {
-  const custom = getThematiquesCustom()
-  const merged = THEMATIQUES.map(t => ({ ...t, modules: [...t.modules] }))
-  custom.forEach(ct => {
-    const existante = merged.find(t => t.id === ct.id)
-    if (existante) existante.modules.push(...ct.modules)
-    else merged.push(ct)
-  })
+  const merged = THEMATIQUES.map(t => ({
+    ...t,
+    modules: t.modules.map(m => marquer(m, 'pls', DATE_CATALOGUE_INITIAL)),
+  }))
+
+  const ajouter = (thematiques, source, dateParDefaut) => {
+    thematiques.forEach(ct => {
+      const modules = (ct.modules || []).map(m => marquer(m, source, dateParDefaut))
+      const existante = merged.find(t => t.id === ct.id)
+      if (existante) existante.modules.push(...modules)
+      else merged.push({ ...ct, modules })
+    })
+  }
+
+  ajouter(THEMATIQUES_SMARTOF, 'smartof', GENERE_LE)
+  ajouter(getThematiquesCustom(), 'custom', null)
+
   return merged
+}
+
+// Modules triés du plus récent au plus ancien. Les modules sans date passent en
+// dernier plutôt que de fausser le tri.
+export function getAllModulesParDate() {
+  return getAllModules().sort((a, b) => {
+    if (!a.createdAt) return 1
+    if (!b.createdAt) return -1
+    return b.createdAt.localeCompare(a.createdAt)
+  })
+}
+
+// Modules d'une provenance donnée : 'pls', 'smartof' ou 'custom'.
+export function getAllModulesParSource(source) {
+  return getAllModules().filter(m => m.source === source)
 }
 
 export function getAllModules() {
@@ -382,7 +432,13 @@ export function ajouterModuleCustom(thematiqueId, module) {
     thematique = { id: thematiqueId, emoji: statique?.emoji || '📦', titre: statique?.titre || thematiqueId, modules: [], custom: true }
     data.thematiques.push(thematique)
   }
-  const nouveauModule = { ...module, id: module.id || `module_${Date.now()}`, custom: true }
+  const nouveauModule = {
+    ...module,
+    id: module.id || `module_${Date.now()}`,
+    custom: true,
+    source: 'custom',
+    createdAt: module.createdAt || new Date().toISOString().slice(0, 10),
+  }
   thematique.modules.push(nouveauModule)
   saveCustom(data)
   return nouveauModule
