@@ -165,14 +165,43 @@ const BANQUE_STANDARD = {
   ],
 }
 
+import { getAllModules } from './catalogue-afs'
+import { questionsDuModule, themesDuModule } from './banque-thematique'
+
 const KEY_BANQUE = 'pls_banque_questions'
 const KEY_REPONSES = 'pls_reponses_questionnaires'
 
-// Retourne la banque pour un module (custom si définie, sinon standard)
+/**
+ * Banque d'un module, par ordre de priorité :
+ *   1. questions personnalisées, si au moins 5 ont été saisies ;
+ *   2. banque historique, pour les 23 modules PLS ;
+ *   3. composition thématique, pour les 43 modules importés de SmartOF — qui
+ *      n'avaient AUCUNE question jusqu'au 2026-10-06.
+ *
+ * Le troisième cas est ce qui rend le dispositif robuste au catalogue mouvant :
+ * un module ajouté demain reçoit des questions dès que son programme mentionne
+ * un thème connu, sans qu'il faille les écrire pour lui.
+ */
 export function getBanqueModule(moduleId) {
   const stored = JSON.parse(localStorage.getItem(KEY_BANQUE) || '{}')
   if (stored[moduleId]?.custom?.length >= 5) return stored[moduleId].custom
-  return BANQUE_STANDARD[moduleId] || []
+  if (BANQUE_STANDARD[moduleId]) return BANQUE_STANDARD[moduleId]
+  const module = getAllModules().find(m => m.id === moduleId)
+  return module ? questionsDuModule(module) : []
+}
+
+/**
+ * D'où viennent les questions d'un module : 'personnalisee', 'historique',
+ * 'thematique' ou 'aucune'. Affiché dans la banque de questions — une question
+ * composée automatiquement doit pouvoir être relue comme telle.
+ */
+export function origineBanque(moduleId) {
+  const stored = JSON.parse(localStorage.getItem(KEY_BANQUE) || '{}')
+  if (stored[moduleId]?.custom?.length >= 5) return 'personnalisee'
+  if (BANQUE_STANDARD[moduleId]) return 'historique'
+  const module = getAllModules().find(m => m.id === moduleId)
+  if (module && themesDuModule(module).length > 0) return 'thematique'
+  return 'aucune'
 }
 
 export function saveBanqueCustom(moduleId, questions) {

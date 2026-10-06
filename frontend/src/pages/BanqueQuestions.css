@@ -68,6 +68,7 @@
 .banque-badge.standard { background: var(--vert-clair); color: #059669; }
 .banque-badge.custom   { background: #EEF2FF; color: #6366F1; }
 .banque-badge.empty    { background: var(--gris); color: var(--texte-secondaire); }
+.banque-badge.thematique { background: #E9D8FD; color: #553C9A; }
 
 /* Main */
 .banque-main { display: flex; flex-direction: column; gap: 20px; }
@@ -153,6 +154,13 @@
 }
 .ql-type-badge.standard { background: var(--vert-clair); color: #059669; }
 .ql-type-badge.custom   { background: #EEF2FF; color: #6366F1; }
+.ql-type-badge.thematique { background: #E9D8FD; color: #553C9A; }
+.ql-type-badge.empty      { background: var(--gris); color: var(--texte-secondaire); }
+.ql-themes {
+  font-size: 12.5px; line-height: 1.55; color: #553C9A;
+  background: #FAF5FF; border-left: 3px solid #805AD5;
+  border-radius: 6px; padding: 10px 14px; margin: 0 0 14px;
+}
 .ql-count { font-size: 12px; color: var(--texte-secondaire); }
 
 .question-view {

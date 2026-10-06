@@ -1,6 +1,18 @@
 import { useState } from 'react'
 import { getThematiques } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
+import { origineBanque } from '../data/questionnaires'
+import { themesDuModule, theme } from '../data/banque-thematique'
+import { getAllModules } from '../data/catalogue-afs'
+
+// Origine des questions d'un module, dite à l'écran : une question composée
+// automatiquement depuis les thèmes doit pouvoir être relue comme telle.
+const ORIGINES = {
+  personnalisee: { court: 'Perso',      long: 'Questions personnalisées', classe: 'custom' },
+  historique:    { court: 'Standard',   long: 'Questions standard',       classe: 'standard' },
+  thematique:    { court: 'Thématique', long: 'Composées par thème',      classe: 'thematique' },
+  aucune:        { court: 'Vide',       long: 'Aucune question',          classe: 'empty' },
+}
 import './BanqueQuestions.css'
 
 const OPTIONS_LABELS = ['A', 'B', 'C', 'D']
@@ -92,9 +104,7 @@ export default function BanqueQuestions() {
           <div key={t.id} className="banque-thematique">
             <div className="banque-thematique-label">{t.emoji} {t.titre}</div>
             {t.modules.map(m => {
-              const stored = JSON.parse(localStorage.getItem('pls_banque_questions') || '{}')
-              const hasCustom = !!(stored[m.id]?.custom?.length >= 5)
-              const hasStandard = !!(BANQUE_STANDARD[m.id]?.length)
+              const o = ORIGINES[origineBanque(m.id)] || ORIGINES.aucune
               return (
                 <button
                   key={m.id}
@@ -102,12 +112,7 @@ export default function BanqueQuestions() {
                   onClick={() => selectModule(m.id)}
                 >
                   <span className="banque-module-titre">{m.titre}</span>
-                  {hasCustom
-                    ? <span className="banque-badge custom">Perso</span>
-                    : hasStandard
-                      ? <span className="banque-badge standard">Standard</span>
-                      : <span className="banque-badge empty">Vide</span>
-                  }
+                  <span className={`banque-badge ${o.classe}`}>{o.court}</span>
                 </button>
               )
             })}
@@ -147,7 +152,7 @@ export default function BanqueQuestions() {
             {saved && <div className="banque-saved-banner">✓ Questions enregistrées avec succès.</div>}
 
             {!editing ? (
-              <QuestionsList moduleId={moduleSelId} isCustom={isCustom} />
+              <QuestionsList moduleId={moduleSelId} />
             ) : (
               <QuestionsEditor
                 draft={draft}
@@ -166,16 +171,32 @@ export default function BanqueQuestions() {
   )
 }
 
-function QuestionsList({ moduleId, isCustom }) {
+function QuestionsList({ moduleId }) {
   const banque = getBanqueModule(moduleId)
+  const origine = origineBanque(moduleId)
+  const o = ORIGINES[origine] || ORIGINES.aucune
+  const module = getAllModules().find(m => m.id === moduleId)
+  const themes = origine === 'thematique' && module
+    ? themesDuModule(module).map(id => theme(id)?.label).filter(Boolean)
+    : []
+
   return (
     <div className="questions-list">
       <div className="ql-meta">
-        <span className={`ql-type-badge ${isCustom ? 'custom' : 'standard'}`}>
-          {isCustom ? 'Questions personnalisées' : 'Questions standard'}
+        <span className={`ql-type-badge ${o.classe}`}>{o.long}</span>
+        <span className="ql-count">
+          {banque.length} question{banque.length > 1 ? 's' : ''}
+          {origine === 'historique' && ' · 5 tirées par passation'}
         </span>
-        <span className="ql-count">{banque.length} question{banque.length > 1 ? 's' : ''} · 5 tirées aléatoirement par passation</span>
       </div>
+      {themes.length > 0 && (
+        <p className="ql-themes">
+          Ce module n'avait aucune question propre : les siennes sont composées depuis les thèmes
+          que son programme couvre — <strong>{themes.join(', ')}</strong>. Elles sont les mêmes au
+          pré-test et au post-test, dans un ordre différent. Pour les remplacer, saisis des
+          questions personnalisées.
+        </p>
+      )}
       {banque.map((q, i) => (
         <div key={q.id} className="question-view">
           <div className="qv-header">
