@@ -309,7 +309,9 @@ export function resumerEstimation(e) {
 // qu'ils accompagnent.
 
 function seuilLabel(participantsMax) {
-  return participantsMax === Infinity ? 'illimité' : `jusqu’à ${participantsMax}`
+  return participantsMax === Infinity
+    ? 'participants illimités'
+    : `jusqu’à ${participantsMax} participants`
 }
 
 /**
