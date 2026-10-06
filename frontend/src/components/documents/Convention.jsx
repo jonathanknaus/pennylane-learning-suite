@@ -1,4 +1,5 @@
 import { getParametres } from '../../data/parametres'
+import { EFFECTIF_MAX_DEFAUT } from '../../data/sessions'
 import './print.css'
 
 const CLAUSES = [
@@ -26,7 +27,7 @@ const CLAUSES = [
   },
   {
     titre: 'Participants',
-    corps: (d) => `La formation accueille ${d.participants.length} participant${d.participants.length > 1 ? 's' : ''} désigné${d.participants.length > 1 ? 's' : ''} par le client. La liste nominative figure en annexe de la présente convention. Le nombre maximum de participants est fixé à ${d.session.participants_max || 15}.`,
+    corps: (d) => `La formation accueille ${d.participants.length} participant${d.participants.length > 1 ? 's' : ''} désigné${d.participants.length > 1 ? 's' : ''} par le client. La liste nominative figure en annexe de la présente convention. Le nombre maximum de participants est fixé à ${d.session.participants_max || EFFECTIF_MAX_DEFAUT}.`,
   },
   {
     titre: 'Prix et modalités de règlement',

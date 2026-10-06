@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { getThematiques, TARIFS, WEBINAIRES_EMBARQUEMENT, ajouterThematiqueCustom, ajouterModuleCustom } from '../data/catalogue-afs'
+import { getThematiques, WEBINAIRES_EMBARQUEMENT, ajouterThematiqueCustom, ajouterModuleCustom } from '../data/catalogue-afs'
+import { grillePourAffichage, SEUIL_SUR_DEVIS } from '../data/tarification'
 import { getBanqueModule } from '../data/questionnaires'
 import { getModuleConfig, saveModuleConfig, BPF_SPECIALITES, BPF_ITEMS } from '../data/catalogue-config'
 import ThematiqueCard from '../components/ThematiqueCard'
@@ -25,12 +26,15 @@ export default function CatalogueAFS({ publicMode = false }) {
     setDetailTab('description')
   }
 
+  // Même grille que la carte latérale et que estimer() : un seul tarif de
+  // référence sur la page, celui en vigueur aujourd'hui.
+  const GRILLE = grillePourAffichage()
+
   function getTarifRecommande() {
     const n = selectedModules.length
     if (n === 0) return null
-    if (n <= 2) return TARIFS.session_1h
-    if (n <= 4) return TARIFS.session_2h
-    return TARIFS.demi_journee
+    const id = n <= 2 ? 'session_1h' : n <= 4 ? 'session_2h' : 'demi_journee'
+    return GRILLE.lignes.find(l => l.id === id)
   }
 
   const tarifRecommande = getTarifRecommande()
@@ -55,7 +59,7 @@ export default function CatalogueAFS({ publicMode = false }) {
         <h1 className="hero-title">Catalogue AFS — Formations Premium</h1>
         <p className="hero-sub">
           Formations personnalisées pour maîtriser tous les aspects de la gestion et comptabilité sur Pennylane.
-          <br />Max 15 participants · Visio ou présentiel · <strong>afs-training@pennylane.com</strong>
+          <br />Jusqu’à {SEUIL_SUR_DEVIS} participants · Visio ou présentiel · <strong>afs-training@pennylane.com</strong>
         </p>
       </div>
 
@@ -120,7 +124,7 @@ export default function CatalogueAFS({ publicMode = false }) {
 
         <aside className="catalogue-aside">
           <div className="aside-sticky">
-            <TarifsTable tarifs={TARIFS} />
+            <TarifsTable />
 
             {selectedModules.length > 0 && (
               <div className="devis-panel">
@@ -139,11 +143,14 @@ export default function CatalogueAFS({ publicMode = false }) {
                 {tarifRecommande && (
                   <div className="devis-tarif">
                     <div className="tarif-label">Format recommandé</div>
-                    <div className="tarif-value">{tarifRecommande.label} — {tarifRecommande.modules}</div>
-                    <div className="tarif-prix">
-                      {tarifRecommande.visio && <span>Visio : <strong>{tarifRecommande.visio}€ HT</strong></span>}
-                      {tarifRecommande.presentiel && <span>Présentiel : <strong>{tarifRecommande.presentiel}€ HT</strong></span>}
-                    </div>
+                    <div className="tarif-value">{tarifRecommande.label} — {tarifRecommande.hint}</div>
+                    {tarifRecommande.paliers.map(p => (
+                      <div key={p.participantsMax} className="tarif-prix">
+                        <span className="tarif-prix-palier">{p.label}</span>
+                        {p.visio != null && <span>Visio : <strong>{p.visio}€ HT</strong></span>}
+                        {p.presentiel != null && <span>Présentiel : <strong>{p.presentiel}€ HT</strong></span>}
+                      </div>
+                    ))}
                   </div>
                 )}
                 <a href="mailto:afs-training@pennylane.com" className="devis-cta">

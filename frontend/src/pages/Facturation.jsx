@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getFactures, saveFacture, deleteFacture, STATUTS_FACTURE, TYPES_FACTURE, createFactureFromSession, calculerFacture } from '../data/factures'
-import { getSessions, FORMATS } from '../data/sessions'
+import { getSessions, FORMATS, prixSession } from '../data/sessions'
 import { getFinanceurs } from '../data/financeurs'
 import { getParametres } from '../data/parametres'
 import Facture from '../components/documents/Facture'
@@ -44,7 +44,9 @@ export default function Facturation() {
 
   function openNewFromSession(session) {
     const format = FORMATS.find(f => f.id === session.format)
-    const prix = format ? (session.modalite === 'visio' ? format.visio : format.presentiel) : null
+    // Le montant proposé reste une PROPOSITION, saisissable : un cas sur devis
+    // ou un tarif négocié n'a pas de prix de grille, le champ reste alors vide.
+    const prix = prixSession(session)
     const base = createFactureFromSession(session, format, prix)
     setSelected(null)
     setForm({ ...EMPTY_FORM, ...base })
@@ -103,8 +105,7 @@ export default function Facturation() {
   function handleSessionChange(sessionId) {
     const session = sessions.find(s => s.id === sessionId)
     if (!session) { setForm(f => ({ ...f, sessionId })); return }
-    const format = FORMATS.find(f => f.id === session.format)
-    const prix = format ? (session.modalite === 'visio' ? format.visio : format.presentiel) : null
+    const prix = prixSession(session)
     setForm(f => ({
       ...f,
       sessionId,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getSessions, deleteSession, seedDemoSessions, STATUTS, FORMATS, MODALITES, QUALIOPI_OPTIONS } from '../data/sessions'
+import { getSessions, deleteSession, seedDemoSessions, STATUTS, FORMATS, MODALITES, QUALIOPI_OPTIONS, estimationSession, EFFECTIF_MAX_DEFAUT } from '../data/sessions'
 import { getAllModules } from '../data/catalogue-afs'
 import { seedDemoStagiaires } from '../data/stagiaires'
 import SessionForm from '../components/SessionForm'
@@ -142,6 +142,7 @@ export default function Sessions({ onNavigate, nav, onNavigateNav }) {
 function SessionCard({ session, onOpen, onEdit, onDelete }) {
   const statut = STATUTS.find(s => s.id === session.statut) || STATUTS[0]
   const format = FORMATS.find(f => f.id === session.format)
+  const estimation = estimationSession(session)
   const allModules = getAllModules()
   const modulesDetails = (session.modules || [])
     .map(id => allModules.find(m => m.id === id))
@@ -207,7 +208,7 @@ function SessionCard({ session, onOpen, onEdit, onDelete }) {
       <div className="session-card-footer">
         <div className="participants-bar-wrap">
           <div className="participants-label">
-            <span>{session.participants_inscrits || 0} / {session.participants_max || 15} participants</span>
+            <span>{session.participants_inscrits || 0} / {session.participants_max || EFFECTIF_MAX_DEFAUT} participants</span>
             <span className="participants-pct">{tauxRemplissage}%</span>
           </div>
           <div className="participants-bar">
@@ -220,10 +221,12 @@ function SessionCard({ session, onOpen, onEdit, onDelete }) {
             />
           </div>
         </div>
-        {format && (
+        {estimation && (
           <div className="session-prix">
-            {session.modalite === 'visio' && format.visio && <span>{format.visio}€ HT</span>}
-            {session.modalite === 'presentiel' && format.presentiel && <span>{format.presentiel}€ HT</span>}
+            {estimation.surDevis
+              ? <span>Sur devis</span>
+              : <span>{estimation.prixHT}€ HT</span>}
+            {estimation.formateurs > 1 && <span className="session-prix-formateurs">{estimation.formateurs} formateurs</span>}
           </div>
         )}
       </div>

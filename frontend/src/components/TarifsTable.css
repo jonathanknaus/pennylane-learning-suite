@@ -12,17 +12,39 @@
 
 .tarif-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: 10px 12px;
   border-radius: 8px;
-  gap: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .tarif-row:hover { background: var(--gris); }
 
 .tarif-name { font-weight: 600; font-size: 14px; }
 .tarif-modules-hint { font-size: 12px; color: var(--texte-secondaire); margin-top: 2px; }
+
+/* Un bloc par palier de participants : le plafond à gauche, les prix à droite.
+   Les formats sans palier (horaire, webinar) n'en ont qu'un seul. */
+.tarif-paliers { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+.tarif-palier { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+.palier-label {
+  font-size: 11px;
+  color: var(--texte-secondaire);
+  white-space: nowrap;
+}
+
+.palier-formateurs {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--gris);
+  font-size: 10px;
+}
 
 .tarif-prices { display: flex; gap: 6px; flex-shrink: 0; }
 
@@ -37,6 +59,20 @@
 .price-chip span { font-weight: 400; font-size: 11px; }
 .price-chip.visio { background: #EEF2FF; color: #6366F1; }
 .price-chip.pres { background: var(--vert-clair); color: #059669; }
+
+.tarifs-regles {
+  margin: 14px 0 0;
+  padding: 12px 12px 12px 26px;
+  border-radius: 8px;
+  background: var(--gris);
+  list-style: disc;
+}
+
+.tarifs-regles li {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--texte-secondaire);
+}
 
 .tarifs-contact { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px; }
 

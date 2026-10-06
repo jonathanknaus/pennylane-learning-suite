@@ -1,4 +1,4 @@
-import { getSessions, FORMATS } from './sessions'
+import { getSessions, FORMATS, prixSession } from './sessions'
 import { getAllModules } from './catalogue-afs'
 import { getStagiaires, getInscriptionsBySession } from './stagiaires'
 
@@ -36,9 +36,7 @@ export function getSessionData(sessionId) {
       })
     : '—'
 
-  const prix = format
-    ? (session.modalite === 'visio' ? format.visio : format.presentiel)
-    : null
+  const prix = prixSession(session)
 
   return { session, participants, modules, format, dateFormatee, prix }
 }

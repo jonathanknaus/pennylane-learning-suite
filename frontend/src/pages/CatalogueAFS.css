@@ -126,7 +126,8 @@
 
 .tarif-label { font-size: 11px; color: var(--texte-secondaire); text-transform: uppercase; letter-spacing: 0.5px; }
 .tarif-value { font-size: 14px; font-weight: 600; }
-.tarif-prix { display: flex; gap: 12px; font-size: 13px; color: var(--texte-secondaire); }
+.tarif-prix { display: flex; gap: 12px; font-size: 13px; color: var(--texte-secondaire); flex-wrap: wrap; align-items: baseline; }
+.tarif-prix-palier { font-size: 11px; }
 .tarif-prix strong { color: var(--texte); }
 
 .devis-cta {

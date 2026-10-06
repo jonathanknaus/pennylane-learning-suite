@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { getStagiaires, getInscriptionsBySession, inscrire, desinscrire, updatePresence, updateStatutInscription, STATUTS_INSCRIPTION, createStagiaire } from '../data/stagiaires'
 import * as XLSX from 'xlsx'
-import { FORMATS, STATUTS, MODALITES, QUALIOPI_OPTIONS, formatDateLong } from '../data/sessions'
+import { FORMATS, STATUTS, MODALITES, QUALIOPI_OPTIONS, formatDateLong, prixSession, EFFECTIF_MAX_DEFAUT } from '../data/sessions'
 import { getAllModules } from '../data/catalogue-afs'
 import { getResultat, calculerProgression } from '../data/questionnaires'
 import { getReponsesChaud, getReponsesFroid, getAllReponsesChaudBySession } from '../data/satisfaction'
@@ -170,7 +170,7 @@ export default function SessionDetail({ session, onClose, onEdit, onNavigateApp,
   const statut = STATUTS.find(s => s.id === session.statut) || STATUTS[0]
   const format = FORMATS.find(f => f.id === session.format)
   const modules = (session.modules || []).map(id => getAllModules().find(m => m.id === id)).filter(Boolean)
-  const prix = format ? (session.modalite === 'visio' ? format.visio : format.presentiel) : null
+  const prix = prixSession(session)
 
   const inscritsIds = new Set(inscriptions.map(i => i.stagiaireId))
   const nonInscrits = stagiaires.filter(s => !inscritsIds.has(s.id))
@@ -267,7 +267,7 @@ export default function SessionDetail({ session, onClose, onEdit, onNavigateApp,
               <div className="inscrits-header">
                 <div>
                   <h2>Participants inscrits</h2>
-                  <p>{inscriptions.length} / {session.participants_max || 15} places
+                  <p>{inscriptions.length} / {session.participants_max || EFFECTIF_MAX_DEFAUT} places
                     {nbPresents > 0 && <span className="presence-summary"> · {nbPresents} présent{nbPresents > 1 ? 's' : ''}</span>}
                     {nbAbsents > 0 && <span className="absence-summary"> · {nbAbsents} absent{nbAbsents > 1 ? 's' : ''}</span>}
                   </p>
@@ -576,12 +576,12 @@ export default function SessionDetail({ session, onClose, onEdit, onNavigateApp,
             <div className="session-info-jauge">
               <div className="jauge-label">
                 <span>Remplissage</span>
-                <span className="jauge-val">{inscriptions.length} / {session.participants_max || 15}</span>
+                <span className="jauge-val">{inscriptions.length} / {session.participants_max || EFFECTIF_MAX_DEFAUT}</span>
               </div>
               <div className="jauge-bar">
                 <div className="jauge-fill" style={{
-                  width: `${Math.min(100, (inscriptions.length / (session.participants_max || 15)) * 100)}%`,
-                  background: inscriptions.length >= (session.participants_max || 15) ? '#EF4444' : 'var(--vert)'
+                  width: `${Math.min(100, (inscriptions.length / (session.participants_max || EFFECTIF_MAX_DEFAUT)) * 100)}%`,
+                  background: inscriptions.length >= (session.participants_max || EFFECTIF_MAX_DEFAUT) ? '#EF4444' : 'var(--vert)'
                 }} />
               </div>
             </div>
@@ -1883,7 +1883,9 @@ function IncidentsTab({ sessionId }) {
 
 function FinanceTab({ session }) {
   const format = FORMATS.find(f => f.id === session.format)
-  const prix = format ? (session.modalite === 'visio' ? format.visio : format.presentiel) : null
+  // Prix de grille, pré-rempli dans les devis et factures mais toujours
+  // modifiable : un cas sur devis le laisse vide, à renseigner à la main.
+  const prix = prixSession(session)
 
   const [devis, setDevis] = useState(() => getDevisBySession(session.id))
   const [factures, setFactures] = useState(() => getFacturesBySession(session.id))

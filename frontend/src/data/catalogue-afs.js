@@ -1,12 +1,8 @@
 import { THEMATIQUES_SMARTOF, GENERE_LE } from './catalogue-smartof'
 
-export const TARIFS = {
-  session_1h: { label: "Session 1h", duree: "1h", visio: 200, presentiel: null, participants_max: 15, modules: "1 ou 2 modules" },
-  session_2h: { label: "Session 2h", duree: "2h", visio: 400, presentiel: null, participants_max: 15, modules: "3 à 4 modules" },
-  demi_journee: { label: "½ Journée", duree: "3h30", visio: 600, presentiel: 1000, participants_max: 15, modules: "jusqu'à 5 modules" },
-  journee: { label: "Journée complète", duree: "7h", visio: 1200, presentiel: 2000, participants_max: 15, modules: "programme sur mesure" },
-  journee_sur_mesure: { label: "Journée sur mesure (présentiel)", duree: "7h", visio: null, presentiel: 2000, participants_max: 15, modules: "100% personnalisé", note: "Frais de déplacement inclus pour 1 formateur, +300€ par formateur supplémentaire" },
-}
+// La constante TARIFS vivait ici : un prix par format, figé, sans palier de
+// participants. Elle est supprimée — les prix sont dans tarification.js (grilles
+// datées, paliers, second formateur) et les formats de session dans sessions.js.
 
 export const THEMATIQUES = [
   {

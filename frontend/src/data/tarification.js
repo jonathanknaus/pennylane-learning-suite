@@ -296,6 +296,106 @@ export function resumerEstimation(e) {
   return parts.join(' · ')
 }
 
+// --- Grille présentable (carte « Grille tarifaire » du catalogue) -------------
+//
+// La carte affichait l'ancienne grille, recopiée en dur dans les TARIFS de
+// catalogue-afs.js : un prix unique par format, « max 15 participants » et une
+// mention « +300 € par formateur supplémentaire » qui n'entrait dans aucun
+// calcul. Elle dérive désormais de la grille réellement appliquée par estimer(),
+// paliers compris : les deux ne peuvent plus diverger.
+//
+// Les intitulés de modules (« 1 ou 2 modules »…) sont de l'argumentaire
+// commercial et non du calcul, mais ils vivent ici pour rester collés au prix
+// qu'ils accompagnent.
+
+function seuilLabel(participantsMax) {
+  return participantsMax === Infinity ? 'illimité' : `jusqu’à ${participantsMax}`
+}
+
+/**
+ * Apparie les paliers visio et présentiel d'un format sur leur plafond de
+ * participants, pour en faire une ligne d'affichage par palier.
+ */
+function paliersApparies(format) {
+  const visio = format.paliers.visio || []
+  const presentiel = format.paliers.presentiel || []
+  const seuils = [...new Set([...visio, ...presentiel].map(p => p.participantsMax))]
+    .sort((a, b) => a - b)
+
+  return seuils.map(seuil => {
+    const v = visio.find(p => p.participantsMax === seuil)
+    const p = presentiel.find(x => x.participantsMax === seuil)
+    return {
+      participantsMax: seuil,
+      label: seuilLabel(seuil),
+      visio: v ? v.prix : null,
+      presentiel: p ? p.prix : null,
+      formateurs: Math.max(v?.formateurs || 1, p?.formateurs || 1),
+    }
+  })
+}
+
+/**
+ * Grille en vigueur à une date donnée, mise en forme pour l'affichage :
+ * une ligne par format, une sous-ligne par palier de participants.
+ */
+export function grillePourAffichage(date = null) {
+  const version = grilleApplicable(date)
+  const G = version.grille
+  const horaire = G.horaire.paliers.visio[0]
+  const webinar = G.webinar.paliers.visio[0]
+
+  const palierHoraire = (heures) => ({
+    participantsMax: horaire.participantsMax,
+    label: seuilLabel(horaire.participantsMax),
+    visio: horaire.prix * heures,
+    presentiel: null,
+    formateurs: horaire.formateurs,
+  })
+
+  const lignes = [
+    { id: 'session_1h', label: 'Session 1h', hint: '1 ou 2 modules', paliers: [palierHoraire(1)] },
+    {
+      id: 'session_2h',
+      label: 'Session 2h',
+      hint: `3 à 4 modules · cumul horaire plafonné à ${CUMUL_HORAIRE_MAX}h`,
+      paliers: [palierHoraire(CUMUL_HORAIRE_MAX)],
+    },
+    {
+      id: 'webinar',
+      label: 'Webinar 1h',
+      hint: 'pour les clients du cabinet · non cumulable',
+      paliers: [{
+        participantsMax: webinar.participantsMax,
+        label: seuilLabel(webinar.participantsMax),
+        visio: webinar.prix,
+        presentiel: null,
+        formateurs: webinar.formateurs,
+      }],
+    },
+    { id: 'demi_journee', label: '½ Journée (3h30)', hint: 'jusqu’à 5 modules', paliers: paliersApparies(G.demi_journee) },
+    { id: 'journee', label: 'Journée complète (7h)', hint: 'programme sur mesure', paliers: paliersApparies(G.journee) },
+  ]
+
+  // Le plafond annoncé est celui des forfaits de la grille AFFICHÉE, pas
+  // SEUIL_SUR_DEVIS : l'ancienne grille s'arrêtait à 15 participants, et une
+  // carte lue pour un devis ancien doit dire 15, pas 25.
+  const plafond = Math.max(
+    ...lignes.flatMap(l => l.paliers.map(p => p.participantsMax)).filter(n => n !== Infinity)
+  )
+
+  const notes = [
+    `Au-delà de ${plafond} participants : sur devis.`,
+    'Présentiel : frais de déplacement inclus pour 1 formateur, et minimum une demi-journée (pas de tarif horaire).',
+    HYPOTHESES.au_dela_journee,
+  ]
+  if (G.supplementFormateur) {
+    notes.push(`+${G.supplementFormateur} € HT par formateur supplémentaire (présentiel).`)
+  }
+
+  return { libelle: version.libelle, dateEffet: version.dateEffet, lignes, notes }
+}
+
 /**
  * Compare une même demande entre deux grilles — utile pour mesurer l'effet
  * d'une augmentation avant de l'annoncer.

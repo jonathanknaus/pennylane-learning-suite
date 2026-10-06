@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { saveSession, STATUTS, MODALITES, FORMATS, QUALIOPI_OPTIONS } from '../data/sessions'
+import { saveSession, STATUTS, MODALITES, FORMATS, QUALIOPI_OPTIONS, estimationSession, EFFECTIF_MAX_DEFAUT } from '../data/sessions'
 import { getThematiques } from '../data/catalogue-afs'
 import { getGestionnaires, getGestionnaireDefaut } from '../data/gestionnaires'
 import { getFormateurs } from '../data/formateurs'
 import { suggererFormateurs, respecteDelaiQualiopi, joursAvantDate, DELAI_MIN_JOURS } from '../data/affectation-formateurs'
+import { SEUIL_SUR_DEVIS } from '../data/tarification'
 import './SessionForm.css'
 
 const EMPTY = {
@@ -20,7 +21,7 @@ const EMPTY = {
   formateurId: '',
   formateurAppuiId: '',
   gestionnaireId: '',
-  participants_max: 15,
+  participants_max: EFFECTIF_MAX_DEFAUT,
   participants_inscrits: 0,
   qualiopi: 'non',
   lien_reunion: '',
@@ -98,9 +99,10 @@ export default function SessionForm({ session, onSaved, onCancel }) {
 
   const formatSelectionne = FORMATS.find(f => f.id === form.format)
   const modaliteLabel = MODALITES.find(m => m.id === form.modalite)?.label || '—'
-  const prix = formatSelectionne
-    ? (form.modalite === 'presentiel' ? formatSelectionne.presentiel : formatSelectionne.visio)
-    : null
+  // Tarif calculé par la grille : il dépend du format, de la modalité ET de
+  // l'effectif max, et peut conclure « sur devis ». À l'édition d'une session
+  // existante, c'est la grille de sa création qui est reprise.
+  const estimation = estimationSession(form)
 
   return (
     <div className="session-form-page">
@@ -414,10 +416,16 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                   <label>Participants max</label>
                   <input
                     type="number"
-                    min="1" max="15"
+                    min="1"
                     value={form.participants_max}
-                    onChange={e => set('participants_max', parseInt(e.target.value) || 15)}
+                    onChange={e => set('participants_max', parseInt(e.target.value) || EFFECTIF_MAX_DEFAUT)}
                   />
+                  {/* Le plafond de 15 qui bridait ce champ datait de la grille
+                      sans palier. La grille va maintenant jusqu'à 25, et au-delà
+                      le tarif passe sur devis : c'est l'estimation qui le dit. */}
+                  <span className="form-hint-effectif">
+                    C’est ce nombre qui fixe le tarif · au-delà de {SEUIL_SUR_DEVIS}, sur devis
+                  </span>
                 </div>
                 <div className="form-group">
                   <label>Inscrits actuellement</label>
@@ -518,11 +526,26 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                 )
               })()}
 
-              {prix && (
+              {estimation?.valide && (
                 <div className="recap-prix">
                   <span>Tarif indicatif</span>
-                  <div className="recap-prix-value">{prix}€ HT</div>
-                  <div className="recap-prix-note">+300€/formateur supplémentaire (présentiel)</div>
+                  {estimation.surDevis ? (
+                    <>
+                      <div className="recap-prix-value">Sur devis</div>
+                      <div className="recap-prix-note">{estimation.motifDevis}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="recap-prix-value">{estimation.prixHT}€ HT</div>
+                      <div className="recap-prix-note">
+                        {estimation.detail} · calculé pour {estimation.participants} participants (effectif max)
+                      </div>
+                    </>
+                  )}
+                  <div className="recap-prix-grille">{estimation.grille}</div>
+                  {estimation.alertes.map(a => (
+                    <div key={a} className="recap-prix-alerte">{a}</div>
+                  ))}
                 </div>
               )}
 

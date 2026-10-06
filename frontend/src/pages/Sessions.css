@@ -171,6 +171,16 @@
   font-weight: 700;
   color: var(--vert-fonce);
   white-space: nowrap;
+  text-align: right;
+}
+
+/* Le palier à 2 formateurs change le coût réel de la session : il est signalé
+   sous le prix plutôt que laissé à deviner. */
+.session-prix-formateurs {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--texte-secondaire);
 }
 
 .session-notes {
