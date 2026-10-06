@@ -185,6 +185,7 @@
 }
 .qb-type-badge.textarea { background: #EBF8FF; color: #2B6CB0; }
 .qb-type-badge.radio { background: #FEF3C7; color: #92400E; }
+.qb-type-badge.checkbox { background: #E9D8FD; color: #553C9A; }
 .qb-required-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #FEE2E2; color: #991B1B; }
 
 .qb-editor-card-actions { display: flex; gap: 4px; flex-shrink: 0; }

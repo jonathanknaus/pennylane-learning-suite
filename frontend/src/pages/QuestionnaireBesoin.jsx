@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import ChoixMultiple from '../components/ChoixMultiple'
 import { verifyBesoinToken, getBesoin, saveBesoinReponses, addPrecisionBesoin, getQuestionsQB } from '../data/questionnaire-besoin'
 import { getSessions } from '../data/sessions'
 import './QuestionnaireBesoin.css'
@@ -219,12 +220,22 @@ export default function QuestionnaireBesoin({ sessionId, token }) {
                 {q.question}
                 {q.required && <span className="qb-required"> *</span>}
               </label>
+              {q.aide && <p className="qb-aide">{q.aide}</p>}
               {q.type === 'textarea' && (
                 <textarea
                   value={form[q.id] || ''}
                   onChange={e => { setForm(f => ({ ...f, [q.id]: e.target.value })); setErrors(err => ({ ...err, [q.id]: '' })) }}
                   placeholder={q.placeholder}
                   rows={3}
+                />
+              )}
+              {q.type === 'checkbox' && (
+                <ChoixMultiple
+                  id={q.id}
+                  options={q.options}
+                  valeur={form[q.id] || ''}
+                  onChange={v => { setForm(f => ({ ...f, [q.id]: v })); setErrors(err => ({ ...err, [q.id]: '' })) }}
+                  classe="qb-choix"
                 />
               )}
               {q.type === 'radio' && (

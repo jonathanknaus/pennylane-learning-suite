@@ -293,6 +293,8 @@ function BanqueQuestions() {
 }
 
 // ── Éditeur questionnaire de besoin ──────────────────────────────────────────
+const LIBELLES_TYPE = { textarea: 'Texte libre', radio: 'Choix unique', checkbox: 'Choix multiple' }
+
 function emptyQBQuestion() {
   return { id: `qb_${Date.now()}_${Math.floor(Math.random() * 9999)}`, label: '', question: '', type: 'textarea', placeholder: '', options: ['', '', ''], required: false }
 }
@@ -357,7 +359,7 @@ function QuestionnaireBesoinEditor() {
       const q = questions[i]
       if (!q.question.trim()) { alert(`Question ${i + 1} : le texte de la question est vide.`); return }
       if (!q.label.trim()) { alert(`Question ${i + 1} : le libellé est vide.`); return }
-      if (q.type === 'radio' && (q.options || []).filter(o => o.trim()).length < 2) {
+      if ((q.type === 'radio' || q.type === 'checkbox') && (q.options || []).filter(o => o.trim()).length < 2) {
         alert(`Question ${i + 1} : au moins 2 options sont requises pour une question à choix.`); return
       }
     }
@@ -402,7 +404,7 @@ function QuestionnaireBesoinEditor() {
                 <span className="qb-editor-card-question">{q.question || <em className="qb-editor-placeholder">Question vide</em>}</span>
               </div>
               <div className="qb-editor-card-badges">
-                <span className={`qb-type-badge ${q.type}`}>{q.type === 'textarea' ? 'Texte libre' : 'Choix unique'}</span>
+                <span className={`qb-type-badge ${q.type}`}>{LIBELLES_TYPE[q.type] || q.type}</span>
                 {q.required && <span className="qb-required-badge">Obligatoire</span>}
               </div>
               <div className="qb-editor-card-actions" onClick={e => e.stopPropagation()}>
@@ -424,6 +426,7 @@ function QuestionnaireBesoinEditor() {
                     <select value={q.type} onChange={e => update(idx, 'type', e.target.value)}>
                       <option value="textarea">Texte libre</option>
                       <option value="radio">Choix unique</option>
+                      <option value="checkbox">Choix multiple</option>
                     </select>
                   </div>
                   <div className="qb-editor-field qb-editor-field-required">
@@ -447,7 +450,7 @@ function QuestionnaireBesoinEditor() {
                   </div>
                 )}
 
-                {q.type === 'radio' && (
+                {(q.type === 'radio' || q.type === 'checkbox') && (
                   <div className="qb-editor-field">
                     <label>Options de réponse <span className="qb-required-star">*</span></label>
                     <div className="qb-options-list">

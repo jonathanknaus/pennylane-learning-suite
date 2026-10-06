@@ -2,46 +2,52 @@ const KEY_BESOIN = 'pls_questionnaire_besoin'
 const KEY_TOKENS = 'pls_besoin_tokens'
 const KEY_QUESTIONS = 'pls_qb_questions'
 
+// Questions alignées sur le formulaire Google « Analyse des Besoins en Formation
+// (maj 08/26) — Cabinets d'Expertise Comptable (Processus Qualiopi) », dans son
+// ordre, à l'issue du point Optimisation Questionnaire de besoins du 2026-10-05.
+//
+// Trois questions du formulaire ne figurent PAS ici, et c'est voulu : le
+// simulateur les pose déjà dans le même écran. Les redemander reviendrait à
+// interroger deux fois sur la même chose dans un formulaire unique.
+//   · « Nombre de participants prévus »      → simulateur, `simu_participants`
+//   · « Présentiel / distanciel »            → simulateur, `simu_modalite`
+//   · « Thématiques souhaitées »             → simulateur, `simu_modules`
+//
+// Deux écarts assumés avec le formulaire :
+//   · La question sur le handicap y est OBLIGATOIRE. Ici elle ne l'est pas :
+//     voir le commentaire qui la précède.
+//   · Le formulaire écrit « À la fin de la journée… ». Les formats AFS vont de
+//     la demi-heure à plusieurs journées, donc « À la fin de la formation… ».
 export const DEFAULT_QUESTIONS_QB = [
   {
     id: 'contexte',
-    label: 'Contexte de la formation',
-    question: 'Quelle est la situation qui motive cette demande de formation ?',
+    label: 'Contexte et enjeux',
+    question: 'Quel est l\'élément déclencheur de cette demande de formation ?',
     type: 'textarea',
     placeholder: 'Décrivez le contexte : changements récents, difficultés rencontrées, évolutions à venir…',
     required: true,
   },
   {
-    id: 'objectifs',
-    label: 'Objectifs visés',
-    question: 'Quels sont les principaux objectifs que vous souhaitez atteindre ?',
+    id: 'enjeux',
+    label: 'Enjeux de la structure',
+    question: 'Quels sont les enjeux principaux pour votre structure actuellement ?',
     type: 'textarea',
-    placeholder: 'Ex. : maîtriser la saisie comptable, comprendre la TVA, automatiser les exports…',
-    required: true,
-  },
-  {
-    id: 'public',
-    label: 'Public concerné',
-    question: 'Qui sera formé ? Quel est leur niveau actuel sur le sujet ?',
-    type: 'textarea',
-    placeholder: 'Ex. : 4 collaborateurs, débutants sur Pennylane, utilisateurs depuis 6 mois…',
-    required: true,
-  },
-  {
-    id: 'niveau_depart',
-    label: 'Niveau de départ',
-    question: 'Comment évaluez-vous le niveau actuel de vos équipes sur les sujets à former ?',
-    type: 'radio',
-    options: ['Débutant — premier contact avec le sujet', 'Intermédiaire — notions de base acquises', 'Avancé — pratique régulière, perfectionnement souhaité'],
-    required: true,
-  },
-  {
-    id: 'contraintes',
-    label: 'Contraintes pratiques',
-    question: 'Y a-t-il des contraintes de planning, de disponibilité ou d\'organisation à prendre en compte ?',
-    type: 'textarea',
-    placeholder: 'Ex. : clôture comptable en mars, télétravail les lundis, 1h max par session…',
+    aide: 'Ex. : veille active sur les outils numériques et les évolutions de la facturation électronique, optimiser ses processus internes pour gagner en efficacité…',
+    placeholder: 'Vos enjeux prioritaires des prochains mois…',
     required: false,
+  },
+  {
+    // Conserve l'id historique `public` : une liste de questions personnalisée
+    // ou des réponses déjà saisies continuent de s'y rattacher. Seuls le
+    // libellé et le type changent — le nombre de participants venant désormais
+    // du simulateur, il ne restait que les postes à demander, et les demander
+    // en cases à cocher les rend exploitables au lieu d'un texte à relire.
+    id: 'public',
+    label: 'Public visé',
+    question: 'Quels sont les postes occupés par les participants ?',
+    type: 'checkbox',
+    options: ['Collaborateurs', 'Chef de mission', 'Expert-comptable'],
+    required: true,
   },
   {
     // Demande de Sarah (2026-10-05). Sert aussi de trace pour l'accessibilité
@@ -58,12 +64,58 @@ export const DEFAULT_QUESTIONS_QB = [
     required: false,
   },
   {
+    id: 'objectifs',
+    label: 'Objectifs opérationnels',
+    question: 'Quelles compétences précises souhaitez-vous que les apprenants maîtrisent à l\'issue de la formation ?',
+    type: 'textarea',
+    placeholder: 'Ex. : maîtriser la saisie comptable, comprendre la TVA, automatiser les exports…',
+    required: true,
+  },
+  {
+    // Formulation imposée par Qualiopi : un objectif doit être évaluable. La
+    // phrase à compléter y conduit mieux qu'une consigne abstraite.
+    id: 'objectifs_operationnels',
+    label: 'Formulation opérationnelle',
+    question: '« À la fin de la formation, les stagiaires seront capables de… » : comment compléteriez-vous cette phrase ?',
+    type: 'textarea',
+    placeholder: 'Ex. : …de produire seuls une déclaration de TVA CA3 et d\'en contrôler le cadrage.',
+    required: true,
+  },
+  {
+    id: 'niveau_depart',
+    label: 'Niveau de départ',
+    question: 'Comment évaluez-vous le niveau actuel de vos équipes sur les sujets à former ?',
+    type: 'radio',
+    options: ['Débutant — premier contact avec le sujet', 'Intermédiaire — notions de base acquises', 'Avancé — pratique régulière, perfectionnement souhaité'],
+    required: true,
+  },
+  {
     id: 'attentes_specifiques',
     label: 'Attentes spécifiques',
-    question: 'Avez-vous des attentes particulières sur le déroulement ou le format de la formation ?',
+    question: 'Avez-vous des besoins ou attentes complémentaires qui n\'ont pas été abordés ci-dessus ?',
     type: 'textarea',
     placeholder: 'Ex. : exercices pratiques sur vos données réelles, support PDF, suivi post-formation…',
     required: false,
+  },
+  {
+    id: 'contraintes',
+    label: 'Contraintes de calendrier',
+    question: 'Quelles sont vos contraintes de calendrier (dates idéales, urgence) ?',
+    type: 'textarea',
+    placeholder: 'Ex. : clôture comptable en mars, télétravail les lundis, 1h max par session…',
+    required: false,
+  },
+  {
+    // Le délai de 15 jours n'est pas une formalité : passé ce point, la prise en
+    // charge peut être refusée alors que la session est déjà calée. La question
+    // est posée tôt pour que le cabinet le sache avant de fixer une date.
+    id: 'opco',
+    label: 'Prise en charge OPCO',
+    question: 'Souhaitez-vous solliciter une prise en charge financière par votre OPCO ?',
+    type: 'radio',
+    options: ['Oui', 'Non'],
+    aide: 'La demande doit être déposée auprès de votre OPCO au moins 15 jours avant le début de la formation, avec les pièces qu\'il réclame. En cas de doute, consultez le site de votre organisme financeur (OPCO, FAF, FIFPL…).',
+    required: true,
   },
   {
     id: 'indicateurs_succes',

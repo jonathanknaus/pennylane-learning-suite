@@ -187,6 +187,30 @@
 .pc-field textarea:focus, .pc-field select:focus {
   border-color: var(--bg-dark); outline: none; background: var(--blanc);
 }
+/* Aide sous une question : exemples ou mention réglementaire (délai OPCO). */
+.pc-aide {
+  font-size: 12.5px; color: var(--texte-secondaire); line-height: 1.5;
+  margin: -2px 0 2px; font-style: italic;
+}
+
+/* Choix multiple — mêmes codes visuels que les autres champs du portail. */
+.pc-choix { display: flex; flex-wrap: wrap; gap: 8px; }
+.pc-choix .cm-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--gris);
+  font-size: 13.5px; font-weight: 400; cursor: pointer; transition: all .15s;
+}
+.pc-choix .cm-option:hover { border-color: var(--bg-dark); background: var(--blanc); }
+.pc-choix .cm-option.selected { border-color: var(--bg-dark); background: var(--blanc); font-weight: 600; }
+.pc-choix .cm-option input { accent-color: var(--bg-dark); }
+.pc-choix .cm-libre {
+  flex: 1 1 100%; font-family: inherit; font-size: 14px; color: var(--texte);
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; background: var(--gris);
+}
+.pc-choix .cm-libre:focus { border-color: var(--bg-dark); outline: none; background: var(--blanc); }
+
 .pc-exclu {
   font-size: 12.5px; color: #92400E; background: #FEF3C7;
   border-radius: 8px; padding: 10px 14px; line-height: 1.5;

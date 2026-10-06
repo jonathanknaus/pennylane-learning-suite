@@ -8,6 +8,7 @@ import {
   lireMonCabinet, ecouterApprenants, enregistrerApprenant, supprimerApprenant,
   enregistrerBesoin, lireBesoin, QUESTIONS_EXCLUES,
 } from '../data/cabinets-firebase'
+import ChoixMultiple from '../components/ChoixMultiple'
 import SimulateurTarif, { SIMU_VIDE, resumerDemande, calculerEstimation } from '../components/SimulateurTarif'
 import './PortailCabinet.css'
 
@@ -181,11 +182,20 @@ function Besoin({ cabinet }) {
               </span>
             )}
           </label>
+          {q.aide && <p className="pc-aide">{q.aide}</p>}
           {QUESTIONS_EXCLUES.includes(q.id) ? (
             <p className="pc-exclu">
               Pour toute adaptation liée à un prérequis ou à une situation de handicap, contactez
               votre interlocuteur AFS. Nous ne collectons pas cette information par ce formulaire.
             </p>
+          ) : q.type === 'checkbox' ? (
+            <ChoixMultiple
+              id={`q-${q.id}`}
+              options={q.options}
+              valeur={reponses[q.id] || ''}
+              onChange={v => setReponses(r => ({ ...r, [q.id]: v }))}
+              classe="pc-choix"
+            />
           ) : q.type === 'radio' ? (
             <select
               id={`q-${q.id}`}
