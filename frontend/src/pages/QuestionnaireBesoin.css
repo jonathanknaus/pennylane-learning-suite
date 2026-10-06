@@ -190,6 +190,27 @@
 }
 .qb-choix .cm-libre:focus { border-color: var(--bg-dark); outline: none; }
 
+/* Niveau par module — une ligne par module, trois boutons. */
+.nm-liste { display: flex; flex-direction: column; gap: 6px; }
+.nm-ligne {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 8px 10px; border-radius: 8px; background: #F8F8F8;
+}
+.nm-module { font-size: 13.5px; font-weight: 500; flex: 1 1 200px; }
+.nm-choix { display: flex; gap: 6px; }
+.nm-niveau {
+  font-family: inherit; font-size: 12.5px; cursor: pointer;
+  padding: 5px 11px; border-radius: 999px;
+  border: 1.5px solid var(--border); background: var(--blanc);
+  color: var(--texte-secondaire); transition: all .15s; white-space: nowrap;
+}
+.nm-niveau:hover { border-color: var(--bg-dark); color: var(--texte); }
+.nm-niveau.actif {
+  border-color: var(--bg-dark); background: var(--bg-dark);
+  color: var(--blanc); font-weight: 600;
+}
+
 .qb-field-error { font-size: 12px; color: #EF4444; font-weight: 600; }
 
 /* Submit row */

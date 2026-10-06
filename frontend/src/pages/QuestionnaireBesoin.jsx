@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import ChoixMultiple from '../components/ChoixMultiple'
+import NiveauxModules from '../components/NiveauxModules'
+import { getAllModules } from '../data/catalogue-afs'
 import { verifyBesoinToken, getBesoin, saveBesoinReponses, addPrecisionBesoin, getQuestionsQB } from '../data/questionnaire-besoin'
 import { getSessions } from '../data/sessions'
 import './QuestionnaireBesoin.css'
@@ -19,6 +21,15 @@ export default function QuestionnaireBesoin({ sessionId, token }) {
   const [precision, setPrecision] = useState('')
   const [precisionSent, setPrecisionSent] = useState(false)
   const QUESTIONS = getQuestionsQB()
+
+  // Le niveau est demandé module par module. Ici il n'y a pas de simulateur :
+  // les modules viennent de la session elle-même. Si elle n'en porte aucun, on
+  // retombe sur un champ libre plutôt que de perdre l'information.
+  const modulesSession = (() => {
+    if (!session?.modules?.length) return []
+    const parId = new Map(getAllModules().map(m => [m.id, m]))
+    return session.modules.map(id => parId.get(id)).filter(Boolean)
+  })()
 
   useEffect(() => {
     const ok = verifyBesoinToken(sessionId, token)
@@ -258,6 +269,34 @@ export default function QuestionnaireBesoin({ sessionId, token }) {
             </div>
           </div>
         ))}
+
+        <div className="qb-question">
+          <div className="qb-question-num">{QUESTIONS.length + 1}</div>
+          <div className="qb-question-body">
+            <label className="qb-question-label">
+              Où en sont les participants sur les sujets de cette formation ?
+            </label>
+            <p className="qb-aide">
+              Il est courant d'être à l'aise sur un sujet et débutant sur un autre : le formateur
+              ajuste son rythme en conséquence.
+            </p>
+            {modulesSession.length > 0 ? (
+              <NiveauxModules
+                modules={modulesSession}
+                valeur={form.niveaux_modules || ''}
+                onChange={v => setForm(f => ({ ...f, niveaux_modules: v }))}
+                classe="qb-niveaux"
+              />
+            ) : (
+              <textarea
+                rows={2}
+                placeholder="Ex. : à l'aise sur la tenue, débutants sur la TVA…"
+                value={form.niveaux_modules || ''}
+                onChange={e => setForm(f => ({ ...f, niveaux_modules: e.target.value }))}
+              />
+            )}
+          </div>
+        </div>
 
         <div className="qb-submit-row">
           <button type="submit" className="qb-btn-submit">

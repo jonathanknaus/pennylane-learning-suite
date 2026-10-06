@@ -82,14 +82,6 @@ export const DEFAULT_QUESTIONS_QB = [
     required: true,
   },
   {
-    id: 'niveau_depart',
-    label: 'Niveau de départ',
-    question: 'Comment évaluez-vous le niveau actuel de vos équipes sur les sujets à former ?',
-    type: 'radio',
-    options: ['Débutant — premier contact avec le sujet', 'Intermédiaire — notions de base acquises', 'Avancé — pratique régulière, perfectionnement souhaité'],
-    required: true,
-  },
-  {
     id: 'attentes_specifiques',
     label: 'Attentes spécifiques',
     question: 'Avez-vous des besoins ou attentes complémentaires qui n\'ont pas été abordés ci-dessus ?',
@@ -127,10 +119,23 @@ export const DEFAULT_QUESTIONS_QB = [
   },
 ]
 
+// Questions retirées du produit, à écarter des listes personnalisées déjà
+// enregistrées. Sans ce filtre, `getQuestionsQB()` les conserverait — il ne
+// supprime jamais ce qui est en stock — et la question réapparaîtrait à côté de
+// ce qui la remplace.
+//
+// `niveau_depart` demandait UN niveau pour toute la formation. Remplacée le
+// 2026-10-06 par un niveau PAR MODULE (NiveauxModules) : un cabinet est
+// couramment expert en tenue et débutant en TVA, et un niveau moyenné ne dit
+// rien au formateur.
+export const QUESTIONS_RETIREES = ['niveau_depart']
+
 export function getQuestionsQB() {
   try {
-    const stored = JSON.parse(localStorage.getItem(KEY_QUESTIONS) || 'null')
-    if (!Array.isArray(stored) || stored.length === 0) return DEFAULT_QUESTIONS_QB
+    const brut = JSON.parse(localStorage.getItem(KEY_QUESTIONS) || 'null')
+    if (!Array.isArray(brut) || brut.length === 0) return DEFAULT_QUESTIONS_QB
+    const stored = brut.filter(q => !QUESTIONS_RETIREES.includes(q?.id))
+    if (stored.length === 0) return DEFAULT_QUESTIONS_QB
 
     // Une liste personnalisée masquait les nouvelles questions par défaut :
     // elles n'apparaissaient qu'après réinitialisation, donc en perdant les

@@ -120,6 +120,7 @@ function Besoin({ cabinet }) {
         if (r.simu_modalite) restaure.modalite = r.simu_modalite
         if (r.simu_participants) restaure.participants = parseInt(r.simu_participants, 10) || 8
         if (r.simu_modules) restaure.modules = r.simu_modules.split(',').filter(Boolean)
+        if (r.simu_niveaux) restaure.niveaux = r.simu_niveaux
         setSimu(restaure)
         // Les champs techniques du simulateur ne s'affichent pas comme réponses.
         Object.keys(r).forEach(k => { if (k.startsWith('simu_') || k === 'estimation') delete r[k] })
@@ -145,6 +146,7 @@ function Besoin({ cabinet }) {
         simu_modalite: simu.modalite,
         simu_participants: String(simu.participants),
         simu_modules: simu.modules.join(','),
+        simu_niveaux: simu.niveaux || '',
       }
       if (estimation?.valide) charge.estimation = resumerDemande(simu)
       await enregistrerBesoin(cabinet.id, 'general', charge)

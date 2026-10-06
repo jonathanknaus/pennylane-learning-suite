@@ -72,6 +72,32 @@
 }
 
 /* Résultat */
+/* Niveau par module — une ligne par module, trois boutons. */
+.nm-liste { display: flex; flex-direction: column; gap: 6px; }
+.nm-ligne {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 8px 10px; border-radius: 8px; background: var(--gris, #F7F7F7);
+}
+.nm-module { font-size: 13.5px; font-weight: 500; flex: 1 1 200px; }
+.nm-choix { display: flex; gap: 6px; }
+.nm-niveau {
+  font-family: inherit; font-size: 12.5px; cursor: pointer;
+  padding: 5px 11px; border-radius: 999px;
+  border: 1.5px solid var(--border); background: var(--blanc);
+  color: var(--texte-secondaire); transition: all .15s; white-space: nowrap;
+}
+.nm-niveau:hover { border-color: var(--bg-dark); color: var(--texte); }
+.nm-niveau.actif {
+  border-color: var(--bg-dark); background: var(--bg-dark);
+  color: var(--blanc); font-weight: 600;
+}
+
+.st-aide {
+  font-size: 12.5px; color: var(--texte-secondaire); line-height: 1.5;
+  margin: -4px 0 10px; font-style: italic;
+}
+
 .st-resultat {
   background: var(--blanc);
   border: 1.5px solid var(--bg-dark);

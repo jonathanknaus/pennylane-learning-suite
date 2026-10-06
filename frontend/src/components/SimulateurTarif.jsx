@@ -2,6 +2,9 @@ import { useMemo } from 'react'
 import { getAllModules } from '../data/catalogue-afs'
 import { estimer, resumerEstimation, MODALITES, SEUIL_SUR_DEVIS } from '../data/tarification'
 import { totaliserDurees, libelleDuree } from '../data/durees-modules'
+import NiveauxModules, {
+  composerNiveaux, decomposerNiveaux, niveauxManquants, libelleNiveau,
+} from './NiveauxModules'
 import './SimulateurTarif.css'
 
 // Simulateur de tarif — composant CONTRÔLÉ, intégré au questionnaire de besoin.
@@ -45,6 +48,8 @@ export const SIMU_VIDE = {
   publicCible: 'collaborateurs',
   webinar: false,
   modules: [],
+  // Niveau par module, sérialisé « id=niveau, id=niveau » (voir NiveauxModules).
+  niveaux: '',
   modalite: 'visio',
   participants: 8,
 }
@@ -65,7 +70,7 @@ export function calculerEstimation(v) {
         webinar: v.webinar,
       })
     : null
-  return { retrouves, disparus, cumul, estimation }
+  return { retrouves, disparus, cumul, estimation, sansNiveau: niveauxManquants(v.niveaux, retrouves) }
 }
 
 // Résumé textuel versé dans la demande, à côté des paramètres bruts.
@@ -78,6 +83,11 @@ export function resumerDemande(v) {
     v.webinar ? 'Format : webinar (1 h, participants illimités)' : `Durée cumulée : ${libelleDuree(cumul.totalHeures)}`,
     resumerEstimation(estimation),
   ]
+  const table = decomposerNiveaux(v.niveaux)
+  const avecNiveau = retrouves.filter(m => table[m.id])
+  if (avecNiveau.length > 0) {
+    lignes.push(`Niveau des participants : ${avecNiveau.map(m => `${m.titre} — ${libelleNiveau(table[m.id])}`).join(' ; ')}`)
+  }
   if (!cumul.confirme) {
     lignes.push(`Durées à confirmer pour : ${cumul.aConfirmer.map(m => m.titre).join(', ')}`)
   }
@@ -97,7 +107,7 @@ export default function SimulateurTarif({ valeur, onChange }) {
     return [...parThematique.entries()]
   }, [])
 
-  const { retrouves, disparus, cumul, estimation } = calculerEstimation(v)
+  const { retrouves, disparus, cumul, estimation, sansNiveau } = calculerEstimation(v)
 
   function set(patch) { onChange({ ...v, ...patch }) }
 
@@ -108,7 +118,10 @@ export default function SimulateurTarif({ valeur, onChange }) {
   }
 
   function basculerModule(id) {
-    set({ modules: v.modules.includes(id) ? v.modules.filter(x => x !== id) : [...v.modules, id] })
+    const apres = v.modules.includes(id) ? v.modules.filter(x => x !== id) : [...v.modules, id]
+    // Recomposer les niveaux sur la nouvelle sélection : un module décoché ne
+    // doit pas laisser son niveau derrière lui.
+    set({ modules: apres, niveaux: composerNiveaux(decomposerNiveaux(v.niveaux), apres) })
   }
 
   return (
@@ -173,6 +186,27 @@ export default function SimulateurTarif({ valeur, onChange }) {
         </div>
       </div>
 
+      {retrouves.length > 0 && (
+        <div className="st-bloc">
+          <div className="st-bloc-titre">
+            Où en sont vos participants sur ces sujets ?
+            {sansNiveau.length > 0 && retrouves.length > sansNiveau.length && (
+              <span className="st-compte">{retrouves.length - sansNiveau.length}/{retrouves.length} renseignés</span>
+            )}
+          </div>
+          <p className="st-aide">
+            Un niveau par module : il est courant d’être à l’aise sur un sujet et débutant sur un
+            autre. Le formateur ajuste son rythme en conséquence — cela ne change pas le tarif.
+          </p>
+          <NiveauxModules
+            modules={retrouves}
+            valeur={v.niveaux}
+            onChange={niveaux => set({ niveaux })}
+            classe="st-niveaux"
+          />
+        </div>
+      )}
+
       {!v.webinar && (
         <div className="st-bloc">
           <div className="st-bloc-titre">Combien de personnes, et sous quelle forme ?</div>
@@ -236,6 +270,14 @@ export default function SimulateurTarif({ valeur, onChange }) {
           <ul className="st-alertes">
             {estimation.alertes.map((a, i) => <li key={i}>{a}</li>)}
           </ul>
+        )}
+
+        {cumul.complet && sansNiveau.length > 0 && (
+          <p className="st-a-confirmer">
+            Niveau non précisé pour {sansNiveau.length} module{sansNiveau.length > 1 ? 's' : ''} :
+            {' '}{sansNiveau.map(m => m.titre).join(', ')}. Ce n’est pas bloquant, mais c’est ce qui
+            nous permet d’adapter le contenu.
+          </p>
         )}
 
         {cumul.complet && !cumul.confirme && (
