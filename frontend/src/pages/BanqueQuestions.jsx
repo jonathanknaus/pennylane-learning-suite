@@ -9,6 +9,7 @@ import { getAllModules } from '../data/catalogue-afs'
 // automatiquement depuis les thèmes doit pouvoir être relue comme telle.
 const ORIGINES = {
   personnalisee: { court: 'Perso',      long: 'Questions personnalisées', classe: 'custom' },
+  afs:           { court: 'AFS',        long: 'QCM de l’équipe AFS',      classe: 'afs' },
   historique:    { court: 'Standard',   long: 'Questions standard',       classe: 'standard' },
   thematique:    { court: 'Thématique', long: 'Composées par thème',      classe: 'thematique' },
   aucune:        { court: 'Vide',       long: 'Aucune question',          classe: 'empty' },
@@ -186,7 +187,7 @@ function QuestionsList({ moduleId }) {
         <span className={`ql-type-badge ${o.classe}`}>{o.long}</span>
         <span className="ql-count">
           {banque.length} question{banque.length > 1 ? 's' : ''}
-          {origine === 'historique' && ' · 5 tirées par passation'}
+          {' · posées à chaque passation, options mélangées'}
         </span>
       </div>
       {themes.length > 0 && (
@@ -204,7 +205,7 @@ function QuestionsList({ moduleId }) {
             <span className="qv-enonce">{q.enonce}</span>
           </div>
           <div className="qv-options">
-            {OPTIONS_LABELS.map((opt, oi) => (
+            {q.options.map((_, oi) => 'ABCD'[oi]).map((opt, oi) => (
               <div key={opt} className={`qv-option ${q.reponse === opt ? 'correct' : ''}`}>
                 <span className="qv-opt-letter">{opt}</span>
                 <span>{q.options[oi]}</span>

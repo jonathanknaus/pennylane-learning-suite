@@ -67,7 +67,9 @@ function QuizzPost({ session, stagiaire, onDone }) {
   )
 
   const q = questions[current]
-  const OPTIONS = ['A', 'B', 'C', 'D']
+  // Lettres dérivées du NOMBRE d'options de la question : les QCM de l'équipe
+  // AFS en comptent parfois 3, et une quatrième case vide serait cliquable.
+  const OPTIONS = (q?.options || []).map((_, i) => 'ABCD'[i])
   const allAnswered = questions.every(q => reponses[q.id])
   const progress = Math.round(((current + 1) / questions.length) * 100)
 

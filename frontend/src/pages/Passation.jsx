@@ -99,7 +99,8 @@ export default function Passation({ sessionId, stagiaireId, type, onDone }) {
   if (!questions.length) return <div className="passation-error">Aucune question disponible pour les modules de cette session.</div>
 
   const q = questions[current]
-  const OPTIONS = ['A', 'B', 'C', 'D']
+  // Voir EvalComplete : le nombre d'options dépend de la question.
+  const OPTIONS = (q?.options || []).map((_, i) => 'ABCD'[i])
   const allAnswered = questions.every(q => reponses[q.id])
   const progress = Math.round(((current + 1) / questions.length) * 100)
 

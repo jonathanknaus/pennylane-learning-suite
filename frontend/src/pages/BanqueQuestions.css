@@ -69,6 +69,7 @@
 .banque-badge.custom   { background: #EEF2FF; color: #6366F1; }
 .banque-badge.empty    { background: var(--gris); color: var(--texte-secondaire); }
 .banque-badge.thematique { background: #E9D8FD; color: #553C9A; }
+.banque-badge.afs { background: #DBEAFE; color: #1D4ED8; font-weight: 700; }
 
 /* Main */
 .banque-main { display: flex; flex-direction: column; gap: 20px; }
@@ -155,6 +156,7 @@
 .ql-type-badge.standard { background: var(--vert-clair); color: #059669; }
 .ql-type-badge.custom   { background: #EEF2FF; color: #6366F1; }
 .ql-type-badge.thematique { background: #E9D8FD; color: #553C9A; }
+.ql-type-badge.afs { background: #DBEAFE; color: #1D4ED8; }
 .ql-type-badge.empty      { background: var(--gris); color: var(--texte-secondaire); }
 .ql-themes {
   font-size: 12.5px; line-height: 1.55; color: #553C9A;

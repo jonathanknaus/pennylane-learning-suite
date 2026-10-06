@@ -23,12 +23,13 @@ Cordialement,
 
 // Modèle du mail qui accompagne la synthèse de demande de formation.
 //
-// ⚠️ ADRESSE D'EXPÉDITION — Jonathan a demandé « afs-training@gmail.com ». Ce
-// sont ici `of_email` et la copie ci-dessous qui font foi, et elles pointent sur
-// afs-training@pennylane.com : une boîte Gmail grand public ferait transiter des
-// données de cabinets hors des outils validés (ISO 27001, RGPD prépondérante),
-// alors que l'adresse Workspace existe déjà. Modifiable, donc son arbitrage —
-// mais l'écart devait être signalé plutôt que recopié en silence.
+// ADRESSE D'EXPÉDITION — tranché le 2026-10-06 : c'est **afs-training@pennylane.com**,
+// et c'est `of_email` qui en est la source.
+//
+// Ne pas confondre avec **afs-admin@pennylane.com**, qui figure sur les fiches
+// produit du Drive : ce n'est pas une boîte mais un GROUPE, reprenant les
+// interlocuteurs commerciaux et Sarah. Il a sa place comme contact sur un document
+// remis au client, pas comme expéditeur des envois de l'outil.
 export const TEMPLATE_SYNTHESE_BESOIN_DEFAUT = {
   copie: 'afs-training@pennylane.com',
   objet: 'Votre demande de formation — {{cabinet}}',

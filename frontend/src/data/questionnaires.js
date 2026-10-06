@@ -167,6 +167,7 @@ const BANQUE_STANDARD = {
 
 import { getAllModules } from './catalogue-afs'
 import { questionsDuModule, themesDuModule } from './banque-thematique'
+import { questionsAfsPourModule } from './qcm-afs'
 
 const KEY_BANQUE = 'pls_banque_questions'
 const KEY_REPONSES = 'pls_reponses_questionnaires'
@@ -185,9 +186,18 @@ const KEY_REPONSES = 'pls_reponses_questionnaires'
 export function getBanqueModule(moduleId) {
   const stored = JSON.parse(localStorage.getItem(KEY_BANQUE) || '{}')
   if (stored[moduleId]?.custom?.length >= 5) return stored[moduleId].custom
-  if (BANQUE_STANDARD[moduleId]) return BANQUE_STANDARD[moduleId]
+
   const module = getAllModules().find(m => m.id === moduleId)
-  return module ? questionsDuModule(module) : []
+  // Les QCM rédigés par l'équipe AFS passent devant : ils viennent des
+  // formateurs, qui savent ce qu'ils évaluent.
+  const afs = module ? questionsAfsPourModule(module) : []
+  const base = BANQUE_STANDARD[moduleId] || (module ? questionsDuModule(module) : [])
+  if (afs.length === 0) return base
+
+  const complement = base.filter(q => !afs.some(a => a.id === q.id))
+  // Toujours 5 au total : `genererQuestionnaire` pose TOUT le pool d'un module,
+  // il ne tire pas 5 questions parmi davantage.
+  return [...afs, ...complement].slice(0, 5)
 }
 
 /**
@@ -198,8 +208,9 @@ export function getBanqueModule(moduleId) {
 export function origineBanque(moduleId) {
   const stored = JSON.parse(localStorage.getItem(KEY_BANQUE) || '{}')
   if (stored[moduleId]?.custom?.length >= 5) return 'personnalisee'
-  if (BANQUE_STANDARD[moduleId]) return 'historique'
   const module = getAllModules().find(m => m.id === moduleId)
+  if (module && questionsAfsPourModule(module).length > 0) return 'afs'
+  if (BANQUE_STANDARD[moduleId]) return 'historique'
   if (module && themesDuModule(module).length > 0) return 'thematique'
   return 'aucune'
 }
