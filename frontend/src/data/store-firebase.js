@@ -78,6 +78,24 @@ async function marquerMigree(cle, emailAuteur) {
   marqueurs[cle] = true
 }
 
+/**
+ * Déclare une collection partagée sans passer par le transfert initial.
+ *
+ * À réserver aux collections NÉES dans Firebase, qui n'ont pas d'historique en
+ * localStorage à protéger — la grille tarifaire en est une. Le garde-fou du
+ * transfert existe pour ne pas écraser des données saisies avant la migration ;
+ * ici il n'y a rien à écraser, et attendre un transfert manuel laisserait la
+ * collection désynchronisée entre les postes.
+ *
+ * Sans effet si le marqueur est déjà posé.
+ */
+export async function declarerPartagee(cle, emailAuteur) {
+  if (!estPartageable(cle)) return false
+  if (await estMigree(cle)) return false
+  await marquerMigree(cle, emailAuteur)
+  return true
+}
+
 // ── Cache local ──────────────────────────────────────────────────────────────
 
 export function lireCache(cle, defaut = null) {

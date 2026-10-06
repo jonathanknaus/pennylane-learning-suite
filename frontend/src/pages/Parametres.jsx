@@ -10,6 +10,7 @@ import GestionAcces from './GestionAcces'
 import MigrationFirebase from './MigrationFirebase'
 import DureesModules from './DureesModules'
 import ContenuModules from './ContenuModules'
+import GrilleTarifaire from './GrilleTarifaire'
 import './Parametres.css'
 import './BanqueQuestions.css'
 
@@ -673,6 +674,7 @@ const ONGLETS = [
   { id: 'qbesoin',   label: 'Questionnaire de besoin' },
   { id: 'mails',     label: 'Modèles de mails' },
   { id: 'acces',     label: 'Accès utilisateurs' },
+  { id: 'tarifs',    label: 'Grille tarifaire' },
   { id: 'durees',    label: 'Durées des modules' },
   { id: 'contenu',   label: 'Contenu des modules' },
   { id: 'migration', label: 'Migration Firebase' },
@@ -707,6 +709,7 @@ export default function Parametres() {
           {onglet === 'qbesoin'   && <QuestionnaireBesoinEditor />}
           {onglet === 'mails'     && <><MailAccesCabinetEditor /><MailSyntheseBesoinEditor /></>}
           {onglet === 'acces'     && <GestionAcces />}
+          {onglet === 'tarifs'    && <GrilleTarifaire />}
           {onglet === 'durees'    && <DureesModules />}
           {onglet === 'contenu'   && <ContenuModules />}
           {onglet === 'migration' && <MigrationFirebase />}

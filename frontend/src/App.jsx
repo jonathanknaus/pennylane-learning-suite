@@ -222,6 +222,9 @@ export default function App() {
     'pls_stagiaires',
     'pls_inscriptions',
     'pls_entreprises',
+    // La grille tarifaire est un paramètre partagé : un tarif modifié par un
+    // administrateur doit s'appliquer aux autres postes, pas rester chez lui.
+    'pls_grilles_tarifaires',
   ]), [])
 
   // Lien quiz public : rendu sans auth, sans sidebar

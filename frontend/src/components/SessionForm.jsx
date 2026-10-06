@@ -4,7 +4,7 @@ import { getThematiques } from '../data/catalogue-afs'
 import { getGestionnaires, getGestionnaireDefaut } from '../data/gestionnaires'
 import { getFormateurs } from '../data/formateurs'
 import { suggererFormateurs, respecteDelaiQualiopi, joursAvantDate, DELAI_MIN_JOURS } from '../data/affectation-formateurs'
-import { SEUIL_SUR_DEVIS } from '../data/tarification'
+import { plafondGrille } from '../data/tarification'
 import './SessionForm.css'
 
 const EMPTY = {
@@ -424,7 +424,7 @@ export default function SessionForm({ session, onSaved, onCancel }) {
                       sans palier. La grille va maintenant jusqu'à 25, et au-delà
                       le tarif passe sur devis : c'est l'estimation qui le dit. */}
                   <span className="form-hint-effectif">
-                    C’est ce nombre qui fixe le tarif · au-delà de {SEUIL_SUR_DEVIS}, sur devis
+                    C’est ce nombre qui fixe le tarif · au-delà de {plafondGrille()}, sur devis
                   </span>
                 </div>
                 <div className="form-group">

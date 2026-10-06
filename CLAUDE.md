@@ -144,14 +144,38 @@ node generer-catalogue.mjs
 
 Deux modules complémentaires :
 
-**`tarification.js`** — grilles **versionnées par date d'effet** (`GRILLES`,
-`grilleApplicable(date)`). Le tarif est **figé à la date de la demande**, pas à celle de la
-session : un devis validé sous l'ancienne grille reste recalculable à l'identique. Deux grilles
-existent : la précédente et celle du **2026-10-05**, qui introduit des paliers par nombre de
-participants.
+**`tarification.js`** — grilles **versionnées par date d'effet**
+(`toutesLesGrilles()`, `grilleApplicable(date)`). Le tarif est **figé à la date de la demande**, pas
+à celle de la session : un devis validé sous l'ancienne grille reste recalculable à l'identique.
 
-Règles de bascule : jusqu'à 2h → tarif horaire cumulable ; au-delà de 2h → forfait demi-journée ;
-7h et plus → forfait journée, par journées entamées. Au-delà de 25 participants → sur devis.
+Deux sources de grilles, fusionnées :
+
+| Source | Contenu | Modifiable |
+|---|---|---|
+| `GRILLES_BASE` | la grille précédente et celle du **2026-10-05**, en dur | non — socle de référence |
+| `pls_grilles_tarifaires` | grilles saisies dans l'app | oui, administrateurs seulement |
+
+Une grille saisie à la **même date d'effet** qu'une grille de base la **masque** ;
+`supprimerGrille(dateEffet)` rétablit l'originale. C'est ce qui permet de corriger une erreur de
+saisie sans perdre la référence historique.
+
+**Aucun montant n'est codé en dur ailleurs.** Les prix, les paliers de participants, le nombre de
+formateurs par palier et les mentions de modules (« 3 à 4 modules ») s'éditent dans
+**Paramètres → Grille tarifaire** (`pages/GrilleTarifaire.jsx`). Les conversions entre la vue
+appariée de l'éditeur et le modèle interne rangé par modalité sont dans `tarification.js`, et nulle
+part ailleurs.
+
+⚠️ `participantsMax: Infinity` (webinar) se stocke en `null` : `JSON.stringify(Infinity)` vaut
+`null`, un aller-retour non converti transformerait le palier illimité en « 0 participant ». La
+conversion est faite à la frontière du stockage.
+
+⚠️ **Il n'y a plus de constante `SEUIL_SUR_DEVIS`.** Le seuil est dérivé de la grille par
+`plafondGrille(date)` : un administrateur qui ajoute un palier « jusqu'à 40 » doit voir le seuil
+suivre. Un effectif que plus aucun palier ne couvre passe sur devis.
+
+Règles de bascule, elles **non éditables** (ce ne sont pas des tarifs) : jusqu'à 2h → tarif horaire
+cumulable ; au-delà de 2h → forfait demi-journée ; 7h et plus → forfait journée, par journées
+entamées.
 
 **`tarifs-negocies.js`** — délégation encadrée. Un `administrateur` fixe librement un tarif ; un
 `formateur_interne` négocie dans **±20 %**. La marge s'ancre **toujours sur le tarif de la grille**,

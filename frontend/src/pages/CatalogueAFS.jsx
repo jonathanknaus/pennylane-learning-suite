@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { getThematiques, WEBINAIRES_EMBARQUEMENT, ajouterThematiqueCustom, ajouterModuleCustom } from '../data/catalogue-afs'
-import { grillePourAffichage, SEUIL_SUR_DEVIS } from '../data/tarification'
+import { grillePourAffichage, plafondGrille } from '../data/tarification'
 import { getBanqueModule } from '../data/questionnaires'
 import { getModuleConfig, saveModuleConfig, BPF_SPECIALITES, BPF_ITEMS } from '../data/catalogue-config'
 import ThematiqueCard from '../components/ThematiqueCard'
@@ -59,7 +59,7 @@ export default function CatalogueAFS({ publicMode = false }) {
         <h1 className="hero-title">Catalogue AFS — Formations Premium</h1>
         <p className="hero-sub">
           Formations personnalisées pour maîtriser tous les aspects de la gestion et comptabilité sur Pennylane.
-          <br />Jusqu’à {SEUIL_SUR_DEVIS} participants · Visio ou présentiel · <strong>afs-training@pennylane.com</strong>
+          <br />Jusqu’à {plafondGrille()} participants · Visio ou présentiel · <strong>afs-training@pennylane.com</strong>
         </p>
       </div>
 

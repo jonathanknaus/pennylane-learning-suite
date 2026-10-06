@@ -286,8 +286,36 @@
     },
     "donnees": {
       ".read": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
-      ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
+      "pls_grilles_tarifaires": {
+        ".read": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
+        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && auth.token.email === 'jonathan.knaus@pennylane.com'",
+        "$dateEffet": {
+          ".validate": "newData.hasChildren(['dateEffet', 'libelle', 'grille'])",
+          "dateEffet": {
+            ".validate": "newData.isString() && newData.val().length === 10"
+          },
+          "libelle": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length < 120"
+          },
+          "grille": {
+            ".validate": "newData.hasChildren()"
+          },
+          "creeLe": {
+            ".validate": "newData.isString() && newData.val().length < 40"
+          },
+          "modifieLe": {
+            ".validate": "newData.isString() && newData.val().length < 40"
+          },
+          "modifiePar": {
+            ".validate": "newData.isString() && newData.val().length < 200"
+          },
+          "modifieParProfil": {
+            ".validate": "newData.isString() && newData.val().length < 40"
+          }
+        }
+      },
       "$collection": {
+        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
         ".validate": "newData.hasChildren() || newData.isString() || newData.isNumber() || newData.isBoolean()"
       }
     }

@@ -23,7 +23,17 @@
 .tarif-row:hover { background: var(--gris); }
 
 .tarif-name { font-weight: 600; font-size: 14px; }
-.tarif-modules-hint { font-size: 12px; color: var(--texte-secondaire); margin-top: 2px; }
+
+/* Le nombre de modules et le palier de participants portaient la même
+   typographie, ce qui les rendait indistinguables. Les modules relèvent du
+   descriptif de l'offre : italique, discret. Le palier est une donnée
+   structurante, qui commande le prix juste en dessous : il est marqué. */
+.tarif-modules-hint {
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--texte-secondaire);
+  margin-top: 2px;
+}
 
 /* Un bloc par palier de participants : son plafond, puis les prix en dessous.
    Les formats sans palier (horaire, webinar) n'en ont qu'un seul. */
@@ -33,7 +43,8 @@
 
 .palier-label {
   font-size: 12px;
-  color: var(--texte-secondaire);
+  font-weight: 600;
+  color: var(--texte);
 }
 
 .palier-formateurs {

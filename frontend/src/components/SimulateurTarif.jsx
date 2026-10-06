@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { getAllModules } from '../data/catalogue-afs'
-import { estimer, resumerEstimation, MODALITES, SEUIL_SUR_DEVIS } from '../data/tarification'
+import { estimer, resumerEstimation, MODALITES, plafondGrille } from '../data/tarification'
 import { totaliserDurees, libelleDuree } from '../data/durees-modules'
 import NiveauxModules, {
   composerNiveaux, decomposerNiveaux, niveauxManquants, libelleNiveau,
@@ -191,6 +191,9 @@ export function ChoixPublic({ valeur, onChange }) {
 
 export default function SimulateurTarif({ valeur, onChange }) {
   const v = { ...SIMU_VIDE, ...valeur }
+  // Dérivé de la grille en vigueur, et non d'un seuil en dur : si un
+  // administrateur ajoute un palier « jusqu'à 40 », le message suit.
+  const plafond = plafondGrille()
 
   const groupes = useMemo(() => {
     const parThematique = new Map()
@@ -286,9 +289,9 @@ export default function SimulateurTarif({ valeur, onChange }) {
               />
             </label>
           </div>
-          {v.participants > SEUIL_SUR_DEVIS && (
+          {v.participants > plafond && (
             <p className="st-info">
-              Au-delà de {SEUIL_SUR_DEVIS} apprenants, le tarif est établi sur devis — nous revenons
+              Au-delà de {plafond} apprenants, le tarif est établi sur devis — nous revenons
               vers vous avec une proposition.
             </p>
           )}
