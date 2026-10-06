@@ -8,7 +8,7 @@ import {
   lireMonCabinet, ecouterApprenants, enregistrerApprenant, supprimerApprenant,
   enregistrerBesoin, lireBesoin, QUESTIONS_EXCLUES,
 } from '../data/cabinets-firebase'
-import SimulateurTarif from '../components/SimulateurTarif'
+import SimulateurTarif, { SIMU_VIDE, resumerDemande, calculerEstimation } from '../components/SimulateurTarif'
 import './PortailCabinet.css'
 
 // Espace cabinet.
@@ -98,68 +98,93 @@ function DemandeLien() {
 }
 
 // ── Questionnaire de besoin ──────────────────────────────────────────────────
-function Besoin({ cabinet, estimationAJoindre, onEstimationConsommee }) {
+function Besoin({ cabinet }) {
   const questions = getQuestionsQB()
   const [reponses, setReponses] = useState({})
-
-  // L'estimation produite par le simulateur se verse dans la question de
-  // contexte : c'est ce qui relie le prix simulé à la demande qu'on reçoit.
-  useEffect(() => {
-    if (!estimationAJoindre) return
-    setReponses(r => {
-      const actuel = r.contexte || ''
-      if (actuel.includes(estimationAJoindre)) return r
-      return { ...r, contexte: actuel ? `${actuel}\n\n${estimationAJoindre}` : estimationAJoindre }
-    })
-    if (onEstimationConsommee) onEstimationConsommee()
-  }, [estimationAJoindre, onEstimationConsommee])
+  const [simu, setSimu] = useState(SIMU_VIDE)
   const [enregistre, setEnregistre] = useState(null)
   const [erreur, setErreur] = useState('')
+  const [envoiEnCours, setEnvoiEnCours] = useState(false)
 
+  // Relecture d'une demande déjà envoyée : on restaure aussi les paramètres du
+  // simulateur, pour que le cabinet retrouve sa simulation et puisse l'ajuster.
   useEffect(() => {
     lireBesoin(cabinet.id, 'general')
       .then(v => {
-        if (v?.reponses) setReponses(v.reponses)
-        if (v?.soumisLe) setEnregistre(v.soumisLe)
+        if (!v?.reponses) return
+        const r = { ...v.reponses }
+        const restaure = { ...SIMU_VIDE }
+        if (r.simu_public) restaure.publicCible = r.simu_public
+        if (r.simu_webinar) restaure.webinar = r.simu_webinar === 'oui'
+        if (r.simu_modalite) restaure.modalite = r.simu_modalite
+        if (r.simu_participants) restaure.participants = parseInt(r.simu_participants, 10) || 8
+        if (r.simu_modules) restaure.modules = r.simu_modules.split(',').filter(Boolean)
+        setSimu(restaure)
+        // Les champs techniques du simulateur ne s'affichent pas comme réponses.
+        Object.keys(r).forEach(k => { if (k.startsWith('simu_') || k === 'estimation') delete r[k] })
+        setReponses(r)
+        if (v.soumisLe) setEnregistre(v.soumisLe)
       })
       .catch(() => {})
   }, [cabinet.id])
 
   async function soumettre() {
     setErreur('')
+    setEnvoiEnCours(true)
     try {
-      await enregistrerBesoin(cabinet.id, 'general', reponses)
+      // Les paramètres du simulateur partent AVEC les réponses, en une seule
+      // demande. Stockés comme chaînes : les règles de la base n'acceptent que
+      // des chaînes sous `reponses`, et ça permet de recalculer l'estimation à
+      // l'identique plus tard, même si la grille a changé entre-temps.
+      const { estimation } = calculerEstimation(simu)
+      const charge = {
+        ...reponses,
+        simu_public: simu.publicCible,
+        simu_webinar: simu.webinar ? 'oui' : 'non',
+        simu_modalite: simu.modalite,
+        simu_participants: String(simu.participants),
+        simu_modules: simu.modules.join(','),
+      }
+      if (estimation?.valide) charge.estimation = resumerDemande(simu)
+      await enregistrerBesoin(cabinet.id, 'general', charge)
       setEnregistre(new Date().toISOString())
     } catch (err) {
-      setErreur(err?.message || 'Enregistrement impossible.')
+      setErreur(err?.message || 'Envoi impossible.')
     }
+    setEnvoiEnCours(false)
   }
+
+  const { estimation } = calculerEstimation(simu)
 
   return (
     <div className="pc-section">
-      <div className="pc-section-title">Votre besoin de formation</div>
+      <div className="pc-section-title">Votre demande de formation</div>
+      <p className="pc-note">
+        Décrivez votre besoin et composez votre formation : l’estimation se met à jour au fur et à
+        mesure. Tout part en une seule demande, et vous pourrez revenir la compléter à tout moment.
+      </p>
       {enregistre && (
         <p className="pc-note">
-          Dernier envoi le {new Date(enregistre).toLocaleString('fr-FR')}. Vous pouvez
-          compléter vos réponses à tout moment.
+          Dernier envoi le {new Date(enregistre).toLocaleString('fr-FR')}.
         </p>
       )}
+
+      {/* Le besoin exprimé */}
       {questions.map(q => (
         <div key={q.id} className="pc-field">
           <label htmlFor={`q-${q.id}`}>
             {q.question}
             {QUESTIONS_EXCLUES.includes(q.id) && (
               <span className="pc-field-hint">
-                {' '}— à évoquer directement avec votre interlocuteur AFS, cette
-                réponse n'est pas conservée ici.
+                {' '}— à évoquer directement avec votre interlocuteur AFS, cette réponse n’est pas
+                conservée ici.
               </span>
             )}
           </label>
           {QUESTIONS_EXCLUES.includes(q.id) ? (
             <p className="pc-exclu">
-              Pour toute adaptation liée à un prérequis ou à une situation de handicap,
-              contactez votre interlocuteur AFS. Nous ne collectons pas cette
-              information par ce formulaire.
+              Pour toute adaptation liée à un prérequis ou à une situation de handicap, contactez
+              votre interlocuteur AFS. Nous ne collectons pas cette information par ce formulaire.
             </p>
           ) : q.type === 'radio' ? (
             <select
@@ -181,8 +206,22 @@ function Besoin({ cabinet, estimationAJoindre, onEstimationConsommee }) {
           )}
         </div>
       ))}
+
+      {/* Le simulateur, dans le même formulaire */}
+      <div className="pc-separateur">Votre formation et son coût estimé</div>
+      <SimulateurTarif valeur={simu} onChange={setSimu} />
+
       {erreur && <div className="pc-login-error">{erreur}</div>}
-      <button className="pc-login-btn" onClick={soumettre}>Enregistrer mes réponses</button>
+
+      <button className="pc-login-btn" onClick={soumettre} disabled={envoiEnCours}>
+        {envoiEnCours
+          ? 'Envoi…'
+          : enregistre
+            ? 'Mettre à jour ma demande'
+            : estimation?.valide
+              ? 'Envoyer ma demande avec l’estimation'
+              : 'Envoyer ma demande'}
+      </button>
     </div>
   )
 }
@@ -316,8 +355,6 @@ export default function PortailCabinet() {
   const [etat, setEtat] = useState('chargement') // chargement | anonyme | refuse | pret
   const [cabinet, setCabinet] = useState(null)
   const [emailConnecte, setEmailConnecte] = useState('')
-  // Texte produit par le simulateur, en attente d'être versé dans le besoin.
-  const [estimation, setEstimation] = useState(null)
   const [erreur, setErreur] = useState('')
 
   // Retour du lien : on termine la connexion avant tout.
@@ -405,12 +442,7 @@ export default function PortailCabinet() {
         <button className="pc-logout-btn" onClick={deconnecter}>Déconnexion</button>
       </div>
 
-      <SimulateurTarif onJoindreAuBesoin={setEstimation} />
-      <Besoin
-        cabinet={cabinet}
-        estimationAJoindre={estimation}
-        onEstimationConsommee={() => setEstimation(null)}
-      />
+      <Besoin cabinet={cabinet} />
       <Apprenants cabinet={cabinet} />
 
       <div className="pc-footer">
