@@ -25,9 +25,11 @@
 //     l'option la plus bavarde. Un écart de longueur est une fuite de réponse.
 //  4. Les distracteurs restent dans le même registre que la bonne réponse. Une
 //     option manifestement hors sujet ne fait pas réfléchir, elle s'élimine.
-//  5. La position de la bonne réponse n'a pas d'importance ici : les options sont
-//     permutées à chaque passation (`melangerOptions`). Ce n'est pas une raison
-//     pour déséquilibrer la source.
+//  5. La bonne réponse est RÉPARTIE sur A, B, C, D dans la source. Les options
+//     sont déjà permutées à chaque passation (`melangerOptions`), donc la position
+//     écrite ici n'a aucun effet à l'écran — mais si ce mélange venait à sauter,
+//     une source entièrement alignée sur « A » ramènerait un biais à 100 %. C'est
+//     exactement ce qui est arrivé à la banque historique, concentrée sur « B ».
 //
 // Format identique à la banque historique, pour que tout le reste fonctionne sans
 // changement : { id, enonce, options: [A, B, C, D], reponse: 'A'|'B'|'C'|'D' }.
@@ -55,34 +57,34 @@ export const THEMES = [
         id: 'tva_prerequis',
         enonce: "Que faut-il vérifier avant d'établir la première déclaration de TVA d'un dossier ?",
         options: [
+          "La date d'envoi de la précédente liasse fiscale",
           "Le paramétrage TVA du dossier et son plan comptable",
           "Le montant du dernier crédit de TVA obtenu",
           "Le nombre de collaborateurs ayant accès au dossier client",
-          "La date d'envoi de la précédente liasse fiscale",
         ],
-        reponse: 'A',
+        reponse: 'B',
       },
       {
         id: 'tva_encaissement',
         enonce: "La TVA sur encaissements se distingue de la TVA sur débits en ce qu'elle :",
         options: [
-          "devient exigible au paiement effectif de la facture",
-          "s'applique uniquement aux livraisons de biens neufs",
           "dispense le dossier de toute déclaration mensuelle",
           "se déclare une fois par an sur un formulaire CA12",
+          "devient exigible au paiement effectif de la facture",
+          "s'applique uniquement aux livraisons de biens neufs",
         ],
-        reponse: 'A',
+        reponse: 'C',
       },
       {
         id: 'tva_formulaire',
         enonce: "Quel formulaire correspond à une déclaration de TVA au régime réel normal ?",
         options: [
-          "La CA3, déposée mensuellement ou trimestriellement",
           "La CA12, déposée une fois par exercice comptable",
           "La DAS2, déposée au titre des honoraires versés",
           "La liasse fiscale, déposée à la clôture de l'exercice",
+          "La CA3, déposée mensuellement ou trimestriellement",
         ],
-        reponse: 'A',
+        reponse: 'D',
       },
       {
         id: 'tva_credit',
@@ -99,34 +101,34 @@ export const THEMES = [
         id: 'tva_tags',
         enonce: "À quoi servent les tags de TVA dans Pennylane ?",
         options: [
+          "À suivre les relances des factures clients impayées",
           "À qualifier les opérations en vue des déclarations",
           "À classer les pièces justificatives dans la GED",
           "À repérer les clients concernés par la réforme RFE",
-          "À suivre les relances des factures clients impayées",
         ],
-        reponse: 'A',
+        reponse: 'B',
       },
       {
         id: 'tva_od',
         enonce: "L'OD de TVA générée dans Pennylane a pour objet :",
         options: [
-          "de solder les comptes de TVA vers le compte à payer",
-          "de corriger le plan comptable du dossier client",
           "de transmettre la déclaration à l'administration fiscale",
           "de rapprocher les transactions bancaires du mois",
+          "de solder les comptes de TVA vers le compte à payer",
+          "de corriger le plan comptable du dossier client",
         ],
-        reponse: 'A',
+        reponse: 'C',
       },
       {
         id: 'tva_apres_ca3',
         enonce: "Après la génération de la CA3 dans Pennylane, l'étape suivante consiste à :",
         options: [
-          "télédéclarer puis suivre le paiement de la TVA due",
           "clôturer définitivement l'exercice comptable en cours",
           "éditer la liasse fiscale et le dossier de travail",
           "relancer les clients dont les factures sont impayées",
+          "télédéclarer puis suivre le paiement de la TVA due",
         ],
-        reponse: 'A',
+        reponse: 'D',
       },
       {
         id: 'tva_reprise',
@@ -143,12 +145,12 @@ export const THEMES = [
         id: 'tva_controle_envoi',
         enonce: "Avant d'envoyer la CA3, le point de contrôle essentiel consiste à :",
         options: [
+          "valider les notes de frais du mois pour les intégrer",
           "vérifier la cohérence entre grand livre et déclaration",
           "confirmer le mandat SEPA du client auprès de sa banque",
           "archiver les justificatifs dans le dossier de révision",
-          "valider les notes de frais du mois pour les intégrer",
         ],
-        reponse: 'A',
+        reponse: 'B',
       },
     ],
   },
