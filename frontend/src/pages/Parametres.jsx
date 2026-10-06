@@ -5,6 +5,7 @@ import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD 
 import { getQuestionsQB, saveQuestionsQB, resetQuestionsQB, DEFAULT_QUESTIONS_QB } from '../data/questionnaire-besoin'
 import GestionAcces from './GestionAcces'
 import MigrationFirebase from './MigrationFirebase'
+import DureesModules from './DureesModules'
 import './Parametres.css'
 import './BanqueQuestions.css'
 
@@ -566,6 +567,7 @@ const ONGLETS = [
   { id: 'qbesoin',   label: 'Questionnaire de besoin' },
   { id: 'mails',     label: 'Modèles de mails' },
   { id: 'acces',     label: 'Accès utilisateurs' },
+  { id: 'durees',    label: 'Durées des modules' },
   { id: 'migration', label: 'Migration Firebase' },
 ]
 
@@ -598,6 +600,7 @@ export default function Parametres() {
           {onglet === 'qbesoin'   && <QuestionnaireBesoinEditor />}
           {onglet === 'mails'     && <MailAccesCabinetEditor />}
           {onglet === 'acces'     && <GestionAcces />}
+          {onglet === 'durees'    && <DureesModules />}
           {onglet === 'migration' && <MigrationFirebase />}
         </div>
       </div>

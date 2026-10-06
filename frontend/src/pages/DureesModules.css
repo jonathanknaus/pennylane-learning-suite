@@ -1,0 +1,96 @@
+/* ===== DURÉES DES MODULES ===== */
+
+.dm-couverture {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.dm-stat {
+  flex: 1;
+  min-width: 120px;
+  background: var(--blanc);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dm-stat-val { font-size: 24px; font-weight: 800; color: var(--bg-dark); letter-spacing: -0.03em; }
+.dm-stat-lbl { font-size: 11.5px; color: var(--texte-secondaire); }
+.dm-stat-ok   { border-color: #A7F3D0; }
+.dm-stat-ok   .dm-stat-val { color: #047857; }
+.dm-stat-warn { border-color: #FCD34D; background: #FFFBEB; }
+.dm-stat-warn .dm-stat-val { color: #92400E; }
+
+.dm-alerte {
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  border-radius: 10px;
+  padding: 12px 15px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  color: #78350F;
+  line-height: 1.55;
+}
+
+.dm-barre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.dm-recherche {
+  font-family: inherit;
+  font-size: 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  min-width: 200px;
+  background: var(--gris);
+}
+.dm-recherche:focus { border-color: var(--bg-dark); outline: none; background: var(--blanc); }
+
+.dm-table { min-width: 900px; }
+.dm-titre { font-weight: 600; color: var(--texte); max-width: 260px; }
+.dm-them  { font-size: 12px; color: var(--texte-secondaire); max-width: 180px; }
+.dm-source {
+  font-size: 11px; font-weight: 600;
+  background: var(--gris); border: 1px solid var(--border);
+  border-radius: 5px; padding: 2px 7px; white-space: nowrap;
+  color: var(--texte-secondaire);
+}
+
+.dm-select {
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  color: var(--bg-dark); background: var(--blanc);
+  border: 1.5px solid var(--border); border-radius: 7px;
+  padding: 5px 8px; cursor: pointer; min-width: 150px;
+}
+.dm-select:focus { border-color: var(--bg-dark); outline: none; }
+.dm-duree-fixe { font-size: 13px; font-weight: 600; color: var(--texte-secondaire); }
+
+.dm-origine {
+  display: inline-block; font-size: 10.5px; font-weight: 700;
+  border-radius: 5px; padding: 2px 7px; white-space: nowrap;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.dm-o-catalogue { background: #DBEAFE; color: #1D4ED8; }
+.dm-o-saisie    { background: #D1FAE5; color: #065F46; }
+.dm-o-proposee  { background: #FEF3C7; color: #92400E; }
+
+.dm-ligne-a-confirmer td { background: #FFFDF5; }
+
+.dm-sugg { max-width: 300px; }
+.dm-sugg-btn {
+  display: block; width: 100%; text-align: left;
+  font-family: inherit; font-size: 11.5px;
+  background: var(--gris); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 8px; margin-bottom: 3px;
+  cursor: pointer; color: var(--texte);
+  transition: all 0.12s;
+}
+.dm-sugg-btn:hover { background: var(--vert-clair); border-color: var(--vert-fonce); }

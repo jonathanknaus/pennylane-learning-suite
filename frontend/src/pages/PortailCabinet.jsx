@@ -8,6 +8,7 @@ import {
   lireMonCabinet, ecouterApprenants, enregistrerApprenant, supprimerApprenant,
   enregistrerBesoin, lireBesoin, QUESTIONS_EXCLUES,
 } from '../data/cabinets-firebase'
+import SimulateurTarif from '../components/SimulateurTarif'
 import './PortailCabinet.css'
 
 // Espace cabinet.
@@ -97,9 +98,21 @@ function DemandeLien() {
 }
 
 // ── Questionnaire de besoin ──────────────────────────────────────────────────
-function Besoin({ cabinet }) {
+function Besoin({ cabinet, estimationAJoindre, onEstimationConsommee }) {
   const questions = getQuestionsQB()
   const [reponses, setReponses] = useState({})
+
+  // L'estimation produite par le simulateur se verse dans la question de
+  // contexte : c'est ce qui relie le prix simulé à la demande qu'on reçoit.
+  useEffect(() => {
+    if (!estimationAJoindre) return
+    setReponses(r => {
+      const actuel = r.contexte || ''
+      if (actuel.includes(estimationAJoindre)) return r
+      return { ...r, contexte: actuel ? `${actuel}\n\n${estimationAJoindre}` : estimationAJoindre }
+    })
+    if (onEstimationConsommee) onEstimationConsommee()
+  }, [estimationAJoindre, onEstimationConsommee])
   const [enregistre, setEnregistre] = useState(null)
   const [erreur, setErreur] = useState('')
 
@@ -303,6 +316,8 @@ export default function PortailCabinet() {
   const [etat, setEtat] = useState('chargement') // chargement | anonyme | refuse | pret
   const [cabinet, setCabinet] = useState(null)
   const [emailConnecte, setEmailConnecte] = useState('')
+  // Texte produit par le simulateur, en attente d'être versé dans le besoin.
+  const [estimation, setEstimation] = useState(null)
   const [erreur, setErreur] = useState('')
 
   // Retour du lien : on termine la connexion avant tout.
@@ -390,7 +405,12 @@ export default function PortailCabinet() {
         <button className="pc-logout-btn" onClick={deconnecter}>Déconnexion</button>
       </div>
 
-      <Besoin cabinet={cabinet} />
+      <SimulateurTarif onJoindreAuBesoin={setEstimation} />
+      <Besoin
+        cabinet={cabinet}
+        estimationAJoindre={estimation}
+        onEstimationConsommee={() => setEstimation(null)}
+      />
       <Apprenants cabinet={cabinet} />
 
       <div className="pc-footer">
