@@ -50,18 +50,25 @@ export const DEFAULT_QUESTIONS_QB = [
     required: true,
   },
   {
-    // Demande de Sarah (2026-10-05). Sert aussi de trace pour l'accessibilité
-    // et le référent handicap (clause 10 de la convention).
+    // Demande de Sarah (2026-10-05), reprise du formulaire Google où elle est
+    // obligatoire. Trace d'accessibilité et point d'entrée du référent handicap
+    // (clause 10 de la convention).
     //
-    // Volontairement NON obligatoire : une situation de handicap relève de la
-    // donnée de santé, donc sensible au sens du RGPD. On invite à la signaler
-    // pour pouvoir adapter, on ne contraint personne à la déclarer.
+    // OBLIGATOIRE, et c'est une obligation Qualiopi : le prestataire doit pouvoir
+    // prouver qu'il a posé la question et qu'il en a tiré les conséquences. Ce
+    // qui est exigé, c'est une RÉPONSE — « non » en est une. On ne contraint donc
+    // personne à déclarer un handicap ; on s'interdit de ne pas avoir demandé.
+    //
+    // La réponse est enregistrée et figure dans la synthèse PDF : sans trace,
+    // l'obligation n'est pas tenue. La finalité est annoncée au cabinet
+    // (champ `aide`) — on ne collecte rien sans dire à quoi ça sert.
     id: 'prerequis_handicap',
     label: 'Prérequis et adaptations',
     question: 'Existe-t-il des prérequis spécifiques ou des situations de handicap dont nous devrions avoir connaissance pour adapter nos modalités ?',
     type: 'textarea',
-    placeholder: 'Ex. : besoin de supports en gros caractères, salle accessible, rythme adapté, prérequis technique sur un outil…',
-    required: false,
+    aide: 'Cette information sert uniquement à adapter les modalités de la formation et n\'est transmise qu\'à notre référent handicap. Si aucun aménagement n\'est nécessaire, indiquez simplement « non ».',
+    placeholder: 'Ex. : supports en gros caractères, salle accessible, rythme adapté, prérequis technique sur un outil… ou « non »',
+    required: true,
   },
   {
     id: 'objectifs',

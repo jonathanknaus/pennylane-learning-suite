@@ -6,11 +6,11 @@
 // n'embarque pas de librairie PDF, et une page imprimable reste lisible même si
 // le rendu change.
 //
-// ⚠️ LA RÉPONSE SUR LE HANDICAP N'Y FIGURE PAS. On a fait le nécessaire pour
-// qu'elle ne soit jamais écrite en base (QUESTIONS_EXCLUES) ; la laisser partir
-// dans un PDF joint à un mail reviendrait à la conserver dans deux boîtes de
-// messagerie — donc à recréer exactement ce qu'on a évité. Le document invite à
-// en parler de vive voix.
+// La réponse sur les prérequis et les situations de handicap FIGURE dans ce
+// document : c'est une obligation Qualiopi (2026-10-06, arbitrage de Jonathan).
+// Le prestataire doit pouvoir prouver qu'il a posé la question et qu'il en a tiré
+// les conséquences — une synthèse qui l'omet ne prouve rien. `QUESTIONS_EXCLUES`
+// reste respectée si une question franchement sensible devait y entrer un jour.
 
 import { QUESTIONS_EXCLUES } from './cabinets-firebase'
 import { getAllModules } from './catalogue-afs'
@@ -120,9 +120,10 @@ export function genererSyntheseHTML(d) {
     conséquence.</p>` : ''
 
   const mentionAdaptation = `
-    <p class="rappel"><strong>Accessibilité.</strong> Si un participant a besoin d'un aménagement,
-    quelle qu'en soit la raison, parlons-en directement : nous étudierons les adaptations possibles
-    avec notre référent. Cette information n'est pas consignée dans ce document.</p>`
+    <p class="rappel"><strong>Accessibilité et adaptations.</strong> Les prérequis et situations de
+    handicap signalés ci-dessus sont transmis à notre référent handicap, à seule fin d'adapter les
+    modalités de la formation. Si la situation évolue d'ici la session, signalez-le nous : les
+    aménagements peuvent être revus à tout moment.</p>`
 
   return `<!DOCTYPE html>
 <html lang="fr">

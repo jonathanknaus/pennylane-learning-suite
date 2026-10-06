@@ -19,8 +19,23 @@ import { baseDeDonnees, authPrete } from './firebase-auth.js'
 
 const CHEMIN = 'cabinets'
 
-// Question dont la réponse ne doit jamais partir dans la base.
-export const QUESTIONS_EXCLUES = ['prerequis_handicap']
+// Questions dont la réponse ne doit jamais partir dans la base.
+//
+// VIDE depuis le 2026-10-06. `prerequis_handicap` y figurait : la réponse était
+// écartée pour éviter de conserver une donnée de santé. Jonathan a tranché, et il
+// a raison — c'est une obligation Qualiopi. Le prestataire doit pouvoir prouver
+// qu'il a posé la question sur les situations de handicap ET qu'il en a tiré les
+// conséquences ; une réponse qu'on n'enregistre pas ne prouve rien.
+//
+// Ce qui est exigé du cabinet, c'est une réponse — « non » en est une. On ne
+// contraint donc personne à déclarer un handicap. La finalité est annoncée dans
+// le questionnaire, et l'accès à `cabinets/<clé>` est limité par les règles au
+// cabinet concerné et aux comptes Pennylane vérifiés.
+//
+// Le mécanisme est conservé : si une question franchement sensible apparaît un
+// jour, c'est ici qu'on l'écarte, et `enregistrerBesoin()` comme la synthèse PDF
+// le respectent déjà.
+export const QUESTIONS_EXCLUES = []
 
 // Clé de nœud dérivée de l'email. Deux raisons :
 //  1. Un email contient des points, interdits dans une clé Firebase.

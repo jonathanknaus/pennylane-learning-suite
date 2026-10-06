@@ -6,7 +6,7 @@ import {
 } from '../data/firebase-auth'
 import {
   lireMonCabinet, ecouterApprenants, enregistrerApprenant, supprimerApprenant,
-  enregistrerBesoin, lireBesoin, QUESTIONS_EXCLUES,
+  enregistrerBesoin, lireBesoin,
 } from '../data/cabinets-firebase'
 import ChoixMultiple from '../components/ChoixMultiple'
 import SimulateurTarif, {
@@ -127,6 +127,13 @@ function Besoin({ cabinet }) {
 
   async function soumettre() {
     setErreur('')
+    // Les questions obligatoires sont vérifiées ici aussi : la synthèse PDF sert
+    // de preuve Qualiopi, et une preuve incomplète ne prouve rien.
+    const manquantes = questions.filter(q => q.required && !String(reponses[q.id] || '').trim())
+    if (manquantes.length > 0) {
+      setErreur(`Merci de répondre à : ${manquantes.map(q => q.label || q.question).join(', ')}.`)
+      return
+    }
     setEnvoiEnCours(true)
     try {
       // Les paramètres du simulateur partent AVEC les réponses, en une seule
@@ -176,20 +183,10 @@ function Besoin({ cabinet }) {
         <div key={q.id} className="pc-field">
           <label htmlFor={`q-${q.id}`}>
             {q.question}
-            {QUESTIONS_EXCLUES.includes(q.id) && (
-              <span className="pc-field-hint">
-                {' '}— à évoquer directement avec votre interlocuteur AFS, cette réponse n’est pas
-                conservée ici.
-              </span>
-            )}
+            {q.required && <span className="pc-field-requis"> *</span>}
           </label>
           {q.aide && <p className="pc-aide">{q.aide}</p>}
-          {QUESTIONS_EXCLUES.includes(q.id) ? (
-            <p className="pc-exclu">
-              Pour toute adaptation liée à un prérequis ou à une situation de handicap, contactez
-              votre interlocuteur AFS. Nous ne collectons pas cette information par ce formulaire.
-            </p>
-          ) : q.type === 'checkbox' ? (
+          {q.type === 'checkbox' ? (
             <ChoixMultiple
               id={`q-${q.id}`}
               options={q.options}
