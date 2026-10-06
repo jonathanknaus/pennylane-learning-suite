@@ -192,6 +192,45 @@ function shuffle5(pool) {
   return [...pool].sort(() => Math.random() - 0.5)
 }
 
+// Mélange uniforme (Fisher-Yates). `sort(() => Math.random() - 0.5)` ne produit
+// PAS une permutation équiprobable : sur 4 options, certaines positions
+// resteraient nettement plus probables que d'autres, et on remplacerait un biais
+// par un autre.
+function melangeUniforme(tableau) {
+  const t = [...tableau]
+  for (let i = t.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[t[i], t[j]] = [t[j], t[i]]
+  }
+  return t
+}
+
+/**
+ * Permute les options d'une question en suivant la bonne réponse.
+ *
+ * Pourquoi c'est nécessaire : la bonne réponse était « B » dans 92 % des 115
+ * questions de la banque, et les options sont affichées dans un ordre FIXE
+ * (A, B, C, D). Cocher systématiquement « B » donnait donc 92 % sans rien
+ * connaître. Comme les scores pré/post servent de preuve Qualiopi, un test
+ * devinable ne prouve rien.
+ *
+ * La question permutée est stockée AVEC la passation (`sauvegarderReponses`), et
+ * `calculerScore` compare à la réponse de cette copie : le score reste juste et
+ * les passations déjà enregistrées ne sont pas affectées.
+ *
+ * ⚠️ Cela ne corrige PAS l'autre biais : la bonne réponse est la plus longue
+ * dans 97 % des cas existants. Celui-là demande de réécrire les distracteurs.
+ */
+export function melangerOptions(q) {
+  const i = 'ABCD'.indexOf(q?.reponse)
+  if (i < 0 || !Array.isArray(q.options) || q.options.length < 2) return q
+  const bonne = q.options[i]
+  const options = melangeUniforme(q.options)
+  const position = options.indexOf(bonne)
+  if (position < 0) return q
+  return { ...q, options, reponse: 'ABCD'[position] }
+}
+
 // Génère un questionnaire (pré ou post) pour une session multi-modules — les
 // questions de chaque module sélectionné sont combinées. Au post-test, les
 // questions déjà posées au pré-test (excludeIds) sont écartées si la banque du
@@ -205,7 +244,7 @@ export function genererQuestionnaire(moduleIds, type, excludeIds = []) {
       ? banque.filter(q => !excludeIds.includes(q.id))
       : banque
     const source = pool.length > 0 ? pool : banque
-    shuffle5(source).forEach(q => questions.push({ ...q, moduleId }))
+    shuffle5(source).forEach(q => questions.push({ ...melangerOptions(q), moduleId }))
   }
   return questions
 }
