@@ -17,6 +17,7 @@ import {
   LIGNES_AFFICHAGE, MENTIONS_MODULES_DEFAUT,
 } from '../data/tarification'
 import { getSessions, estimationSession } from '../data/sessions'
+import { imprimerGrille } from '../data/grille-pdf'
 import './GrilleTarifaire.css'
 
 const MODALITE_LABEL = { visio: 'Visio', presentiel: 'Présentiel' }
@@ -81,6 +82,16 @@ export default function GrilleTarifaire() {
     setVue(grilleEditable(vue.dateEffet))
   }
 
+  function telecharger(dateEffet) {
+    // Le PDF passe par une fenêtre d'impression : si le navigateur la bloque, le
+    // clic reste sans effet visible. On le dit plutôt que de laisser croire à un bug.
+    if (!imprimerGrille(dateEffet)) {
+      setErreurs(['La fenêtre d’impression a été bloquée par le navigateur. Autorise les fenêtres surgissantes pour ce site, puis réessaie.'])
+      return
+    }
+    setErreurs([])
+  }
+
   function supprimer(dateEffet) {
     const resultat = supprimerGrille(dateEffet)
     setConfirmSuppression(null)
@@ -134,6 +145,7 @@ export default function GrilleTarifaire() {
         dateOuverte={vue?.dateEffet}
         onOuvrir={ouvrir}
         onSupprimer={setConfirmSuppression}
+        onTelecharger={telecharger}
       />
 
       {confirmSuppression && (
@@ -161,7 +173,7 @@ export default function GrilleTarifaire() {
   )
 }
 
-function ListeGrilles({ grilles, dateOuverte, onOuvrir, onSupprimer }) {
+function ListeGrilles({ grilles, dateOuverte, onOuvrir, onSupprimer, onTelecharger }) {
   const aujourdHui = new Date().toISOString().slice(0, 10)
   const enVigueur = grilles.find(g => g.dateEffet <= aujourdHui)
 
@@ -185,6 +197,11 @@ function ListeGrilles({ grilles, dateOuverte, onOuvrir, onSupprimer }) {
           <div className="gt-ligne-actions">
             <button className="btn-secondary" onClick={() => onOuvrir(g.dateEffet)}>
               {g.origine === 'base' ? 'Modifier (copie)' : 'Modifier'}
+            </button>
+            {/* Chaque grille a son propre document : on télécharge celle de la
+                ligne, à sa date d'effet, et non la grille du jour. */}
+            <button className="btn-secondary" onClick={() => onTelecharger(g.dateEffet)}>
+              PDF
             </button>
             {g.origine === 'personnalisee' && (
               <button className="btn-link-danger" onClick={() => onSupprimer(g.dateEffet)}>

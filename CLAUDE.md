@@ -194,10 +194,17 @@ Annoncer « au-delà de 25 » à un cabinet qui demande 2h lui laisse croire que
 tarifées, avant de lui répondre « sur devis ». `plafondPourDemande()` rend `0` quand aucun effectif
 n'est tarifé, par exemple du présentiel sous la demi-journée.
 
-**Vérification** : `npm run verifier:tarifs` (53 contrôles, sans dépendance ajoutée — esbuild de
-Vite bundle les modules, `scripts/stub-reseau.mjs` remplace Firebase). À lancer après toute
-modification de `tarification.js` : il couvre les pièges qui ne se voient pas à l'œil (le `Infinity`
-du palier illimité perdu en JSON, le plafond par format, la résolution du droit d'écriture).
+**Deux vérifications, sans dépendance ajoutée** (l'esbuild de Vite bundle les modules,
+`scripts/stub-reseau.mjs` remplace Firebase) :
+
+| Commande | Ce qu'elle couvre |
+|---|---|
+| `npm run verifier:tarifs` | 60 contrôles : `Infinity` du palier illimité perdu en JSON, plafond par format, droit d'écriture et son repli, PDF par grille datée |
+| `npm run verifier:regles` | 19 contrôles **code ↔ `database.rules.json`** : chemins couverts, listes de champs identiques, valeurs énumérées acceptées |
+
+Lancer la première après toute modification de `tarification.js`, la seconde après toute écriture
+d'un nouveau champ dans Firebase. ⚠️ Les règles RTDB refusent **silencieusement** une écriture non
+conforme — `pousser()` se contente d'un `console.warn`, et la donnée manque le jour de l'audit.
 
 Règles de bascule, elles **non éditables** (ce ne sont pas des tarifs) : jusqu'à 2h → tarif horaire
 cumulable ; au-delà de 2h → forfait demi-journée ; 7h et plus → forfait journée, par journées

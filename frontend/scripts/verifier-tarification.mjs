@@ -203,6 +203,19 @@ ok('frais de déplacement sans mention de formateur',
   html.includes('frais de déplacement inclus') && !html.includes('inclus pour 1 formateur'))
 ok('rappel du tarif figé à la demande', html.includes('grille en vigueur à la date de cette demande'))
 
+// L'éditeur propose un PDF par grille : il doit sortir CELLE de la ligne, à sa
+// date d'effet, et non la grille du jour.
+const grilleDatee = T.grilleEditable(null)
+grilleDatee.dateEffet = '2027-06-01'
+grilleDatee.libelle = 'Grille du 1er juin 2027'
+grilleDatee.formats.find(f => f.id === 'demi_journee').paliers[0].visio = 1234
+T.enregistrerGrille(grilleDatee)
+const htmlDate = P.genererGrilleHTML('2027-06-01')
+ok('PDF d’une grille datée : son libellé', htmlDate.includes('Grille du 1er juin 2027'))
+ok('PDF d’une grille datée : son tarif à elle', htmlDate.includes(`${(1234).toLocaleString('fr-FR')} €`))
+ok('PDF du jour : inchangé', !P.genererGrilleHTML().includes('1 234'))
+T.supprimerGrille('2027-06-01')
+
 // ── Sortie ──────────────────────────────────────────────────────────────────
 
 rmSync(entree, { force: true })
