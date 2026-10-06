@@ -34,13 +34,13 @@ const TVA = 0.20
 export const PUBLICS = [
   {
     id: 'collaborateurs',
-    label: 'Collaborateurs ou dirigeants du cabinet',
-    aide: 'Formats à l’heure, demi-journée ou journée, selon les modules retenus.',
+    label: 'Les collaborateurs du cabinet',
+    aide: 'Collaborateurs ou dirigeants. Formats à l’heure, demi-journée ou journée, selon les modules retenus.',
   },
   {
     id: 'clients',
-    label: 'Clients du cabinet',
-    aide: 'Donne accès au format webinar, en participants illimités.',
+    label: 'Mes clients',
+    aide: 'Les entreprises que vous accompagnez. Seul cas où le format webinar est proposé, en participants illimités.',
   },
 ]
 
@@ -139,6 +139,56 @@ export function resumerDemande(v) {
   return lignes.join('\n')
 }
 
+// Choix du public, et webinar qui en dépend.
+//
+// SÉPARÉ du reste du simulateur et placé en TÊTE du questionnaire : c'est la
+// première chose qu'un cabinet a à dire, et c'est elle qui ouvre ou ferme le
+// format webinar. Tant qu'elle vivait au milieu du simulateur, en bas de page,
+// un cabinet venu former ses clients ne trouvait pas où le déclarer et ne voyait
+// donc jamais le webinar — signalé par Jonathan le 2026-10-06.
+export function ChoixPublic({ valeur, onChange }) {
+  const v = { ...SIMU_VIDE, ...valeur }
+
+  function changerPublic(id) {
+    // Le webinar n'existe que pour les clients : changer de public le désactive,
+    // sinon on garderait un format devenu indisponible.
+    onChange({ ...v, publicCible: id, webinar: id === 'clients' ? v.webinar : false })
+  }
+
+  return (
+    <div className="st-bloc">
+      <div className="st-bloc-titre">Qui est à former ?</div>
+      <div className="st-publics">
+        {PUBLICS.map(p => (
+          <button
+            key={p.id}
+            type="button"
+            className={`st-public ${v.publicCible === p.id ? 'actif' : ''}`}
+            onClick={() => changerPublic(p.id)}
+          >
+            <span className="st-public-label">{p.label}</span>
+            <span className="st-public-aide">{p.aide}</span>
+          </button>
+        ))}
+      </div>
+
+      {v.publicCible === 'clients' && (
+        <label className="st-webinar">
+          <input
+            type="checkbox"
+            checked={v.webinar}
+            onChange={e => onChange({ ...v, webinar: e.target.checked })}
+          />
+          <span>
+            <strong>Format webinar</strong> — 1 heure en visioconférence, <strong>participants
+            illimités</strong>. Adapté pour convier votre clientèle.
+          </span>
+        </label>
+      )}
+    </div>
+  )
+}
+
 export default function SimulateurTarif({ valeur, onChange }) {
   const v = { ...SIMU_VIDE, ...valeur }
 
@@ -155,12 +205,6 @@ export default function SimulateurTarif({ valeur, onChange }) {
 
   function set(patch) { onChange({ ...v, ...patch }) }
 
-  function changerPublic(id) {
-    // Le webinar n'existe que pour les clients : changer de public le désactive,
-    // sinon on garderait un format devenu indisponible.
-    set({ publicCible: id, webinar: id === 'clients' ? v.webinar : false })
-  }
-
   function basculerModule(id) {
     const apres = v.modules.includes(id) ? v.modules.filter(x => x !== id) : [...v.modules, id]
     // Recomposer les niveaux sur la nouvelle sélection : un module décoché ne
@@ -170,33 +214,6 @@ export default function SimulateurTarif({ valeur, onChange }) {
 
   return (
     <>
-      <div className="st-bloc">
-        <div className="st-bloc-titre">Qui est à former ?</div>
-        <div className="st-publics">
-          {PUBLICS.map(p => (
-            <button
-              key={p.id}
-              type="button"
-              className={`st-public ${v.publicCible === p.id ? 'actif' : ''}`}
-              onClick={() => changerPublic(p.id)}
-            >
-              <span className="st-public-label">{p.label}</span>
-              <span className="st-public-aide">{p.aide}</span>
-            </button>
-          ))}
-        </div>
-
-        {v.publicCible === 'clients' && (
-          <label className="st-webinar">
-            <input type="checkbox" checked={v.webinar} onChange={e => set({ webinar: e.target.checked })} />
-            <span>
-              <strong>Format webinar</strong> — 1 heure en visioconférence, <strong>participants
-              illimités</strong>. Adapté pour convier votre clientèle.
-            </span>
-          </label>
-        )}
-      </div>
-
       <div className="st-bloc">
         <div className="st-bloc-titre">
           Quels modules vous intéressent ?

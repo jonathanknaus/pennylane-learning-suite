@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getQuestionsQB } from '../data/questionnaire-besoin'
+import { getQuestionsQB, questionsVisibles, optionsQuestion } from '../data/questionnaire-besoin'
 import {
   surChangementAuth, deconnexionGoogle, envoyerLienConnexion,
   arriveParLienConnexion, terminerConnexionParLien,
@@ -10,6 +10,7 @@ import {
 } from '../data/cabinets-firebase'
 import ChoixMultiple from '../components/ChoixMultiple'
 import SimulateurTarif, {
+  ChoixPublic,
   SIMU_VIDE, resumerDemande, calculerEstimation,
   reponsesSimu, simuDepuisReponses, reponsesSansSimu,
 } from '../components/SimulateurTarif'
@@ -104,7 +105,7 @@ function DemandeLien() {
 
 // ── Questionnaire de besoin ──────────────────────────────────────────────────
 function Besoin({ cabinet }) {
-  const questions = getQuestionsQB()
+  const toutesQuestions = getQuestionsQB()
   const [reponses, setReponses] = useState({})
   const [simu, setSimu] = useState(SIMU_VIDE)
   const [enregistre, setEnregistre] = useState(null)
@@ -151,9 +152,20 @@ function Besoin({ cabinet }) {
     setEnvoiEnCours(false)
   }
 
+  const questions = questionsVisibles(toutesQuestions, simu.publicCible)
   const { estimation } = calculerEstimation(simu)
   const aRepondu = Object.values(reponses).some(v => String(v || '').trim() !== '')
   const peutImprimer = aRepondu && simu.modules.length > 0
+
+  // Changer de public rend les postes déjà cochés inexacts : « Chef de mission »
+  // ne décrit pas la clientèle d'un cabinet. On les efface plutôt que de laisser
+  // une réponse qui ne correspond plus aux options affichées.
+  function changerPublic(suivant) {
+    if (suivant.publicCible !== simu.publicCible) {
+      setReponses(r => ({ ...r, public: '' }))
+    }
+    setSimu(suivant)
+  }
 
   function telechargerSynthese() {
     setErreurImpression('')
@@ -178,6 +190,10 @@ function Besoin({ cabinet }) {
         </p>
       )}
 
+      {/* Qui est à former : en premier, car ce choix ouvre le format webinar
+          et détermine les postes proposés juste après. */}
+      <ChoixPublic valeur={simu} onChange={changerPublic} />
+
       {/* Le besoin exprimé */}
       {questions.map(q => (
         <div key={q.id} className="pc-field">
@@ -189,7 +205,7 @@ function Besoin({ cabinet }) {
           {q.type === 'checkbox' ? (
             <ChoixMultiple
               id={`q-${q.id}`}
-              options={q.options}
+              options={optionsQuestion(q, simu.publicCible)}
               valeur={reponses[q.id] || ''}
               onChange={v => setReponses(r => ({ ...r, [q.id]: v }))}
               classe="pc-choix"

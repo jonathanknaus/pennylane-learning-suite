@@ -47,6 +47,12 @@ export const DEFAULT_QUESTIONS_QB = [
     question: 'Quels sont les postes occupés par les participants ?',
     type: 'checkbox',
     options: ['Collaborateurs', 'Chef de mission', 'Expert-comptable'],
+    // Les postes dépendent de QUI est formé : « Chef de mission » ne veut rien
+    // dire pour la clientèle d'un cabinet. Sans ça, un cabinet venu former ses
+    // clients devait cocher des postes qui ne les décrivent pas.
+    optionsParPublic: {
+      clients: ['Dirigeant ou gérant', 'Comptable interne', 'Assistant administratif', 'Responsable administratif et financier'],
+    },
     required: true,
   },
   {
@@ -136,6 +142,24 @@ export const DEFAULT_QUESTIONS_QB = [
 // couramment expert en tenue et débutant en TVA, et un niveau moyenné ne dit
 // rien au formateur.
 export const QUESTIONS_RETIREES = ['niveau_depart']
+
+/**
+ * Options à présenter pour une question, selon le public visé.
+ * Hors espace cabinet (questionnaire par lien de session), `publicCible` est
+ * absent : on retombe sur les options par défaut, celles du cabinet.
+ */
+export function optionsQuestion(q, publicCible) {
+  return q?.optionsParPublic?.[publicCible] || q?.options || []
+}
+
+/**
+ * Questions à afficher ET à valider. Une question masquée ne doit pas bloquer
+ * l'envoi au titre de son caractère obligatoire — sinon le formulaire refuse de
+ * partir pour un champ que personne ne voit.
+ */
+export function questionsVisibles(questions, publicCible) {
+  return (questions || []).filter(q => !q.siPublic || !publicCible || q.siPublic === publicCible)
+}
 
 export function getQuestionsQB() {
   try {
