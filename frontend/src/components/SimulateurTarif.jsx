@@ -200,11 +200,28 @@ export function ChoixPublic({ valeur, onChange }) {
   )
 }
 
+/**
+ * Au-delà de combien de participants CETTE demande passe-t-elle sur devis ?
+ *
+ * `plafondGrille()` donne le plafond des forfaits (25), mais le tarif HORAIRE a
+ * le sien, plus bas (15) : annoncer « au-delà de 25 » à un cabinet qui demande
+ * 2 h l'aurait laissé croire que 20 personnes sont tarifées, avant de lui
+ * répondre « sur devis ». On interroge donc la grille plutôt que de deviner —
+ * exact par construction, et cela suit toute modification de la grille.
+ */
+function seuilSurDevis({ dureeHeures, modalite }) {
+  const plafond = plafondGrille() || 25
+  if (!dureeHeures) return plafond
+  let dernierOk = 0
+  for (let n = 1; n <= plafond; n++) {
+    const e = estimer({ dureeHeures, modalite, participants: n })
+    if (e?.valide && !e.surDevis) dernierOk = n
+  }
+  return dernierOk || plafond
+}
+
 export default function SimulateurTarif({ valeur, onChange }) {
   const v = { ...SIMU_VIDE, ...valeur }
-  // Dérivé de la grille en vigueur, et non d'un seuil en dur : si un
-  // administrateur ajoute un palier « jusqu'à 40 », le message suit.
-  const plafond = plafondGrille()
 
   const groupes = useMemo(() => {
     const parThematique = new Map()
@@ -215,7 +232,12 @@ export default function SimulateurTarif({ valeur, onChange }) {
     return [...parThematique.entries()]
   }, [])
 
-  const { retrouves, disparus, cumul, estimation, sansNiveau } = calculerEstimation(v)
+  const { retrouves, disparus, cumul, estimation, sansNiveau, sansAmpleur } = calculerEstimation(v)
+  const plafond = seuilSurDevis({ dureeHeures: cumul.totalHeures, modalite: v.modalite })
+  // Le présentiel n'est pas tarifé à l'heure : sous la demi-journée, la demande
+  // partira forcément sur devis. Autant le dire avant que le cabinet attende un
+  // montant qui n'arrivera pas.
+  const presentielTropCourt = v.modalite === 'presentiel' && cumul.complet && cumul.totalHeures < 3.5
 
   function set(patch) { onChange({ ...v, ...patch }) }
 
@@ -312,8 +334,15 @@ export default function SimulateurTarif({ valeur, onChange }) {
           </div>
           {v.participants > plafond && (
             <p className="st-info">
-              Au-delà de {plafond} apprenants, le tarif est établi sur devis — nous revenons
-              vers vous avec une proposition.
+              Au-delà de {plafond} apprenants pour cette durée, le tarif est établi sur devis —
+              nous revenons vers vous avec une proposition.
+            </p>
+          )}
+          {presentielTropCourt && (
+            <p className="st-info">
+              Le présentiel suppose au minimum une demi-journée. Pour {libelleDuree(cumul.totalHeures)},
+              choisissez la visioconférence, ou passez les modules concernés en
+              {' '}<strong>Fondamentaux</strong> — sinon votre demande partira sur devis.
             </p>
           )}
         </div>
