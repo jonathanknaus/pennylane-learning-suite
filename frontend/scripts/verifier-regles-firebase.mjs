@@ -197,11 +197,15 @@ ok('pls_session reste une clé LOCALE (jeton de session, jamais partagé)',
 // pointe sur le même projet Firebase (afs-pls-auth-42a28). Or une base n'a qu'un
 // seul document de règles : coller une copie écrase l'autre intégralement.
 //
-// Ce contrôle compare les nœuds communs. Il est ignoré si l'autre dépôt n'est pas
-// à côté (autre machine, clone isolé) : son absence n'est pas une erreur.
-// REGLES_VEILLE=/chemin/vers/database.rules.json permet de le désigner.
+// Ce dépôt est la source unique depuis le 2026-10-06 : la copie a été retirée de
+// veille-juridique, qui renvoie ici par son REGLES-FIREBASE.md. Le contrôle vérifie
+// donc qu'elle ne REVIENT pas — une copie recréée ramènerait l'écrasement silencieux.
+//
+// Si elle revient malgré tout, les nœuds communs sont comparés pour dire ce qu'un
+// collage ferait perdre. L'absence du dépôt voisin n'est pas une erreur (autre
+// machine, clone isolé) ; REGLES_VEILLE=/chemin désigne un autre emplacement.
 
-section('Copie des règles dans le dépôt veille-juridique')
+section('Source unique des règles')
 
 const cheminVeille = process.env.REGLES_VEILLE
   || join(racine, '../veille-juridique/database.rules.json')
@@ -210,27 +214,19 @@ let reglesVeille = null
 try {
   reglesVeille = JSON.parse(readFileSync(cheminVeille, 'utf8')).rules
 } catch {
-  console.log('  —     dépôt veille absent de cette machine, comparaison ignorée')
+  // Absence attendue : c'est l'état voulu.
 }
 
+ok('aucune copie des règles dans veille-juridique', reglesVeille === null,
+  reglesVeille ? `copie réapparue : ${cheminVeille} — un collage depuis l’un écraserait l’autre` : 'ce dépôt est la seule source')
+
 if (reglesVeille) {
-  // Les nœuds que les deux dépôts décrivent doivent être identiques : c'est la
-  // seule garantie qu'un collage depuis l'un ne détruit rien de l'autre.
   for (const noeud of ['acces', 'profils', 'cabinets', 'veille']) {
-    ok(`${noeud} — identique dans les deux dépôts`,
+    ok(`${noeud} — encore identique des deux côtés`,
       JSON.stringify(reglesVeille[noeud]) === JSON.stringify(regles[noeud]),
       'une divergence ici signifie qu’un collage perdrait du travail')
   }
-
-  // PLS doit rester le sur-ensemble : c'est lui qu'on colle dans la console.
-  const grilleCoteVeille = reglesVeille.donnees?.pls_grilles_tarifaires
-  ok('PLS est le sur-ensemble (il porte la règle de la grille, pas l’autre dépôt)',
-    !!regles.donnees?.pls_grilles_tarifaires && !grilleCoteVeille,
-    grilleCoteVeille ? 'les deux la portent : risque de divergence' : 'coller la version PLS')
 }
 
 console.log(`\n${echecs === 0 ? '✅ Règles et code cohérents.' : `❌ ${echecs} divergence(s).`}`)
-if (echecs === 0 && reglesVeille) {
-  console.log('   → la version à coller dans la console Firebase est celle de CE dépôt (PLS).')
-}
 process.exit(echecs === 0 ? 0 : 1)

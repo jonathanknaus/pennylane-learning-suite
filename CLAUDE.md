@@ -22,6 +22,16 @@ place — `scanFermetureExtranet()` dans `rappels.js` suit ce modèle : il notif
 `tarifs-negocies.js` pilotent l'affichage ; la vraie protection est dans `database.rules.json`,
 évaluée par Firebase. Toute règle métier qui compte doit y être reprise.
 
+**Ce dépôt est la SEULE source des règles Firebase** (depuis le 2026-10-06). La base
+`afs-pls-auth-42a28` est partagée avec l'outil de veille juridique, qui en portait une copie : or une
+base n'a qu'**un** document de règles, et un collage dans la console remplace tout — la dernière
+copie collée écrasait silencieusement les règles décrites par l'autre dépôt. La copie a été retirée
+de `veille-juridique`, qui renvoie ici par son `REGLES-FIREBASE.md`. `npm run verifier:regles`
+échoue si elle réapparaît.
+
+Il n'y a **ni CLI Firebase ni `firebase.json`** ici : les règles se collent à la main dans la console
+(Realtime Database → Règles). Le fichier versionné est la référence, pas le déploiement.
+
 ---
 
 ## Stack réelle
@@ -200,7 +210,7 @@ n'est tarifé, par exemple du présentiel sous la demi-journée.
 | Commande | Ce qu'elle couvre |
 |---|---|
 | `npm run verifier:tarifs` | 60 contrôles : `Infinity` du palier illimité perdu en JSON, plafond par format, droit d'écriture et son repli, PDF par grille datée |
-| `npm run verifier:regles` | 19 contrôles **code ↔ `database.rules.json`** : chemins couverts, listes de champs identiques, valeurs énumérées acceptées |
+| `npm run verifier:regles` | 20 contrôles **code ↔ `database.rules.json`** : chemins couverts, listes de champs identiques, valeurs énumérées acceptées |
 
 Lancer la première après toute modification de `tarification.js`, la seconde après toute écriture
 d'un nouveau champ dans Firebase. ⚠️ Les règles RTDB refusent **silencieusement** une écriture non
