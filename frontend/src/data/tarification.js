@@ -271,6 +271,25 @@ export function grilleAVenir(date = null) {
  * administrateur ajoute un palier « jusqu'à 40 », le seuil doit suivre, sinon
  * estimer() renverrait « sur devis » pour un effectif que la grille tarife.
  */
+/**
+ * Au-delà de combien de participants CETTE demande passe-t-elle sur devis ?
+ *
+ * À préférer à plafondGrille() dès qu'une durée est connue : le plafond dépend
+ * du format retenu. Les forfaits montent à 25 dans la grille d'origine, mais le
+ * tarif horaire s'arrête à 15 — annoncer « au-delà de 25 » à un cabinet qui
+ * demande 2h lui laisserait croire que 20 personnes sont tarifées.
+ *
+ * Rend 0 quand la demande n'est tarifée à aucun effectif, par exemple du
+ * présentiel sous la demi-journée.
+ */
+export function plafondPourDemande({ dureeHeures, modalite = 'visio', webinar = false, date = null }) {
+  if (!dureeHeures || dureeHeures <= 0) return plafondGrille(date)
+  const G = grilleApplicable(date).grille
+  const format = G[choisirFormat({ dureeHeures, webinar })]
+  if (!format) return 0
+  return plafondPaliers(format.paliers[webinar ? 'visio' : modalite])
+}
+
 export function plafondGrille(date = null) {
   const G = grilleApplicable(date).grille
   const plafonds = Object.values(G)

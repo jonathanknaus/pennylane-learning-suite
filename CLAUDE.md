@@ -181,9 +181,23 @@ personne n'est pas dans cette liste — Firebase refusera l'écriture côté ser
 `null`, un aller-retour non converti transformerait le palier illimité en « 0 participant ». La
 conversion est faite à la frontière du stockage.
 
-⚠️ **Il n'y a plus de constante `SEUIL_SUR_DEVIS`.** Le seuil est dérivé de la grille par
-`plafondGrille(date)` : un administrateur qui ajoute un palier « jusqu'à 40 » doit voir le seuil
-suivre. Un effectif que plus aucun palier ne couvre passe sur devis.
+⚠️ **Il n'y a plus de constante `SEUIL_SUR_DEVIS`.** Le seuil est dérivé de la grille : un
+administrateur qui ajoute un palier « jusqu'à 40 » doit le voir suivre.
+
+| Fonction | À utiliser quand |
+|---|---|
+| `plafondPourDemande({dureeHeures, modalite})` | **par défaut**, dès qu'une durée est connue |
+| `plafondGrille(date)` | seulement pour une mention générale, sans demande précise |
+
+Le plafond dépend du **format retenu** : les forfaits montent à 25, le tarif horaire s'arrête à 15.
+Annoncer « au-delà de 25 » à un cabinet qui demande 2h lui laisse croire que 20 personnes sont
+tarifées, avant de lui répondre « sur devis ». `plafondPourDemande()` rend `0` quand aucun effectif
+n'est tarifé, par exemple du présentiel sous la demi-journée.
+
+**Vérification** : `npm run verifier:tarifs` (53 contrôles, sans dépendance ajoutée — esbuild de
+Vite bundle les modules, `scripts/stub-reseau.mjs` remplace Firebase). À lancer après toute
+modification de `tarification.js` : il couvre les pièges qui ne se voient pas à l'œil (le `Infinity`
+du palier illimité perdu en JSON, le plafond par format, la résolution du droit d'écriture).
 
 Règles de bascule, elles **non éditables** (ce ne sont pas des tarifs) : jusqu'à 2h → tarif horaire
 cumulable ; au-delà de 2h → forfait demi-journée ; 7h et plus → forfait journée, par journées

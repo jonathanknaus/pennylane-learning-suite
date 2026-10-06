@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { getAllModules } from '../data/catalogue-afs'
-import { estimer, resumerEstimation, MODALITES, plafondGrille } from '../data/tarification'
+import { estimer, resumerEstimation, MODALITES, plafondPourDemande } from '../data/tarification'
 import { totaliserDurees, libelleDuree } from '../data/durees-modules'
 import ModulesRetenus, {
   composerNiveaux, decomposerNiveaux, niveauxManquants, libelleNiveau, ampleursManquantes,
@@ -200,26 +200,6 @@ export function ChoixPublic({ valeur, onChange }) {
   )
 }
 
-/**
- * Au-delà de combien de participants CETTE demande passe-t-elle sur devis ?
- *
- * `plafondGrille()` donne le plafond des forfaits (25), mais le tarif HORAIRE a
- * le sien, plus bas (15) : annoncer « au-delà de 25 » à un cabinet qui demande
- * 2 h l'aurait laissé croire que 20 personnes sont tarifées, avant de lui
- * répondre « sur devis ». On interroge donc la grille plutôt que de deviner —
- * exact par construction, et cela suit toute modification de la grille.
- */
-function seuilSurDevis({ dureeHeures, modalite }) {
-  const plafond = plafondGrille() || 25
-  if (!dureeHeures) return plafond
-  let dernierOk = 0
-  for (let n = 1; n <= plafond; n++) {
-    const e = estimer({ dureeHeures, modalite, participants: n })
-    if (e?.valide && !e.surDevis) dernierOk = n
-  }
-  return dernierOk || plafond
-}
-
 export default function SimulateurTarif({ valeur, onChange }) {
   const v = { ...SIMU_VIDE, ...valeur }
 
@@ -233,7 +213,10 @@ export default function SimulateurTarif({ valeur, onChange }) {
   }, [])
 
   const { retrouves, disparus, cumul, estimation, sansNiveau, sansAmpleur } = calculerEstimation(v)
-  const plafond = seuilSurDevis({ dureeHeures: cumul.totalHeures, modalite: v.modalite })
+  // Le plafond dépend du format retenu, donc de la durée : les forfaits montent à
+  // 25, le tarif horaire s'arrête à 15. plafondPourDemande() le lit directement
+  // dans les paliers de la grille, y compris une grille personnalisée.
+  const plafond = plafondPourDemande({ dureeHeures: cumul.totalHeures, modalite: v.modalite })
   // Le présentiel n'est pas tarifé à l'heure : sous la demi-journée, la demande
   // partira forcément sur devis. Autant le dire avant que le cabinet attende un
   // montant qui n'arrivera pas.
