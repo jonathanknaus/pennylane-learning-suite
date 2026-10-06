@@ -9,6 +9,7 @@ import {
 import GestionAcces from './GestionAcces'
 import MigrationFirebase from './MigrationFirebase'
 import DureesModules from './DureesModules'
+import ContenuModules from './ContenuModules'
 import './Parametres.css'
 import './BanqueQuestions.css'
 
@@ -673,6 +674,7 @@ const ONGLETS = [
   { id: 'mails',     label: 'Modèles de mails' },
   { id: 'acces',     label: 'Accès utilisateurs' },
   { id: 'durees',    label: 'Durées des modules' },
+  { id: 'contenu',   label: 'Contenu des modules' },
   { id: 'migration', label: 'Migration Firebase' },
 ]
 
@@ -706,6 +708,7 @@ export default function Parametres() {
           {onglet === 'mails'     && <><MailAccesCabinetEditor /><MailSyntheseBesoinEditor /></>}
           {onglet === 'acces'     && <GestionAcces />}
           {onglet === 'durees'    && <DureesModules />}
+          {onglet === 'contenu'   && <ContenuModules />}
           {onglet === 'migration' && <MigrationFirebase />}
         </div>
       </div>
