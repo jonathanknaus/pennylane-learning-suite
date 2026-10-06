@@ -100,8 +100,9 @@ export default function GrilleTarifaire() {
           <h2>Grille tarifaire</h2>
         </div>
         <p className="gt-refus">
-          Seul un administrateur peut modifier la grille tarifaire. Tu peux la consulter sur la
-          fiche du catalogue.
+          Ton profil n’a pas le droit d’écriture sur la grille tarifaire. Il se donne dans
+          Paramètres → Accès utilisateurs, colonne Écriture du module « Grille tarifaire ».
+          La grille reste consultable sur la fiche du catalogue.
         </p>
       </div>
     )

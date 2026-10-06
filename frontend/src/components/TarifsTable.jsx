@@ -1,10 +1,19 @@
+import { useState } from 'react'
 import { grillePourAffichage } from '../data/tarification'
+import { imprimerGrille } from '../data/grille-pdf'
 import './TarifsTable.css'
 
 // `date` permet d'afficher la grille qui s'appliquait à une demande ancienne
 // (le tarif est figé à la date de la demande). Par défaut : la grille en vigueur.
 export default function TarifsTable({ date = null }) {
   const grille = grillePourAffichage(date)
+  const [bloque, setBloque] = useState(false)
+
+  function telecharger() {
+    // Le PDF passe par une fenêtre d'impression : si elle est bloquée, le clic
+    // n'a aucun effet visible. On le dit plutôt que de laisser croire à un bug.
+    setBloque(!imprimerGrille(date))
+  }
 
   return (
     <div className="tarifs-table">
@@ -43,6 +52,15 @@ export default function TarifsTable({ date = null }) {
         <a href="mailto:afs-training@pennylane.com" className="contact-btn">
           Contacter l'équipe AFS
         </a>
+        <button type="button" className="telecharger-btn" onClick={telecharger}>
+          Télécharger la grille (PDF)
+        </button>
+        {bloque && (
+          <p className="telecharger-bloque">
+            La fenêtre d’impression a été bloquée par le navigateur. Autorise les fenêtres
+            surgissantes pour ce site, puis réessaie.
+          </p>
+        )}
       </div>
     </div>
   )

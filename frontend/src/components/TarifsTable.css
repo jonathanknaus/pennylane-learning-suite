@@ -99,3 +99,32 @@
 }
 
 .contact-btn:hover { opacity: 0.85; }
+
+/* Action secondaire : le PDF se remet à un cabinet, mais le geste principal
+   reste la prise de contact. */
+.telecharger-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px 10px;
+  background: var(--blanc);
+  color: var(--vert-fonce);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.telecharger-btn:hover { background: var(--gris); }
+
+.telecharger-bloque {
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #92400E;
+  background: #FFFBEB;
+  border-radius: 6px;
+  padding: 8px 10px;
+}

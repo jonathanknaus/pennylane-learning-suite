@@ -18,7 +18,7 @@
 // La date d'effet fait l'identité d'une grille : deux grilles applicables le
 // même jour seraient ambiguës, le stockage les indexe donc par cette date.
 
-import { getCurrentUser } from './auth.js'
+import { getCurrentUser, peutEcrire, permsCourantes } from './auth.js'
 import { lireCache, pousser, declarerPartagee } from './store-firebase.js'
 
 // Le tarif horaire se cumule jusqu'à 2 heures. Au-delà, c'est le forfait
@@ -606,11 +606,21 @@ export function grillePourAffichage(date = null) {
 // Le modèle interne, lui, range les paliers par modalité — c'est ce que lit
 // estimer(). Les deux conversions sont ici, et nulle part ailleurs.
 
-/** Profils autorisés à modifier la grille. */
-export const PROFILS_EDITION_GRILLE = ['administrateur']
+// Le droit de modifier la grille est une PERMISSION DE PROFIL, pas une liste de
+// profils en dur : il se coche dans Paramètres → Accès utilisateurs, colonne
+// Écriture du module « Grille tarifaire ». Un administrateur l'a par défaut, et
+// peut le déléguer sans déploiement.
+export const MODULE_TARIFS = 'tarifs'
 
 export function peutModifierGrille() {
-  return PROFILS_EDITION_GRILLE.includes(getCurrentUser()?.profilId)
+  const u = getCurrentUser()
+  if (!u) return false
+  // Repli pour les profils enregistrés AVANT l'ajout du module « tarifs » : ils
+  // ne portent pas encore cette permission, et peutEcrire() renverrait false.
+  // Sans ce repli, un administrateur se verrait refuser l'accès à l'éditeur
+  // jusqu'à la resynchronisation des profils dans Firebase.
+  if (!permsCourantes()?.[MODULE_TARIFS]) return u.profilId === 'administrateur'
+  return peutEcrire(MODULE_TARIFS)
 }
 
 // Métadonnées des formats : ce que l'éditeur affiche et ce qu'il autorise.
@@ -826,7 +836,7 @@ function tracer(existant, action) {
  */
 export function enregistrerGrille(vue) {
   if (!peutModifierGrille()) {
-    return { ok: false, erreurs: ['Seul un administrateur peut modifier la grille tarifaire.'] }
+    return { ok: false, erreurs: ['Ton profil n’a pas le droit d’écriture sur la grille tarifaire.'] }
   }
   const erreurs = validerGrilleEditable(vue)
   if (erreurs.length) return { ok: false, erreurs }
@@ -856,7 +866,7 @@ export function enregistrerGrille(vue) {
  */
 export function supprimerGrille(dateEffet) {
   if (!peutModifierGrille()) {
-    return { ok: false, erreurs: ['Seul un administrateur peut modifier la grille tarifaire.'] }
+    return { ok: false, erreurs: ['Ton profil n’a pas le droit d’écriture sur la grille tarifaire.'] }
   }
   const data = load()
   if (!data[dateEffet]) {

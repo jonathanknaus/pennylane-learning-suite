@@ -165,6 +165,18 @@ formateurs par palier et les mentions de modules (« 3 à 4 modules ») s'édite
 appariée de l'éditeur et le modèle interne rangé par modalité sont dans `tarification.js`, et nulle
 part ailleurs.
 
+Le droit d'éditer est la permission **`tarifs`** de la matrice de profils (`firebase-config.js`),
+colonne Écriture dans **Accès utilisateurs** : `rw` pour `administrateur`, `r` pour les autres. C'est
+le seul module de `MODULES_ACCES` **sans page de navigation** — une permission d'action, pas un
+écran. `peutModifierGrille()` retombe sur `profilId === 'administrateur'` quand le profil stocké ne
+porte pas encore la permission (profils créés avant son ajout).
+
+⚠️ **Deux contrôles à tenir alignés.** Les règles RTDB ne peuvent pas résoudre un profil depuis un
+email : le nœud `acces` est indexé par identifiant, pas par adresse. L'écriture de
+`donnees/pls_grilles_tarifaires` est donc restreinte à une **liste d'emails en dur**, qui doit rester
+en phase avec `ADMINS_RACINE`. Conséquence : cocher Écriture pour un profil ne suffit pas si la
+personne n'est pas dans cette liste — Firebase refusera l'écriture côté serveur.
+
 ⚠️ `participantsMax: Infinity` (webinar) se stocke en `null` : `JSON.stringify(Infinity)` vaut
 `null`, un aller-retour non converti transformerait le palier illimité en « 0 participant ». La
 conversion est faite à la frontière du stockage.

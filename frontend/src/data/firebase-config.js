@@ -62,6 +62,13 @@ export const MODULES_ACCES = [
   ] },
   { group: 'Configuration', items: [
     { id: 'parametres', label: 'Paramètres' },
+    // Permission d'ACTION, sans page de navigation : elle commande qui peut
+    // modifier les prix, les paliers de participants et le nombre de formateurs
+    // dans Paramètres → Grille tarifaire. C'est la seule entrée de cette liste
+    // qui n'a pas d'équivalent dans NAV_ADMIN, et c'est volontaire — App.jsx ne
+    // gouverne la navigation que par NAV_ADMIN, elle ne crée donc pas de page
+    // fantôme.
+    { id: 'tarifs', label: 'Grille tarifaire' },
   ] },
 ]
 
@@ -112,6 +119,11 @@ const MATRICE = {
   webinaires:       ['rw',  'r',     'r',     'r'],
   'product-update': ['rw',  'r',     'r',     '-'],
   parametres:       ['rw',  '-',     '-',     '-'],
+  // Les tarifs se CONSULTENT largement — ils s'affichent sur la fiche produit,
+  // dans le simulateur et sur chaque session — mais ne se MODIFIENT qu'en
+  // écriture, réservée aux administrateurs par défaut. Le droit se délègue
+  // ensuite profil par profil depuis Accès utilisateurs, sans déploiement.
+  tarifs:           ['rw',  'r',     'r',     'r'],
 }
 
 const ORDRE_PROFILS = ['administrateur', 'formateur_interne', 'formateur_externe', 'consultatif']
