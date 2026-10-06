@@ -9,7 +9,11 @@ import {
   enregistrerBesoin, lireBesoin, QUESTIONS_EXCLUES,
 } from '../data/cabinets-firebase'
 import ChoixMultiple from '../components/ChoixMultiple'
-import SimulateurTarif, { SIMU_VIDE, resumerDemande, calculerEstimation } from '../components/SimulateurTarif'
+import SimulateurTarif, {
+  SIMU_VIDE, resumerDemande, calculerEstimation,
+  reponsesSimu, simuDepuisReponses, reponsesSansSimu,
+} from '../components/SimulateurTarif'
+import { donneesSynthese, imprimerSynthese } from '../data/synthese-besoin'
 import './PortailCabinet.css'
 
 // Espace cabinet.
@@ -106,6 +110,7 @@ function Besoin({ cabinet }) {
   const [enregistre, setEnregistre] = useState(null)
   const [erreur, setErreur] = useState('')
   const [envoiEnCours, setEnvoiEnCours] = useState(false)
+  const [erreurImpression, setErreurImpression] = useState('')
 
   // Relecture d'une demande déjà envoyée : on restaure aussi les paramètres du
   // simulateur, pour que le cabinet retrouve sa simulation et puisse l'ajuster.
@@ -113,18 +118,8 @@ function Besoin({ cabinet }) {
     lireBesoin(cabinet.id, 'general')
       .then(v => {
         if (!v?.reponses) return
-        const r = { ...v.reponses }
-        const restaure = { ...SIMU_VIDE }
-        if (r.simu_public) restaure.publicCible = r.simu_public
-        if (r.simu_webinar) restaure.webinar = r.simu_webinar === 'oui'
-        if (r.simu_modalite) restaure.modalite = r.simu_modalite
-        if (r.simu_participants) restaure.participants = parseInt(r.simu_participants, 10) || 8
-        if (r.simu_modules) restaure.modules = r.simu_modules.split(',').filter(Boolean)
-        if (r.simu_niveaux) restaure.niveaux = r.simu_niveaux
-        setSimu(restaure)
-        // Les champs techniques du simulateur ne s'affichent pas comme réponses.
-        Object.keys(r).forEach(k => { if (k.startsWith('simu_') || k === 'estimation') delete r[k] })
-        setReponses(r)
+        setSimu(simuDepuisReponses(v.reponses))
+        setReponses(reponsesSansSimu(v.reponses))
         if (v.soumisLe) setEnregistre(v.soumisLe)
       })
       .catch(() => {})
@@ -139,15 +134,7 @@ function Besoin({ cabinet }) {
       // des chaînes sous `reponses`, et ça permet de recalculer l'estimation à
       // l'identique plus tard, même si la grille a changé entre-temps.
       const { estimation } = calculerEstimation(simu)
-      const charge = {
-        ...reponses,
-        simu_public: simu.publicCible,
-        simu_webinar: simu.webinar ? 'oui' : 'non',
-        simu_modalite: simu.modalite,
-        simu_participants: String(simu.participants),
-        simu_modules: simu.modules.join(','),
-        simu_niveaux: simu.niveaux || '',
-      }
+      const charge = { ...reponses, ...reponsesSimu(simu) }
       if (estimation?.valide) charge.estimation = resumerDemande(simu)
       await enregistrerBesoin(cabinet.id, 'general', charge)
       setEnregistre(new Date().toISOString())
@@ -158,6 +145,18 @@ function Besoin({ cabinet }) {
   }
 
   const { estimation } = calculerEstimation(simu)
+  const aRepondu = Object.values(reponses).some(v => String(v || '').trim() !== '')
+  const peutImprimer = aRepondu && simu.modules.length > 0
+
+  function telechargerSynthese() {
+    setErreurImpression('')
+    const d = donneesSynthese({ cabinet, questions, reponses, simu, estimation })
+    if (!imprimerSynthese(d)) {
+      setErreurImpression(
+        'Votre navigateur a bloqué l’ouverture de la synthèse. Autorisez les fenêtres pour ce site, puis réessayez.'
+      )
+    }
+  }
 
   return (
     <div className="pc-section">
@@ -225,6 +224,7 @@ function Besoin({ cabinet }) {
 
       {erreur && <div className="pc-login-error">{erreur}</div>}
 
+      <div className="pc-actions">
       <button className="pc-login-btn" onClick={soumettre} disabled={envoiEnCours}>
         {envoiEnCours
           ? 'Envoi…'
@@ -234,6 +234,16 @@ function Besoin({ cabinet }) {
               ? 'Envoyer ma demande avec l’estimation'
               : 'Envoyer ma demande'}
       </button>
+      <button className="pc-btn-secondaire" onClick={telechargerSynthese} disabled={!peutImprimer}>
+        ⬇ Télécharger la synthèse (PDF)
+      </button>
+      </div>
+      {!peutImprimer && (
+        <p className="pc-note">
+          Renseignez votre besoin et choisissez au moins un module pour obtenir la synthèse.
+        </p>
+      )}
+      {erreurImpression && <div className="pc-login-error">{erreurImpression}</div>}
     </div>
   )
 }

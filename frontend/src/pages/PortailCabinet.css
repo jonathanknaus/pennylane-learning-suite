@@ -211,6 +211,16 @@
 }
 .pc-choix .cm-libre:focus { border-color: var(--bg-dark); outline: none; background: var(--blanc); }
 
+.pc-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.pc-btn-secondaire {
+  font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  padding: 11px 18px; border-radius: 8px;
+  border: 1.5px solid var(--bg-dark); background: var(--blanc); color: var(--bg-dark);
+  transition: all .15s;
+}
+.pc-btn-secondaire:hover:not(:disabled) { background: var(--gris); }
+.pc-btn-secondaire:disabled { opacity: .45; cursor: not-allowed; border-color: var(--border); color: var(--texte-secondaire); }
+
 .pc-exclu {
   font-size: 12.5px; color: #92400E; background: #FEF3C7;
   border-radius: 8px; padding: 10px 14px; line-height: 1.5;

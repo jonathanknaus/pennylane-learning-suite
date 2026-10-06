@@ -54,6 +54,50 @@ export const SIMU_VIDE = {
   participants: 8,
 }
 
+// Conversions entre l'état du simulateur et les réponses stockées.
+//
+// Factorisées ici parce que DEUX écrans en ont besoin — le portail cabinet pour
+// relire une demande, la fiche session pour en produire la synthèse — et que
+// deux lectures divergentes du même stockage finiraient par donner deux prix
+// différents pour la même demande.
+//
+// Tout est en CHAÎNES : les règles de la base n'acceptent que ça sous
+// `reponses`, et cela permet de recalculer l'estimation à l'identique plus tard.
+export const PREFIXE_SIMU = 'simu_'
+
+export function reponsesSimu(simu) {
+  const v = { ...SIMU_VIDE, ...simu }
+  return {
+    simu_public: v.publicCible,
+    simu_webinar: v.webinar ? 'oui' : 'non',
+    simu_modalite: v.modalite,
+    simu_participants: String(v.participants),
+    simu_modules: (v.modules || []).join(','),
+    simu_niveaux: v.niveaux || '',
+  }
+}
+
+export function simuDepuisReponses(reponses) {
+  const r = reponses || {}
+  const v = { ...SIMU_VIDE }
+  if (r.simu_public) v.publicCible = r.simu_public
+  if (r.simu_webinar) v.webinar = r.simu_webinar === 'oui'
+  if (r.simu_modalite) v.modalite = r.simu_modalite
+  if (r.simu_participants) v.participants = parseInt(r.simu_participants, 10) || SIMU_VIDE.participants
+  if (r.simu_modules) v.modules = r.simu_modules.split(',').map(x => x.trim()).filter(Boolean)
+  if (r.simu_niveaux) v.niveaux = r.simu_niveaux
+  return v
+}
+
+/** Réponses débarrassées des champs techniques, pour affichage. */
+export function reponsesSansSimu(reponses) {
+  const net = { ...(reponses || {}) }
+  for (const cle of Object.keys(net)) {
+    if (cle.startsWith(PREFIXE_SIMU) || cle === 'estimation') delete net[cle]
+  }
+  return net
+}
+
 // Calcule l'estimation à partir de l'état du simulateur. Exporté pour que le
 // questionnaire puisse composer son envoi sans dupliquer cette logique.
 export function calculerEstimation(v) {

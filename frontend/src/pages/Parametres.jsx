@@ -3,6 +3,9 @@ import { getParametres, saveParametres, CHAMPS_OF, TEMPLATE_ACCES_CABINET_DEFAUT
 import { getThematiques } from '../data/catalogue-afs'
 import { getBanqueModule, saveBanqueCustom, deleteBanqueCustom, BANQUE_STANDARD } from '../data/questionnaires'
 import { getQuestionsQB, saveQuestionsQB, resetQuestionsQB, DEFAULT_QUESTIONS_QB } from '../data/questionnaire-besoin'
+import {
+  getModeleSynthese, saveModeleSynthese, resetModeleSynthese, VARIABLES_MAIL,
+} from '../data/modele-mail'
 import GestionAcces from './GestionAcces'
 import MigrationFirebase from './MigrationFirebase'
 import DureesModules from './DureesModules'
@@ -563,6 +566,105 @@ function MailAccesCabinetEditor() {
   )
 }
 
+// ── Éditeur du mail de synthèse de demande ───────────────────────────────────
+function MailSyntheseBesoinEditor() {
+  const [form, setForm] = useState(getModeleSynthese)
+  const [saved, setSaved] = useState(false)
+
+  function handleSave() {
+    saveModeleSynthese(form)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
+  function handleReset() {
+    if (!confirm('Remettre le modèle par défaut ?')) return
+    resetModeleSynthese()
+    setForm(getModeleSynthese())
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
+  return (
+    <div className="param-section">
+      <div className="param-section-header">
+        <h2>Email de synthèse d'une demande de formation</h2>
+        <p>
+          Accompagne la synthèse PDF envoyée au cabinet après remplissage du questionnaire et du
+          simulateur.
+        </p>
+      </div>
+
+      <p className="param-avertissement">
+        <strong>PLS n'envoie pas ce mail lui-même.</strong> Le site est statique et son code est
+        public : y placer un identifiant de messagerie reviendrait à le publier. L'outil produit le
+        PDF et ouvre ce mail pré-rempli dans votre messagerie, où vous joignez le PDF avant
+        d'envoyer — rien ne part sans vous. L'envoi automatique suppose le backend déployé.
+      </p>
+
+      <div className="mail-vars-list">
+        <div className="mail-vars-title">Variables disponibles</div>
+        <div className="mail-vars-grid">
+          {VARIABLES_MAIL.map(v => (
+            <div key={v.cle} className="mail-var-item">
+              <code className="mail-var-code">{`{{${v.cle}}}`}</code>
+              <span className="mail-var-desc">{v.description}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="param-form">
+        <div className="param-field">
+          <label className="param-label">Expéditeur</label>
+          <input className="param-input" type="text" value={form.expediteur} disabled />
+          <span className="param-hint">
+            Repris de « Email d'envoi » dans l'onglet Organisme de formation.
+          </span>
+        </div>
+        <div className="param-field">
+          <label className="param-label">En copie</label>
+          <input
+            className="param-input"
+            type="text"
+            value={form.copie}
+            onChange={e => { setForm(f => ({ ...f, copie: e.target.value })); setSaved(false) }}
+          />
+          <span className="param-hint">Garde une trace de l'envoi dans la boîte AFS.</span>
+        </div>
+        <div className="param-field" style={{ gridColumn: '1 / -1' }}>
+          <label className="param-label">Objet du mail</label>
+          <input
+            className="param-input"
+            type="text"
+            value={form.objet}
+            onChange={e => { setForm(f => ({ ...f, objet: e.target.value })); setSaved(false) }}
+          />
+        </div>
+        <div className="param-field" style={{ gridColumn: '1 / -1' }}>
+          <label className="param-label">Corps du mail</label>
+          <textarea
+            className="param-input"
+            value={form.corps}
+            rows={16}
+            style={{ resize: 'vertical', fontFamily: 'monospace', fontSize: 13 }}
+            onChange={e => { setForm(f => ({ ...f, corps: e.target.value })); setSaved(false) }}
+          />
+          <span className="param-hint">
+            À garder court : les messageries tronquent les mails pré-remplis trop longs. Le détail
+            est dans le PDF joint.
+          </span>
+        </div>
+        <div className="param-actions" style={{ gridColumn: '1 / -1' }}>
+          <button type="button" className="btn-reset" onClick={handleReset}>↩ Remettre par défaut</button>
+          {saved && <span className="param-saved">✓ Enregistré</span>}
+          <button type="button" className="btn-save-param" onClick={handleSave}>Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Page principale Paramètres ────────────────────────────────────────────────
 const ONGLETS = [
   { id: 'of',        label: 'Organisme de formation' },
@@ -601,7 +703,7 @@ export default function Parametres() {
           {onglet === 'of'        && <InfosOF />}
           {onglet === 'questions' && <BanqueQuestions />}
           {onglet === 'qbesoin'   && <QuestionnaireBesoinEditor />}
-          {onglet === 'mails'     && <MailAccesCabinetEditor />}
+          {onglet === 'mails'     && <><MailAccesCabinetEditor /><MailSyntheseBesoinEditor /></>}
           {onglet === 'acces'     && <GestionAcces />}
           {onglet === 'durees'    && <DureesModules />}
           {onglet === 'migration' && <MigrationFirebase />}

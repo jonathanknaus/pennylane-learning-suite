@@ -4,6 +4,10 @@ import {
 } from '../data/cabinets-firebase'
 import { estAdminRacine } from '../data/firebase-auth'
 import { getCurrentUser } from '../data/auth'
+import { getQuestionsQB } from '../data/questionnaire-besoin'
+import { simuDepuisReponses, reponsesSansSimu, calculerEstimation } from './SimulateurTarif'
+import { donneesSynthese, imprimerSynthese } from '../data/synthese-besoin'
+import { getModeleSynthese, lienMailto } from '../data/modele-mail'
 
 // Ouverture et suivi de l'accès au portail d'un cabinet, depuis la fiche session.
 //
@@ -17,8 +21,45 @@ export default function AccesCabinet({ contactEmail, lienPortail }) {
   const [occupe, setOccupe] = useState(false)
   const [lienCopie, setLienCopie] = useState(false)
 
+  const [erreurSynthese, setErreurSynthese] = useState('')
+
   const moi = getCurrentUser()
   const peutGerer = estAdminRacine(moi?.email)
+
+  // Reconstitue la demande telle que le cabinet l'a envoyée. Les conversions
+  // viennent du simulateur : deux lectures différentes du même stockage
+  // finiraient par afficher deux prix pour une seule demande.
+  function demandeDuCabinet() {
+    const reponsesBrutes = cabinet?.besoins?.general?.reponses || {}
+    const simu = simuDepuisReponses(reponsesBrutes)
+    const { estimation } = calculerEstimation(simu)
+    return donneesSynthese({
+      cabinet: { ...cabinet, email: contactEmail },
+      questions: getQuestionsQB(),
+      reponses: reponsesSansSimu(reponsesBrutes),
+      simu,
+      estimation,
+    })
+  }
+
+  function ouvrirSynthese() {
+    setErreurSynthese('')
+    if (!imprimerSynthese(demandeDuCabinet())) {
+      setErreurSynthese('Le navigateur a bloqué l\'ouverture. Autorisez les fenêtres pour ce site.')
+    }
+  }
+
+  function preparerMail() {
+    setErreurSynthese('')
+    const d = demandeDuCabinet()
+    // Nouvelle fenêtre plutôt que location.href : garder la fiche session
+    // ouverte, le PDF restant à produire et à joindre.
+    window.open(lienMailto({
+      destinataire: contactEmail,
+      modele: getModeleSynthese(),
+      variables: d.variables,
+    }), '_blank')
+  }
 
   useEffect(() => {
     if (!contactEmail) return
@@ -141,6 +182,23 @@ export default function AccesCabinet({ contactEmail, lienPortail }) {
               ? `renseigné le ${new Date(besoinSoumis).toLocaleDateString('fr-FR')}`
               : 'pas encore renseigné'}
           </p>
+          {besoinSoumis && (
+            <div className="acces-cab-synthese">
+              <button className="btn-secondaire-sm" onClick={ouvrirSynthese}>
+                ⬇ Synthèse de la demande (PDF)
+              </button>
+              <button className="btn-secondaire-sm" onClick={preparerMail}>
+                ✉ Préparer le mail au cabinet
+              </button>
+              <p className="acces-pwd-hint" style={{ margin: 0, flexBasis: '100%' }}>
+                Le mail s'ouvre pré-rempli dans votre messagerie, avec
+                {' '}{getModeleSynthese().copie || 'la boîte AFS'} en copie. <strong>Joignez le PDF
+                avant d'envoyer</strong> : un lien mailto ne peut pas porter de pièce jointe.
+              </p>
+              {erreurSynthese && <p className="acces-error" style={{ flexBasis: '100%' }}>{erreurSynthese}</p>}
+            </div>
+          )}
+
           <p className="acces-cab-retour-ligne">
             <strong>Apprenants déclarés :</strong> {apprenants.length}
           </p>
