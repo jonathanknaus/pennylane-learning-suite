@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import ChoixMultiple from '../components/ChoixMultiple'
-import NiveauxModules from '../components/NiveauxModules'
+import ModulesRetenus from '../components/ModulesRetenus'
 import { getAllModules } from '../data/catalogue-afs'
 import { verifyBesoinToken, getBesoin, saveBesoinReponses, addPrecisionBesoin, getQuestionsQB } from '../data/questionnaire-besoin'
 import { getSessions } from '../data/sessions'
@@ -281,7 +281,7 @@ export default function QuestionnaireBesoin({ sessionId, token }) {
               ajuste son rythme en conséquence.
             </p>
             {modulesSession.length > 0 ? (
-              <NiveauxModules
+              <ModulesRetenus
                 modules={modulesSession}
                 valeur={form.niveaux_modules || ''}
                 onChange={v => setForm(f => ({ ...f, niveaux_modules: v }))}

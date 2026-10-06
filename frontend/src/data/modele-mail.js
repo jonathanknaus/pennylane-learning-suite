@@ -24,6 +24,7 @@ export const VARIABLES_MAIL = [
   { cle: 'modalite', description: 'Présentiel, visioconférence ou webinar' },
   { cle: 'estimation', description: 'Montant estimé, ou « sur devis »' },
   { cle: 'niveaux', description: 'Niveau des participants, module par module' },
+  { cle: 'ampleurs', description: 'Ampleur retenue par module (rappel, approfondissement, fondamentaux)' },
   { cle: 'of_signataire', description: 'Signataire (paramètres de l\'organisme)' },
   { cle: 'of_titre', description: 'Titre du signataire' },
   { cle: 'of_nom', description: 'Nom de l\'organisme' },

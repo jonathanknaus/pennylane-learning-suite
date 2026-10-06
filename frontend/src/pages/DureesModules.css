@@ -24,6 +24,10 @@
 .dm-stat-warn { border-color: #FCD34D; background: #FFFBEB; }
 .dm-stat-warn .dm-stat-val { color: #92400E; }
 
+.dm-info {
+  background: #EBF8FF !important; color: #2B6CB0 !important;
+  border-left-color: #3182CE !important;
+}
 .dm-alerte {
   background: #FEF3C7;
   border: 1px solid #FCD34D;

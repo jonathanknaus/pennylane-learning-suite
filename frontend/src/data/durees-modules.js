@@ -24,6 +24,84 @@ const CLE = 'pls_modules_duree'
 
 // Valeurs proposées à la saisie. Bornées à la réalité des formats AFS : une
 // session va de l'heure à la journée, au-delà on compte en journées.
+// ── Formats : l'ampleur voulue sur un sujet ──────────────────────────────────
+//
+// Un même sujet ne dure pas une durée fixe. Jonathan l'a posé ainsi
+// (2026-10-06) : « un sujet comme la TVA peut être abordé durant 1 h, 2 h ou même
+// une demi-journée. Tout dépend du niveau de l'apprenant avant formation et de
+// l'ampleur de la formation à dispenser. »
+//
+// C'est pourquoi la question « quelle est la durée de ce module ? » était mal
+// posée — et pourquoi 26 modules traînaient en « durée à confirmer » : il n'y a
+// pas une durée à confirmer, il y a une ampleur à choisir au moment de la demande.
+//
+// ⚠️ L'ampleur varie À L'INVERSE du niveau : on part de zéro en 3 h 30, on révise
+// en 1 h. Le niveau déclaré par le cabinet suggère donc le format, sans jamais
+// l'imposer — c'est lui qui connaît ses équipes.
+export const FORMATS = [
+  {
+    id: 'rappel',
+    heures: 1,
+    label: 'Rappel',
+    accroche: 'Vos équipes pratiquent déjà',
+    pour: 'expert',
+    explication: "Une remise en main sur un sujet déjà pratiqué. On reprend les points qui coincent, " +
+      "on redresse les habitudes prises de travers et on repart avec les bons réflexes. " +
+      "Pas de découverte : du recadrage.",
+  },
+  {
+    id: 'approfondissement',
+    heures: 2,
+    label: 'Approfondissement',
+    accroche: 'Les bases sont acquises',
+    pour: 'intermediaire',
+    explication: "Le quotidien est maîtrisé, mais une partie de l’outil reste inexploitée. On va " +
+      "chercher les cas particuliers, les automatisations et les contrôles auxquels on ne pense " +
+      "pas — ceux qui font gagner du temps et évitent les erreurs en fin d’exercice.",
+  },
+  {
+    id: 'fondamentaux',
+    heures: 3.5,
+    label: 'Fondamentaux',
+    accroche: 'Le sujet est nouveau',
+    pour: 'debutant',
+    explication: "Une demi-journée pour partir de zéro. Chaque étape est montrée puis refaite par " +
+      "les participants, jusqu’à ce qu’ils sachent faire seuls. À retenir dès qu’une partie du " +
+      "groupe découvre le sujet : en moins de temps, la pratique manque.",
+  },
+]
+
+export const FORMAT_DEFAUT = 'approfondissement'
+
+export function format(id) {
+  return FORMATS.find(f => f.id === id) || null
+}
+
+export function heuresFormat(id) {
+  return format(id)?.heures ?? null
+}
+
+/** Format correspondant à un niveau déclaré. Une suggestion, pas une contrainte. */
+export function formatSuggere(niveau) {
+  return FORMATS.find(f => f.pour === niveau)?.id || FORMAT_DEFAUT
+}
+
+/**
+ * Le niveau déclaré et le format retenu se contredisent-ils ?
+ * Débutant en 1 h ou expert en 3 h 30 : ce n'est pas interdit — le cabinet peut
+ * avoir ses raisons — mais cela mérite d'être dit avant de valider un devis.
+ */
+export function formatIncoherent(niveau, idFormat) {
+  if (!niveau || !idFormat) return null
+  if (niveau === 'debutant' && idFormat === 'rappel') {
+    return 'Vous avez indiqué un niveau débutant : une heure suffit rarement à partir de zéro.'
+  }
+  if (niveau === 'expert' && idFormat === 'fondamentaux') {
+    return 'Vous avez indiqué un niveau expert : une demi-journée de fondamentaux sera sans doute redondante.'
+  }
+  return null
+}
+
 export const DUREES_PROPOSEES = [0.5, 1, 1.5, 2, 3.5, 7, 14]
 
 export function libelleDuree(h) {
@@ -138,19 +216,32 @@ export function enregistrerDuree(moduleId, heures) {
  *                que de la présenter comme un prix arrêté.
  *   `aConfirmer` : les modules concernés, pour pouvoir les nommer à l'écran.
  */
-export function totaliserDurees(modules) {
+export function totaliserDurees(modules, formatsChoisis) {
+  const fmts = formatsChoisis || {}
   const retenus = []
   const aConfirmer = []
   let total = 0
   for (const m of modules || []) {
-    total += dureeModule(m)
     retenus.push(m)
-    if (!dureeConfirmee(m)) aConfirmer.push(m)
+    // 1. L'ampleur choisie par le cabinet fait foi : c'est lui qui sait s'il
+    //    part de zéro ou s'il révise.
+    const heures = heuresFormat(fmts[m.id])
+    if (heures !== null) { total += heures; continue }
+    // 2. À défaut, la durée portée par le module (produit SmartOF fini).
+    const propre = Number(m.duree)
+    if (Number.isFinite(propre) && propre > 0) { total += propre; continue }
+    // 3. À défaut encore, la durée saisie à la main.
+    const saisie = dureeSaisie(m.id)
+    if (saisie !== null) { total += saisie; continue }
+    // 4. Sinon le format par défaut, et on le signale : l'estimation reste
+    //    calculable, mais elle repose sur une hypothèse.
+    total += heuresFormat(FORMAT_DEFAUT)
+    aConfirmer.push(m)
   }
   return {
     totalHeures: Math.round(total * 100) / 100,
     // Une estimation est toujours calculable ; « confirme » dit si elle repose
-    // uniquement sur des durées établies ou en partie sur la convention de 1 h.
+    // uniquement sur des ampleurs choisies et des durées établies.
     complet: retenus.length > 0,
     confirme: retenus.length > 0 && aConfirmer.length === 0,
     retenus,

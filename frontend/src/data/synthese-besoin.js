@@ -15,7 +15,8 @@
 import { QUESTIONS_EXCLUES } from './cabinets-firebase'
 import { getAllModules } from './catalogue-afs'
 import { libelleDuree, totaliserDurees, origineDuree } from './durees-modules'
-import { decomposerNiveaux, libelleNiveau } from '../components/NiveauxModules'
+import { decomposerNiveaux, libelleNiveau } from '../components/ModulesRetenus'
+import { FORMATS, format as formatParId } from './durees-modules'
 import { MODALITES } from './tarification'
 import { variablesOrganisme } from './modele-mail'
 
@@ -44,8 +45,11 @@ export function donneesSynthese({ cabinet, questions, reponses, simu, estimation
   const parId = new Map(getAllModules().map(m => [m.id, m]))
   const retenus = (simu?.modules || []).map(id => parId.get(id)).filter(Boolean)
   const disparus = (simu?.modules || []).filter(id => !parId.has(id))
-  const cumul = totaliserDurees(retenus)
   const niveaux = decomposerNiveaux(simu?.niveaux)
+  const ampleurs = decomposerNiveaux(simu?.formats, FORMATS.map(f => f.id))
+  // Le cumul suit les ampleurs choisies : sans elles, la durée du PDF
+  // contredirait celle du simulateur pour la même demande.
+  const cumul = totaliserDurees(retenus, ampleurs)
 
   const montant = !estimation?.valide
     ? 'à préciser'
@@ -68,6 +72,7 @@ export function donneesSynthese({ cabinet, questions, reponses, simu, estimation
     disparus,
     cumul,
     niveaux,
+    ampleurs,
     montant,
     estimation,
     simu,
@@ -82,6 +87,8 @@ export function donneesSynthese({ cabinet, questions, reponses, simu, estimation
       estimation: montant,
       niveaux: retenus.filter(m => niveaux[m.id])
         .map(m => `${m.titre} : ${libelleNiveau(niveaux[m.id])}`).join(' ; '),
+      ampleurs: retenus.filter(m => ampleurs[m.id])
+        .map(m => `${m.titre} : ${formatParId(ampleurs[m.id])?.label}`).join(' ; '),
       ...variablesOrganisme(),
     },
   }
@@ -96,6 +103,10 @@ export function genererSyntheseHTML(d) {
 
   const lignesModules = d.retenus.map(m => {
     const niveau = d.niveaux[m.id] ? libelleNiveau(d.niveaux[m.id]) : '<span class="gris">non précisé</span>'
+    const f = formatParId(d.ampleurs[m.id])
+    const ampleur = f
+      ? `${echap(f.label)} — ${echap(libelleDuree(f.heures))}`
+      : '<span class="gris">non précisée</span>'
     const origine = origineDuree(m)
     const duree = libelleDuree(m.duree || undefined) !== 'Non renseignée' && origine === 'catalogue'
       ? libelleDuree(m.duree)
@@ -105,7 +116,7 @@ export function genererSyntheseHTML(d) {
       <td>${echap(m.titre)}</td>
       <td>${echap(m.thematique || '—')}</td>
       <td>${niveau}</td>
-      <td class="num">${duree ? echap(duree) : '<span class="gris">à confirmer</span>'}</td>
+      <td>${ampleur}</td>
     </tr>`
   }).join('')
 
@@ -159,7 +170,7 @@ export function genererSyntheseHTML(d) {
 
 <h2>Formation envisagée</h2>
 ${d.retenus.length > 0 ? `<table>
-  <thead><tr><th>Module</th><th>Thématique</th><th>Niveau des participants</th><th class="num">Durée</th></tr></thead>
+  <thead><tr><th>Module</th><th>Thématique</th><th>Niveau des participants</th><th>Ampleur retenue</th></tr></thead>
   <tbody>${lignesModules}</tbody>
 </table>` : '<p class="gris">Aucun module sélectionné.</p>'}
 ${alerteDisparus}

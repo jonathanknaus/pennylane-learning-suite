@@ -2,9 +2,10 @@ import { useMemo } from 'react'
 import { getAllModules } from '../data/catalogue-afs'
 import { estimer, resumerEstimation, MODALITES, plafondGrille } from '../data/tarification'
 import { totaliserDurees, libelleDuree } from '../data/durees-modules'
-import NiveauxModules, {
-  composerNiveaux, decomposerNiveaux, niveauxManquants, libelleNiveau,
-} from './NiveauxModules'
+import ModulesRetenus, {
+  composerNiveaux, decomposerNiveaux, niveauxManquants, libelleNiveau, ampleursManquantes,
+} from './ModulesRetenus'
+import { FORMATS, format as formatParId } from '../data/durees-modules'
 import './SimulateurTarif.css'
 
 // Simulateur de tarif — composant CONTRÔLÉ, intégré au questionnaire de besoin.
@@ -48,8 +49,11 @@ export const SIMU_VIDE = {
   publicCible: 'collaborateurs',
   webinar: false,
   modules: [],
-  // Niveau par module, sérialisé « id=niveau, id=niveau » (voir NiveauxModules).
+  // Niveau par module, sérialisé « id=niveau, id=niveau » (voir ModulesRetenus).
   niveaux: '',
+  // Ampleur voulue par module, même format : « id=rappel, id=fondamentaux ».
+  // Un sujet ne dure pas une durée fixe — voir FORMATS dans durees-modules.
+  formats: '',
   modalite: 'visio',
   participants: 8,
 }
@@ -74,6 +78,7 @@ export function reponsesSimu(simu) {
     simu_participants: String(v.participants),
     simu_modules: (v.modules || []).join(','),
     simu_niveaux: v.niveaux || '',
+    simu_formats: v.formats || '',
   }
 }
 
@@ -86,6 +91,7 @@ export function simuDepuisReponses(reponses) {
   if (r.simu_participants) v.participants = parseInt(r.simu_participants, 10) || SIMU_VIDE.participants
   if (r.simu_modules) v.modules = r.simu_modules.split(',').map(x => x.trim()).filter(Boolean)
   if (r.simu_niveaux) v.niveaux = r.simu_niveaux
+  if (r.simu_formats) v.formats = r.simu_formats
   return v
 }
 
@@ -105,7 +111,8 @@ export function calculerEstimation(v) {
   const parId = new Map(tous.map(m => [m.id, m]))
   const retrouves = (v.modules || []).map(id => parId.get(id)).filter(Boolean)
   const disparus = (v.modules || []).filter(id => !parId.has(id))
-  const cumul = totaliserDurees(retrouves)
+  const ampleurs = decomposerNiveaux(v.formats, FORMATS.map(f => f.id))
+  const cumul = totaliserDurees(retrouves, ampleurs)
   const estimation = cumul.complet
     ? estimer({
         dureeHeures: cumul.totalHeures,
@@ -114,7 +121,11 @@ export function calculerEstimation(v) {
         webinar: v.webinar,
       })
     : null
-  return { retrouves, disparus, cumul, estimation, sansNiveau: niveauxManquants(v.niveaux, retrouves) }
+  return {
+    retrouves, disparus, cumul, estimation,
+    sansNiveau: niveauxManquants(v.niveaux, retrouves),
+    sansAmpleur: ampleursManquantes(v.formats, retrouves, FORMATS.map(f => f.id)),
+  }
 }
 
 // Résumé textuel versé dans la demande, à côté des paramètres bruts.
@@ -210,9 +221,14 @@ export default function SimulateurTarif({ valeur, onChange }) {
 
   function basculerModule(id) {
     const apres = v.modules.includes(id) ? v.modules.filter(x => x !== id) : [...v.modules, id]
-    // Recomposer les niveaux sur la nouvelle sélection : un module décoché ne
-    // doit pas laisser son niveau derrière lui.
-    set({ modules: apres, niveaux: composerNiveaux(decomposerNiveaux(v.niveaux), apres) })
+    const idsFormats = FORMATS.map(f => f.id)
+    // Recomposer niveau ET ampleur sur la nouvelle sélection : un module décoché
+    // ne doit rien laisser derrière lui.
+    set({
+      modules: apres,
+      niveaux: composerNiveaux(decomposerNiveaux(v.niveaux), apres),
+      formats: composerNiveaux(decomposerNiveaux(v.formats, idsFormats), apres, idsFormats),
+    })
   }
 
   return (
@@ -253,19 +269,24 @@ export default function SimulateurTarif({ valeur, onChange }) {
       {retrouves.length > 0 && (
         <div className="st-bloc">
           <div className="st-bloc-titre">
-            Où en sont vos participants sur ces sujets ?
+            Où en sont vos participants, et jusqu'où aller ?
             {sansNiveau.length > 0 && retrouves.length > sansNiveau.length && (
               <span className="st-compte">{retrouves.length - sansNiveau.length}/{retrouves.length} renseignés</span>
             )}
           </div>
           <p className="st-aide">
-            Un niveau par module : il est courant d’être à l’aise sur un sujet et débutant sur un
-            autre. Le formateur ajuste son rythme en conséquence — cela ne change pas le tarif.
+            Pour chaque module, dites où en sont vos participants — il est courant d’être à l’aise
+            sur un sujet et débutant sur un autre — puis l’ampleur que vous souhaitez.
+            <strong> Un même sujet se traite en une heure comme en une demi-journée</strong> : c’est
+            vous qui décidez s’il s’agit d’un rappel ou d’une mise à niveau complète. Le niveau que
+            vous indiquez propose l’ampleur correspondante, vous restez libre de la changer.
           </p>
-          <NiveauxModules
+          <ModulesRetenus
             modules={retrouves}
             valeur={v.niveaux}
             onChange={niveaux => set({ niveaux })}
+            formats={v.formats}
+            onChangeFormats={formats => set({ formats })}
             classe="st-niveaux"
           />
         </div>
@@ -334,6 +355,15 @@ export default function SimulateurTarif({ valeur, onChange }) {
           <ul className="st-alertes">
             {estimation.alertes.map((a, i) => <li key={i}>{a}</li>)}
           </ul>
+        )}
+
+        {cumul.complet && sansAmpleur.length > 0 && (
+          <p className="st-a-confirmer">
+            Ampleur non précisée pour {sansAmpleur.length} module{sansAmpleur.length > 1 ? 's' : ''} :
+            {' '}{sansAmpleur.map(m => m.titre).join(', ')}. Le calcul retient
+            {' '}{formatParId('approfondissement')?.label.toLowerCase()} par défaut — précisez-la pour
+            une estimation juste.
+          </p>
         )}
 
         {cumul.complet && sansNiveau.length > 0 && (

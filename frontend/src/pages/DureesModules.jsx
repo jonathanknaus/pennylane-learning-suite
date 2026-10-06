@@ -72,14 +72,17 @@ export default function DureesModules() {
         </div>
       </div>
 
-      {couverture.proposee > 0 && (
-        <p className="dm-alerte">
-          <strong>{couverture.proposee} module{couverture.proposee > 1 ? 's' : ''}</strong> {couverture.proposee > 1 ? 'reposent' : 'repose'} sur
-          la convention de {DUREE_PROPOSEE_DEFAUT} h, déduite de ta grille — qui énonce
-          « Session 1h = 1 ou 2 modules ». Ce n'est pas une mesure. Toute estimation qui en dépend
-          sera signalée comme à confirmer auprès du cabinet.
-        </p>
-      )}
+      <p className="dm-alerte dm-info">
+        <strong>Ces durées ne sont plus ce qui détermine le prix.</strong> Un même sujet se traite en
+        1 h (rappel), 2 h (approfondissement) ou 3 h 30 (fondamentaux) : c'est le cabinet qui choisit
+        l'ampleur dans le simulateur, module par module, selon le niveau de ses équipes. Les
+        {' '}{couverture.proposee} module{couverture.proposee > 1 ? 's' : ''} sans durée ici ne
+        bloque{couverture.proposee > 1 ? 'nt' : ''} donc plus rien — à défaut de choix, le calcul
+        retient l'approfondissement.
+        <br />
+        Cet écran reste utile pour les modules venus de SmartOF, qui sont des <em>produits</em> à
+        durée fixe : leur durée fait foi et n'est pas modifiable ici.
+      </p>
 
       <div className="dm-barre">
         <div className="filtre-statut" style={{ marginBottom: 0 }}>

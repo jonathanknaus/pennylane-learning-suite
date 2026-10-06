@@ -138,7 +138,7 @@ export const DEFAULT_QUESTIONS_QB = [
 // ce qui la remplace.
 //
 // `niveau_depart` demandait UN niveau pour toute la formation. Remplacée le
-// 2026-10-06 par un niveau PAR MODULE (NiveauxModules) : un cabinet est
+// 2026-10-06 par un niveau PAR MODULE (ModulesRetenus) : un cabinet est
 // couramment expert en tenue et débutant en TVA, et un niveau moyenné ne dit
 // rien au formateur.
 export const QUESTIONS_RETIREES = ['niveau_depart']
