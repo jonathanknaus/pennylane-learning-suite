@@ -171,6 +171,13 @@
             ".validate": false
           }
         }
+      },
+      "signatures": {
+        ".read": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
+        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com')",
+        "$personne": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length < 1000"
+        }
       }
     },
     "profils": {
