@@ -34,7 +34,7 @@ les a relevées comme des écarts à corriger avant toute mise en service.
 
 ---
 
-## 1. Un jeton limité à la lecture
+## 1. Un second jeton, limité à la lecture
 
 Le compte `api-afs-pennylane@smartof.tech` dispose aujourd'hui de droits `create`, `update` et
 **`delete`** sur les apprenants, les contacts clients, les formateurs, les entreprises, les
@@ -44,9 +44,12 @@ sessions ouvertes.
 Notre usage est **strictement en lecture** : reprendre des données de référence pour éviter une double
 saisie. Le droit de suppression sur des fiches apprenants et formateurs va très au-delà de ce besoin.
 
-→ **Pouvez-vous nous délivrer un jeton restreint à la lecture, sur les seules ressources
-nécessaires ?** Un second compte dédié nous convient parfaitement si c'est la voie la plus simple de
-votre côté.
+→ **Pouvez-vous nous délivrer un second jeton, restreint à la lecture sur les seules ressources
+nécessaires ?**
+
+Nous souhaitons que le **compte actuel reste actif** : nos travaux en cours s'appuient dessus, et nous
+préférons une bascule progressive à une coupure. Il ne s'agit donc pas de remplacer un accès, mais
+d'en ajouter un, dimensionné à l'usage réel.
 
 ## 2. Renouvellement du mot de passe, et transmission par canal sécurisé
 
@@ -56,9 +59,12 @@ Nous n'avons aucune raison de penser qu'ils ont été exposés, et nous ne signa
 notre politique de sécurité n'admet simplement pas qu'un identifiant circule en clair, car personne ne
 peut l'attester après coup.
 
-→ **Pouvez-vous renouveler le mot de passe du compte de service et nous transmettre les nouveaux
-identifiants par un canal sécurisé ?** Nous utilisons **1Password** et pouvons vous ouvrir un partage
-chiffré ; tout autre moyen évitant l'envoi en clair nous convient.
+→ **Pouvez-vous renouveler le mot de passe du compte `api-afs-pennylane@smartof.tech` et nous
+transmettre les nouveaux identifiants par un canal sécurisé ?** Nous utilisons **1Password** et pouvons
+vous ouvrir un partage chiffré ; tout autre moyen évitant l'envoi en clair nous convient.
+
+Cette demande vaut également pour les identifiants du second jeton évoqué au point 1 : nous préférons
+les recevoir par ce même canal plutôt que par courrier électronique.
 
 Nous supprimerons les deux messages d'origine dès la bascule effectuée.
 

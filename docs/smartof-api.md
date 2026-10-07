@@ -487,6 +487,16 @@ que **l'usage voulu est en lecture seule**.
 demander à l'éditeur un **nouveau jeton en lecture seule sur des scopes précis**, et non une simple
 restriction du compte existant.
 
+⚠️ **Décision de Jonathan (2026-10-07) : le compte actuel n'est PAS supprimé.** Les travaux en cours
+s'appuient dessus, et une bascule progressive vaut mieux qu'une coupure. Le mail demande donc un
+**second** jeton, en complément.
+
+Conséquence à connaître pour le SPD : tant que le compte d'origine reste actif avec ses droits
+`delete`, **l'exigence de moindre privilège n'est pas pleinement satisfaite** — le périmètre réel du
+compte ne change pas, seul l'usage change. Deux façons de refermer le point le jour où la bascule est
+faite : demander à l'éditeur de restreindre le compte d'origine, ou le désactiver. À signaler à
+Sylvain plutôt qu'à laisser découvrir.
+
 En attendant, la liste blanche des 16 routes de lecture appliquée par `scripts/smartof/` reste une
 garantie côté outillage, **pas côté compte**.
 
