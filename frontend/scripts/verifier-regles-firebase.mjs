@@ -82,6 +82,7 @@ for (const [noeud, utilise] of Object.entries(chemins)) {
 const veille = lire('data/veille-storage.js')
 for (const [constante, sousNoeud] of [
   ['CHEMIN', 'traitements'], ['CHEMIN_ARCHIVES', 'archives'], ['CHEMIN_MANUELS', 'articles-manuels'],
+  ['CHEMIN_FORMATEURS', 'formateurs'],
 ]) {
   const m = veille.match(new RegExp(`const\\s+${constante}\\s*=\\s*'veille/([^']+)'`))
   if (m) ok(`veille/${m[1]} — règle présente`, !!regles.veille?.[m[1]], `attendu : veille/${sousNoeud}`)
@@ -101,6 +102,11 @@ const casChamps = [
     libelle: 'veille/articles-manuels',
     duCode: listeConstante(veille, 'CHAMPS_MANUEL'),
     desRegles: champsAutorises(regles.veille?.['articles-manuels']?.$article),
+  },
+  {
+    libelle: 'veille/formateurs',
+    duCode: listeConstante(veille, 'CHAMPS_FORMATEUR'),
+    desRegles: champsAutorises(regles.veille?.formateurs?.$formateur),
   },
 ]
 

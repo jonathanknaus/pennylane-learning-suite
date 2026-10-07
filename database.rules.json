@@ -171,6 +171,28 @@
             ".validate": false
           }
         }
+      },
+      "formateurs": {
+        ".read": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
+        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com')",
+        "$formateur": {
+          ".validate": "newData.hasChildren(['prenom', 'nom', 'email'])",
+          "prenom": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length < 100"
+          },
+          "nom": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length < 100"
+          },
+          "email": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length < 200"
+          },
+          "actif": {
+            ".validate": "newData.isBoolean()"
+          },
+          "$autre": {
+            ".validate": false
+          }
+        }
       }
     },
     "profils": {

@@ -1,3 +1,19 @@
+// Liste de diffusion de la veille : les formateurs qui reçoivent les articles.
+//
+// Serveur d'abord, cache ensuite — même schéma que les articles manuels. Elle
+// vivait dans le seul localStorage : chaque poste avait sa liste, donc Sarah
+// pouvait diffuser à quatre personnes et PLS en afficher cinq. Une liste de
+// diffusion qui diffère selon le navigateur n'est pas une liste de diffusion.
+//
+// Le localStorage reste le cache d'affichage : la liste s'affiche sans attendre
+// le réseau, et l'outil reste utilisable si la base est injoignable.
+import {
+  ecouterFormateurs as ecouterServeur,
+  enregistrerFormateur,
+  supprimerFormateur,
+  publierFormateurs,
+} from './veille-storage.js'
+
 export const RESPONSABLE = {
   prenom: 'Sarah',
   nom: 'BRIDEN',
@@ -14,31 +30,33 @@ const DEFAUT = [
   { id: 'f4', prenom: 'Etienne',  nom: 'BARTHELEMY',   email: 'etienne.barthelemy@pennylane.com', actif: true },
   { id: 'f5', prenom: 'Jonathan', nom: 'KNAUS',        email: 'jonathan.knaus@pennylane.com',     actif: true },
   // La responsable est destinataire comme les autres, bien que ce soit elle qui
-  // prépare les mails : elle garde ainsi une copie de ce qui est diffusé dans sa
-  // propre boîte, et son absence de la liste serait une faille le jour où
-  // quelqu'un d'autre diffuse.
+  // prépare les mails : elle garde ainsi une copie de ce qui est diffusé, et son
+  // absence serait une faille le jour où quelqu'un d'autre diffuse.
   { id: 'f6', prenom: RESPONSABLE.prenom, nom: RESPONSABLE.nom, email: RESPONSABLE.email, actif: true },
 ]
 
 // Ajout rattrapé une seule fois pour les listes déjà enregistrées.
 //
-// DEFAUT ne sert que si le stockage local est vide : sans ce rattrapage, ajouter
-// la responsable au code n'aurait rien changé sur un poste qui a déjà sa liste.
-// Un marqueur évite de la faire réapparaître si elle est retirée ensuite — le
-// bouton de suppression doit rester vrai.
+// DEFAUT ne sert que si le cache est vide : sans ce rattrapage, ajouter la
+// responsable au code n'aurait rien changé sur un poste qui a déjà sa liste. Un
+// marqueur évite de la faire réapparaître si elle est retirée ensuite — le bouton
+// de suppression doit rester vrai.
 const CLE_AJOUT_RESPONSABLE = 'pls_formateurs_veille_responsable_ajoute'
+
+function ecrireCache(liste) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(liste))
+  return liste
+}
 
 function rattraperResponsable(liste) {
   if (localStorage.getItem(CLE_AJOUT_RESPONSABLE)) return liste
   localStorage.setItem(CLE_AJOUT_RESPONSABLE, new Date().toISOString())
   const cible = RESPONSABLE.email.toLowerCase()
   if (liste.some(f => String(f.email || '').toLowerCase() === cible)) return liste
-  const complete = [
+  return ecrireCache([
     ...liste,
     { id: `fv_${Date.now()}`, prenom: RESPONSABLE.prenom, nom: RESPONSABLE.nom, email: RESPONSABLE.email, actif: true },
-  ]
-  saveFormateursVeille(complete)
-  return complete
+  ])
 }
 
 export function getFormateursVeille() {
@@ -52,26 +70,46 @@ export function getFormateursVeille() {
   }
 }
 
-export function saveFormateursVeille(liste) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(liste))
+// La liste du serveur fait foi dès qu'elle existe. Tant qu'elle est vide, le
+// cache local tient : c'est ce qui permet de voir la liste avant publication, et
+// d'éviter qu'un premier instantané vide n'efface tout.
+// Le second argument dit si la liste existe en base. Tant qu'elle n'y est pas,
+// l'écran propose de la publier plutôt que de le faire dans le dos de la personne.
+export function ecouterFormateursVeille(callback, onErreur) {
+  return ecouterServeur(
+    duServeur => callback(
+      duServeur.length ? ecrireCache(duServeur) : getFormateursVeille(),
+      { publiee: duServeur.length > 0 },
+    ),
+    onErreur,
+  )
 }
 
-export function addFormateurVeille(prenom, nom, email) {
-  const liste = getFormateursVeille()
+export async function publierFormateursVeille() {
+  return publierFormateurs(getFormateursVeille())
+}
+
+export async function addFormateurVeille(prenom, nom, email) {
   const nouveau = { id: `fv_${Date.now()}`, prenom, nom, email, actif: true }
-  const updated = [...liste, nouveau]
-  saveFormateursVeille(updated)
-  return updated
+  ecrireCache([...getFormateursVeille(), nouveau])
+  await enregistrerFormateur(nouveau.id, nouveau)
+  return getFormateursVeille()
 }
 
-export function updateFormateurVeille(id, changes) {
-  const updated = getFormateursVeille().map(f => f.id === id ? { ...f, ...changes } : f)
-  saveFormateursVeille(updated)
-  return updated
+export async function updateFormateurVeille(id, changes) {
+  const liste = getFormateursVeille().map(f => f.id === id ? { ...f, ...changes } : f)
+  ecrireCache(liste)
+  const modifie = liste.find(f => f.id === id)
+  if (modifie) await enregistrerFormateur(id, modifie)
+  return liste
 }
 
-export function removeFormateurVeille(id) {
-  const updated = getFormateursVeille().filter(f => f.id !== id)
-  saveFormateursVeille(updated)
-  return updated
+export async function removeFormateurVeille(id) {
+  ecrireCache(getFormateursVeille().filter(f => f.id !== id))
+  await supprimerFormateur(id)
+  return getFormateursVeille()
+}
+
+export function saveFormateursVeille(liste) {
+  return ecrireCache(liste)
 }
