@@ -457,19 +457,53 @@ quotidiennes, mots de passe hashés, pare-feu par zone réseau, détection d'int
 **Règle SPD** : relier SmartOF à PLS, c'est relier deux outils → validation IT + Legal avant toute
 mise en production.
 
-## 9. État du SPD — en attente
+## 9. État du SPD — arbitré le 2026-10-06
 
 Canal `#portal-request-connect-smartof-pennylane-1148`, page Notion
-[CONNECT SMARTOF <> PENNYLANE](https://app.notion.com/p/scribetech/CONNECT-SMARTOF-PENNYLANE-3812276c03bf800e80eccc15e6f1a25c).
+[CONNECT SMARTOF <> PENNYLANE](https://app.notion.com/p/scribetech/CONNECT-SMARTOF-PENNYLANE-3812276c03bf800e80eccc15e6f1a25c)
+(réf. **SPD-1148**, projet de type « 🤖 Automation »).
 
-Le **2026-10-05 à 11h59**, Sylvain Sarméjeanne a posé trois exigences et **attend une réponse** :
+Sylvain Sarméjeanne a posé trois exigences le **2026-10-05**, et **tranché le 2026-10-06 à 10h22**
+après notre réponse détaillée.
 
-1. la remise des credentials doit passer par un **ticket IT** ;
-2. les scopes de la clé doivent suivre le **moindre privilège** ;
-3. la clé doit être **stockée de façon sécurisée**.
+### 1. Remise des identifiants — ❌ non conforme, remédiation arrêtée
+Les identifiants sont arrivés par **deux mails en clair de l'éditeur** (`marie.tardivel@smartof.tech`,
+le 11 juin 2026).
 
-L'exigence n° 2 prend un sens très concret maintenant qu'on sait que le compte dispose de routes
-`delete` sur les apprenants, les formateurs et les entreprises.
+**Arbitrage de Sylvain** : *« this is not secure enough and I suggest to rotate these credentials and
+to use 1password to share new credentials. IT ticket doesn't seem relevant in this case. »*
+
+⚠️ **Le ticket IT est écarté** — la question « quelle file ? » n'a plus d'objet. Ce qu'il faut faire :
+1. demander à l'éditeur de **renouveler le mot de passe** ;
+2. faire transiter les nouveaux identifiants par **1Password** ;
+3. **supprimer les deux mails d'origine** une fois la bascule faite.
+
+### 2. Moindre privilège — ❌ non conforme, demande validée
+Le compte `api-afs-pennylane@smartof.tech` dispose de `create`, `update` et **`delete`** sur
+apprenants, contacts clients, formateurs, entreprises, opportunités commerciales et produits, alors
+que **l'usage voulu est en lecture seule**.
+
+**Arbitrage** : *« perfect if you could get a new token with read-only rights on specific scopes »* →
+demander à l'éditeur un **nouveau jeton en lecture seule sur des scopes précis**, et non une simple
+restriction du compte existant.
+
+En attendant, la liste blanche des 16 routes de lecture appliquée par `scripts/smartof/` reste une
+garantie côté outillage, **pas côté compte**.
+
+### 3. Stockage — 🟡 en cours, le coffre est désigné
+**Le coffre d'entreprise est 1Password** (*« I guess it's possible to store the credentials in
+1password and use them from here? »*). Le trousseau macOS n'est qu'un **cache local** : les secrets
+doivent vivre dans 1Password comme source de vérité.
+
+### Tâche SPD ouverte
+Sylvain a mis à jour les exigences du SPD. Une tâche en découle, **statut Todo** :
+**SPD-AP-4217 — « Credentials have been shared using 1password »**
+([page Notion](https://app.notion.com/p/3f12276c03bf8007bc9dc58ef4775dad)), sous *ISO 27001
+Documentation / Security & Privacy By Design / SPD Requirements*.
+
+⚠️ Rien n'est en production, et rien n'y va avant ces trois points. L'exigence n° 2 prend un sens très
+concret maintenant qu'on sait que le compte dispose de routes `delete` sur les apprenants, les
+formateurs et les entreprises.
 
 ## 10. Deux instances distinctes
 

@@ -7,6 +7,18 @@
 #
 # Les valeurs ne sont jamais affichées, ni écrites dans un fichier, ni dans
 # l'historique du shell. Le trousseau est chiffré et lié à ta session macOS.
+#
+# ⚠️ LE TROUSSEAU N'EST QU'UN CACHE LOCAL. La source de vérité est **1Password**,
+# désigné par Sylvain Sarméjeanne le 2026-10-06 au titre du SPD-1148 : « I guess
+# it's possible to store the credentials in 1password and use them from here? »
+#
+# Deux conséquences, tant que la bascule n'est pas faite :
+#   · ces secrets n'existent que sur ce poste — un autre poste ne peut pas s'en
+#     servir, et ils disparaissent avec la session ;
+#   · le mot de passe actuel est à RENOUVELER : il est arrivé en clair par mail le
+#     11 juin 2026, ce que le SPD refuse. Le nouveau doit transiter par 1Password,
+#     et non par un ticket IT — explicitement écarté par Sylvain.
+# Voir docs/smartof-api.md §9.
 
 set -uo pipefail
 cd "$(dirname "$0")"

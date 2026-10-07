@@ -45,13 +45,37 @@ les produits de formation.
 Nous préférons obtenir cette liste de votre part plutôt que de la chercher par tâtonnement sur
 votre plateforme.
 
-**3. Périmètre du compte**
+**3. Périmètre du compte — un jeton en lecture seule**
 
-- Quels droits porte aujourd'hui le compte `api-afs-pennylane@smartof.tech` ?
-- Nous souhaitons le restreindre à la **lecture seule** pour notre phase d'étude, conformément à
-  notre politique interne de moindre privilège. Est-ce possible, ou faut-il créer un second
-  compte dédié ?
+Nous avons cartographié votre API cette semaine à partir de votre Swagger. Le compte
+`api-afs-pennylane@smartof.tech` dispose aujourd'hui de droits `create`, `update` et **`delete`** sur
+les apprenants, les contacts clients, les formateurs, les entreprises, les opportunités commerciales
+et les produits.
+
+Notre usage est **strictement en lecture** : reprendre des données de référence pour éviter une
+double saisie. Le droit de suppression sur des fiches apprenants et formateurs va très au-delà de ce
+besoin, et notre revue de sécurité interne le relève comme un écart à corriger avant toute mise en
+service.
+
+- Pouvez-vous nous **délivrer un nouveau jeton limité à la lecture**, sur les seules ressources dont
+  nous avons besoin ? Un **second compte dédié** nous convient parfaitement si c'est la voie la plus
+  simple de votre côté.
 - Ce compte consomme-t-il l'un de nos sièges administrateurs ?
+
+**3 bis. Renouvellement du mot de passe et canal de transmission**
+
+Les identifiants actuels nous sont parvenus **par courrier électronique en clair**, le 11 juin 2026.
+Notre politique de sécurité ne l'admet pas, indépendamment de toute suspicion d'incident : nous
+n'avons aucune raison de penser que ces identifiants ont été exposés, mais nous ne pouvons pas en
+attester pour un envoi en clair.
+
+Nous vous demandons donc de :
+
+- **renouveler le mot de passe** du compte de service ;
+- nous transmettre les nouveaux identifiants par un **canal sécurisé**. Nous utilisons **1Password**
+  et pouvons vous ouvrir un partage chiffré ; tout autre moyen évitant l'envoi en clair nous convient.
+
+Nous supprimerons les deux messages d'origine dès la bascule effectuée.
 
 **4. Quotas et bonnes pratiques**
 
