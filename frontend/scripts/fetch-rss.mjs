@@ -1,10 +1,3 @@
-// ⚠️ COPIE DE SECOURS. La passe qui fait foi est celle de l'outil de veille
-// (dépôt veille-juridique) : son articles.json publié est la source de vérité
-// lue par les deux interfaces, pour qu'un article traité par Sarah soit le même
-// article ici. Celle-ci entretient le fichier local, utilisé en repli si Pages
-// est indisponible ou si le dépôt de veille change de visibilité. Les deux
-// scripts doivent rester identiques, au nom d'agent HTTP près.
-//
 // Passe de veille — lancée chaque lundi 8h (Paris) par GitHub Actions, et à la
 // demande via « Run workflow ». Récupère les articles des sources surveillées,
 // les CLASSE par indicateur Qualiopi (23 / 24 / 25) et écrit

@@ -1,3 +1,10 @@
+# ⚠️ PASSE DE SECOURS. La passe qui fait foi est celle du dépôt veille-juridique :
+# son articles.json publié est la source de vérité lue par les deux interfaces
+# (voir articles-store.js), pour qu'un article traité par Sarah soit le même
+# article ici. Celle-ci entretient la copie locale, utilisée en repli si Pages est
+# indisponible. Le script, lui, doit rester identique dans les deux dépôts — il est
+# synchronisé par scripts/sync-veille.sh, au nom d'agent HTTP près.
+
 name: Fetch RSS articles
 
 on:

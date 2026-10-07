@@ -5,7 +5,7 @@ import { chargerArticles, getArticlesCache, getDateDerniereFetch, getArticlesMan
 // « getCurrentUser is not defined », avalé par le catch et affiché comme un
 // refus d'archivage.
 import { getCurrentUser } from '../data/auth'
-import { getTraitements, getTraitement, enregistrerTraitement, DECISIONS, INDICATEURS, INDICATEURS_IDS, exportRegistreCSV, exportRegistrePDF, filtrerParIndicateur, compterParIndicateur } from '../data/traitement'
+import { getTraitements, getTraitement, enregistrerTraitement, DECISIONS, INDICATEURS, INDICATEURS_IDS, exportRegistreCSV, exportRegistrePDF, filtrerParIndicateur, compterParIndicateur, lienMailDiffusion } from '../data/traitement'
 import { getFormateursVeille, addFormateurVeille, updateFormateurVeille, removeFormateurVeille } from '../data/veille-formateurs'
 import { RESPONSABLE } from '../data/veille-formateurs'
 import { ecouterTraces, sauvegarderTraces, ecouterArchives, archiverArticles, desarchiverArticle } from '../data/veille-storage'
@@ -94,6 +94,7 @@ function ModaleTraitement({ article, onClose, onSave }) {
     String(trace?.indicateur || article.indicateur || '')
   )
   const [impact, setImpact] = useState(trace?.impact || '')
+  const [mailPrepareLe, setMailPrepareLe] = useState(trace?.mailPrepareLe || '')
   const formateurs = getFormateursVeille()
 
   function toggleDestinataire(email) {
@@ -114,6 +115,7 @@ function ModaleTraitement({ article, onClose, onSave }) {
       urlArticle,
       indicateur,
       impact,
+      mailPrepareLe: decision === 'diffuser' ? mailPrepareLe : '',
     })
     onClose()
   }
@@ -237,6 +239,42 @@ function ModaleTraitement({ article, onClose, onSave }) {
             L'auditeur ne regarde pas ce qu'on a lu, mais ce qu'on en a fait. C'est ce champ qui porte la preuve.
           </p>
         </div>
+
+        {/* Mail de diffusion. L'outil ne l'envoie pas : il ouvre le client de
+            messagerie pré-rempli, le mail part de ta boîte avec ta signature, et
+            tu le relis avant d'appuyer sur Envoyer. Un site statique public ne
+            peut pas porter d'identifiant SMTP sans le publier. */}
+        {decision === 'diffuser' && (
+          <div className="modale-section">
+            <p className="modale-label">Mail à l'équipe</p>
+            {destinataires.length === 0 ? (
+              <p className="indicateur-aide">Coche au moins un destinataire ci-dessus pour préparer le mail.</p>
+            ) : (
+              <>
+                <a
+                  className="btn-mail"
+                  href={lienMailDiffusion({
+                    titre: article.titre,
+                    url: urlArticle || article.url,
+                    source: source?.nom || article.source_id,
+                    date: article.date,
+                    message: commentaire,
+                    indicateur,
+                    destinataires,
+                  })}
+                  onClick={() => setMailPrepareLe(new Date().toISOString())}
+                >
+                  📧 Préparer le mail ({destinataires.length} destinataire{destinataires.length > 1 ? 's' : ''})
+                </a>
+                <p className="indicateur-aide">
+                  {mailPrepareLe
+                    ? <>Mail préparé le <strong>{new Date(mailPrepareLe).toLocaleString('fr-FR')}</strong> — pense à enregistrer la trace pour garder cette date au registre.</>
+                    : <>Ouvre ton client de messagerie, pré-rempli avec l'objet, le lien et ton message. Rien ne part sans toi.</>}
+                </p>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="modale-footer">
           <button className="btn-annuler" onClick={onClose}>Annuler</button>

@@ -34,6 +34,18 @@ echo "  ✓ data/veille.js"
 cp "$PLS_SRC/data/articles-store.js" "$VJ/data/articles-store.js"
 echo "  ✓ data/articles-store.js"
 
+# ── data/veille-storage.js ───────────────────────────────────────────────────
+# Identique. ⚠️ Porte CHAMPS, la liste des champs acceptés par les règles RTDB :
+# oublier ce fichier fait refuser l'écriture côté serveur, silencieusement.
+cp "$PLS_SRC/data/veille-storage.js" "$VJ/data/veille-storage.js"
+echo "  ✓ data/veille-storage.js"
+
+# ── data/classement-veille.js ────────────────────────────────────────────────
+# Identique. Règles de classement par indicateur Qualiopi : les deux outils
+# doivent ranger les articles de la même façon.
+cp "$PLS_SRC/data/classement-veille.js" "$VJ/data/classement-veille.js"
+echo "  ✓ data/classement-veille.js"
+
 # ── data/veille-formateurs.js → data/formateurs.js ──────────────────────────
 # PLS utilise des noms avec suffix "Veille" et STORAGE_KEY "pls_formateurs_veille"
 # veille-juridique utilise les noms courts et STORAGE_KEY "pls_formateurs"
@@ -70,10 +82,13 @@ echo "  ✓ pages/VeilleFormateur.jsx + css"
 
 # ── scripts/fetch-rss.mjs ────────────────────────────────────────────────────
 # Remettre l'User-Agent veille-juridique
+# Les workflows exécutent frontend/scripts/fetch-rss.mjs ici et scripts/fetch-rss.mjs
+# là-bas. Le script visait les copies périmées de la racine : la passe de veille
+# n'était donc jamais synchronisée.
 sed \
   -e "s|pennylane-learning-suite/|veille-juridique/|g" \
-  "$(cd "$(dirname "$0")/.." && pwd)/scripts/fetch-rss.mjs" > "$HOME/veille-juridique/fetch-rss.mjs"
-echo "  ✓ scripts/fetch-rss.mjs → fetch-rss.mjs"
+  "$PLS_SRC/../scripts/fetch-rss.mjs" > "$HOME/veille-juridique/scripts/fetch-rss.mjs"
+echo "  ✓ frontend/scripts/fetch-rss.mjs → scripts/fetch-rss.mjs"
 
 echo ""
 echo "Sync terminée. Vérifier et commiter dans veille-juridique :"

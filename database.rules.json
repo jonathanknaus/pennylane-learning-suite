@@ -99,6 +99,9 @@
               ".validate": "newData.isString() && newData.val().length < 200"
             }
           },
+          "mailPrepareLe": {
+            ".validate": "newData.isString() && newData.val().length < 40"
+          },
           "$autre": {
             ".validate": false
           }
