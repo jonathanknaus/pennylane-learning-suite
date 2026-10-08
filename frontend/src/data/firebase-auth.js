@@ -39,6 +39,11 @@ function app() {
   return getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG)
 }
 function auth() { return getAuth(app()) }
+
+// Exposé pour `agenda-google.js`, qui a besoin du même objet Auth pour demander
+// un scope supplémentaire. Dupliquer l'initialisation Firebase créerait une
+// seconde instance, et la session de l'une ne vaudrait pas pour l'autre.
+export function authentification() { return auth() }
 function db() { return getDatabase(app()) }
 
 function normaliser(email) {

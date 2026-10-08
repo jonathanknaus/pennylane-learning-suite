@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { saveSession, STATUTS, MODALITES, FORMATS, QUALIOPI_OPTIONS, estimationSession, EFFECTIF_MAX_DEFAUT } from '../data/sessions'
 import { getThematiques } from '../data/catalogue-afs'
 import { getGestionnaires, getGestionnaireDefaut } from '../data/gestionnaires'
 import { getFormateurs } from '../data/formateurs'
 import { suggererFormateurs, respecteDelaiQualiopi, joursAvantDate, DELAI_MIN_JOURS } from '../data/affectation-formateurs'
+import { ecouterIndisponibilites, indexerParJour } from '../data/indisponibilites'
 import { plafondGrille } from '../data/tarification'
 import './SessionForm.css'
 
@@ -566,7 +567,16 @@ export default function SessionForm({ session, onSaved, onCancel }) {
 }
 
 function FormateursSuggeres({ moduleIds, dateStr, excludeSessionId, onAssigner, formateurActuelId }) {
-  const suggestions = suggererFormateurs(moduleIds, dateStr, { excludeSessionId })
+  // Les indisponibilités viennent de Firebase, donc en différé. Tant qu'elles ne
+  // sont pas là, la suggestion fonctionne sur les seules sessions PLS — l'écran
+  // ne reste pas vide en attendant.
+  const [indexIndispo, setIndexIndispo] = useState(null)
+  useEffect(() => {
+    const stop = ecouterIndisponibilites(brut => setIndexIndispo(indexerParJour(brut)), () => {})
+    return () => { if (typeof stop === 'function') stop() }
+  }, [])
+
+  const suggestions = suggererFormateurs(moduleIds, dateStr, { excludeSessionId, indexIndispo })
   const delaiOk = respecteDelaiQualiopi(dateStr)
   const jours = joursAvantDate(dateStr)
 
@@ -581,7 +591,7 @@ function FormateursSuggeres({ moduleIds, dateStr, excludeSessionId, onAssigner, 
         </div>
       )}
       <div className="fmt-suggeres-list">
-        {suggestions.slice(0, 6).map(({ formateur, couvreTout, disponible, nbModulesCouverts }) => (
+        {suggestions.slice(0, 6).map(({ formateur, couvreTout, disponible, nbModulesCouverts, motif }) => (
           <div key={formateur.id} className={`fmt-suggere-row ${formateur.id === formateurActuelId ? 'active' : ''}`}>
             <div className="fmt-suggere-info">
               <span className="fmt-suggere-nom">{formateur.prenom} {formateur.nom}</span>
@@ -591,7 +601,9 @@ function FormateursSuggeres({ moduleIds, dateStr, excludeSessionId, onAssigner, 
                   : <span className="fmt-badge fmt-badge-partiel">{nbModulesCouverts}/{moduleIds.length} module{moduleIds.length > 1 ? 's' : ''}</span>}
                 {disponible
                   ? <span className="fmt-badge fmt-badge-ok">Disponible</span>
-                  : <span className="fmt-badge fmt-badge-warn">Déjà occupé ce jour</span>}
+                  : motif === 'agenda'
+                    ? <span className="fmt-badge fmt-badge-warn" title="Plage occupée dans son agenda">Indisponible (agenda)</span>
+                    : <span className="fmt-badge fmt-badge-warn">Déjà occupé ce jour</span>}
               </span>
             </div>
             <button type="button" className="btn-secondary-sm" onClick={() => onAssigner(formateur)} disabled={formateur.id === formateurActuelId}>

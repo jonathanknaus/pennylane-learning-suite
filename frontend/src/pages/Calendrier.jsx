@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { getSessions, seedDemoSessions, STATUTS } from '../data/sessions'
 import { getFormateurs } from '../data/formateurs'
+import {
+  ecouterIndisponibilites, indexerParJour, estIndisponible, plagesDuJour, etatCouverture, ORIGINES, jour,
+} from '../data/indisponibilites'
+import { connecterAgenda, synchroniserAgendas, agendaConnecte, deconnecterAgenda } from '../data/agenda-google'
 import './Calendrier.css'
 
 const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -51,11 +55,64 @@ export default function Calendrier() {
   const [filterFormateur, setFilterFormateur] = useState('')
   const [selectedSession, setSelectedSession] = useState(null)
 
+  // Indisponibilités : brut pour l'affichage détaillé, index pour les tests par
+  // jour (appelés une fois par formateur et par case du calendrier).
+  const [indispoBrut, setIndispoBrut] = useState({})
+  const [indexIndispo, setIndexIndispo] = useState(null)
+  const [connecte, setConnecte] = useState(agendaConnecte())
+  const [synchro, setSynchro] = useState(null)
+  const [erreurAgenda, setErreurAgenda] = useState('')
+  const [enCours, setEnCours] = useState(false)
+
   useEffect(() => {
     seedDemoSessions()
     setSessions(getSessions())
     setFormateurs(getFormateurs())
   }, [])
+
+  useEffect(() => {
+    const stop = ecouterIndisponibilites(
+      brut => { setIndispoBrut(brut); setIndexIndispo(indexerParJour(brut)) },
+      err => setErreurAgenda(err.message),
+    )
+    return () => { if (typeof stop === 'function') stop() }
+  }, [])
+
+  async function connecter() {
+    setErreurAgenda('')
+    setEnCours(true)
+    try {
+      const email = await connecterAgenda()
+      setConnecte(true)
+      setSynchro({ message: `Agenda de ${email || 'votre compte'} connecté.` })
+    } catch (err) {
+      setErreurAgenda(err?.message || 'Connexion à l’agenda impossible.')
+    }
+    setEnCours(false)
+  }
+
+  // Le mois affiché, pas « les 12 prochains mois » : on n'interroge que ce que
+  // l'utilisateur regarde, et une resynchronisation ne touche que cette fenêtre.
+  async function synchroniser() {
+    setErreurAgenda('')
+    setEnCours(true)
+    try {
+      const debut = new Date(year, month, 1)
+      const fin = new Date(year, month + 1, 1)
+      const r = await synchroniserAgendas(formateurs, debut, fin)
+      setSynchro(r)
+    } catch (err) {
+      setErreurAgenda(err?.message || 'Lecture des agendas impossible.')
+      setConnecte(agendaConnecte())
+    }
+    setEnCours(false)
+  }
+
+  function deconnecter() {
+    deconnecterAgenda()
+    setConnecte(false)
+    setSynchro(null)
+  }
 
   function prevMonth() {
     if (month === 0) { setYear(y => y - 1); setMonth(11) }
@@ -93,15 +150,77 @@ export default function Calendrier() {
   }
 
   const statut = (s) => STATUTS.find(st => st.id === s.statut)
+  const couverture = etatCouverture(indispoBrut, formateurs)
+
+  // Formateurs indisponibles un jour donné, en respectant le filtre courant.
+  function indisposDuJour(date) {
+    if (!indexIndispo) return []
+    const d = jour(date)
+    return formateurs.filter(f => {
+      if (filterFormateur && `${f.prenom} ${f.nom}`.trim() !== filterFormateur) return false
+      return estIndisponible(indexIndispo, f.id, d)
+    })
+  }
 
   return (
     <div className="calendrier">
       <div className="cal-topbar">
         <div>
           <h1 className="cal-title">Calendrier des formateurs</h1>
-          <p className="cal-sub">{sessions.length} session{sessions.length > 1 ? 's' : ''} planifiée{sessions.length > 1 ? 's' : ''}</p>
+          <p className="cal-sub">
+            {sessions.length} session{sessions.length > 1 ? 's' : ''} planifiée{sessions.length > 1 ? 's' : ''}
+            {couverture.couverts > 0 && ` · ${couverture.couverts}/${couverture.total} agenda${couverture.couverts > 1 ? 's' : ''} relevé${couverture.couverts > 1 ? 's' : ''}`}
+          </p>
+        </div>
+        <div className="cal-agenda-actions">
+          {!connecte ? (
+            <button className="cal-btn-agenda" onClick={connecter} disabled={enCours}>
+              {enCours ? 'Connexion…' : '🔗 Connecter mon agenda'}
+            </button>
+          ) : (
+            <>
+              <button className="cal-btn-agenda" onClick={synchroniser} disabled={enCours}>
+                {enCours ? 'Lecture…' : `↻ Relever les agendas — ${MOIS[month]} ${year}`}
+              </button>
+              <button className="cal-btn-agenda-sec" onClick={deconnecter} disabled={enCours}>
+                Déconnecter
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      <p className="cal-agenda-note">
+        Nous ne lisons que les <strong>plages occupées</strong> des agendas — jamais les titres, ni
+        les participants, ni les lieux. L’autorisation Google vaut pour l’onglet en cours : elle n’est
+        pas conservée.
+      </p>
+
+      {erreurAgenda && <div className="cal-agenda-erreur">{erreurAgenda}</div>}
+
+      {synchro && (
+        <div className="cal-agenda-bilan">
+          {synchro.message || (
+            <>
+              {synchro.synchronises} agenda{synchro.synchronises > 1 ? 's' : ''} relevé{synchro.synchronises > 1 ? 's' : ''},
+              {' '}{synchro.plages} plage{synchro.plages > 1 ? 's' : ''} occupée{synchro.plages > 1 ? 's' : ''} sur {MOIS[month]} {year}.
+            </>
+          )}
+          {synchro.refuses?.length > 0 && (
+            <div className="cal-agenda-refus">
+              ⚠️ {synchro.refuses.length} agenda{synchro.refuses.length > 1 ? 's' : ''} non consultable{synchro.refuses.length > 1 ? 's' : ''} :
+              {' '}{synchro.refuses.map(r => r.email).join(', ')}. Ces formateurs resteront affichés
+              comme disponibles — demande-leur de partager leur agenda avec toi.
+            </div>
+          )}
+          {synchro.sansEmail > 0 && (
+            <div className="cal-agenda-refus">
+              {synchro.sansEmail} formateur{synchro.sansEmail > 1 ? 's' : ''} sans adresse email : aucun
+              agenda à relever.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filtres formateurs */}
       {formateursUniques.length > 1 && (
@@ -171,6 +290,25 @@ export default function Calendrier() {
                         {s.heure && <span className="cal-event-time">{s.heure}</span>}
                         <span className="cal-event-titre">{s.titre}</span>
                       </button>
+                    )
+                  })}
+
+                  {/* Indisponibilités : sous les sessions, visuellement en retrait.
+                      Ce ne sont pas des événements à ouvrir, mais des créneaux à
+                      éviter — et seules les PLAGES sont connues, pas leur objet. */}
+                  {indisposDuJour(day.date).map(f => {
+                    const plages = plagesDuJour(indispoBrut, f.id, jour(day.date))
+                    const origines = [...new Set(plages.map(p => p.origine))]
+                      .map(o => ORIGINES[o]?.label || o).join(', ')
+                    return (
+                      <div
+                        key={`indispo_${f.id}`}
+                        className="cal-indispo"
+                        title={`${f.prenom} ${f.nom} — indisponible (${origines || 'origine inconnue'})`}
+                      >
+                        <span className="cal-indispo-point" />
+                        <span className="cal-indispo-nom">{f.prenom} {f.nom.charAt(0)}.</span>
+                      </div>
                     )
                   })}
                 </div>
