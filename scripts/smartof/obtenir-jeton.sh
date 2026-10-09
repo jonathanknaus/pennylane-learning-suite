@@ -13,7 +13,7 @@
 #   ex.   :  ./obtenir-jeton.sh /sessions
 #
 # Il te faudra la CLÉ API WEB du projet SmartOF (paramètre "key" de l'API Google).
-# À demander à l'éditeur : voir docs/mail-smartof-demande-api.md.
+# À demander à l'éditeur : voir `~/smartof-spd/mail-smartof-demande-api.md`.
 
 set -uo pipefail
 
@@ -30,13 +30,17 @@ read -rs CLE_WEB
 echo
 if [[ -z "${CLE_WEB:-}" ]]; then
   echo "✗ Clé API web non fournie — elle est obligatoire pour l'API Google." >&2
-  echo "  À demander à l'éditeur (voir docs/mail-smartof-demande-api.md)." >&2
+  echo "  À demander à l'éditeur (voir ~/smartof-spd/mail-smartof-demande-api.md)." >&2
   exit 1
 fi
 
-printf "Identifiant [api-afs-pennylane@smartof.tech] : "
+printf "Identifiant du compte API : "
 read -r IDENT
-IDENT="${IDENT:-api-afs-pennylane@smartof.tech}"
+IDENT="${IDENT:-${SMARTOF_IDENTIFIANT:-}}"
+if [[ -z "$IDENT" ]]; then
+  echo "✗ Identifiant requis." >&2
+  exit 1
+fi
 
 printf "Mot de passe du compte : "
 read -rs MOTDEPASSE

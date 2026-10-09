@@ -23,7 +23,10 @@ charger_secrets() {
   CLE_WEB="$(_lire_trousseau "$SERVICE_CLE")"
   MOTDEPASSE="$(_lire_trousseau "$SERVICE_MDP")"
   IDENT="$(_lire_trousseau "$SERVICE_IDENT")"
-  IDENT="${IDENT:-api-afs-pennylane@smartof.tech}"
+  # ⚠️ Pas de valeur par défaut en dur : le dépôt est public, et l'identifiant
+  # du compte de service n'a pas à y figurer. Il vient du trousseau, ou de
+  # SMARTOF_IDENTIFIANT, ou il est saisi.
+  IDENT="${IDENT:-${SMARTOF_IDENTIFIANT:-}}"
 
   if [[ -n "$CLE_WEB" && -n "$MOTDEPASSE" ]]; then
     echo "🔐 Identifiants lus depuis le trousseau macOS (aucune saisie nécessaire)."
@@ -39,14 +42,18 @@ charger_secrets() {
     printf "Clé API web (AIza…) : "
     read -rs CLE_WEB; echo
   fi
+  if [[ -z "$IDENT" ]]; then
+    printf "Identifiant du compte API : "
+    read -r IDENT
+  fi
   if [[ -z "$MOTDEPASSE" ]]; then
     printf "Mot de passe : "
     read -rs MOTDEPASSE; echo
   fi
   echo
 
-  if [[ -z "$CLE_WEB" || -z "$MOTDEPASSE" ]]; then
-    echo "✗ Clé API web et mot de passe sont requis." >&2
+  if [[ -z "$CLE_WEB" || -z "$MOTDEPASSE" || -z "$IDENT" ]]; then
+    echo "✗ Clé API web, identifiant et mot de passe sont requis." >&2
     return 1
   fi
 }

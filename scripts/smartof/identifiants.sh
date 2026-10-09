@@ -9,7 +9,7 @@
 # l'historique du shell. Le trousseau est chiffré et lié à ta session macOS.
 #
 # ⚠️ LE TROUSSEAU N'EST QU'UN CACHE LOCAL. La source de vérité est **1Password**,
-# désigné par Sylvain Sarméjeanne le 2026-10-06 au titre du SPD-1148 : « I guess
+# désigné par le validateur sécurité le 2026-10-06 au titre du SPD-1148 : « I guess
 # it's possible to store the credentials in 1password and use them from here? »
 #
 # Deux conséquences, tant que la bascule n'est pas faite :
@@ -17,8 +17,8 @@
 #     servir, et ils disparaissent avec la session ;
 #   · le mot de passe actuel est à RENOUVELER : il est arrivé en clair par mail le
 #     11 juin 2026, ce que le SPD refuse. Le nouveau doit transiter par 1Password,
-#     et non par un ticket IT — explicitement écarté par Sylvain.
-# Voir docs/smartof-api.md §9.
+#     et non par un ticket IT — explicitement écarté en revue.
+# Voir `~/smartof-spd/smartof-api.md` §9 — hors dépôt, celui-ci étant public.
 
 set -uo pipefail
 cd "$(dirname "$0")"
@@ -48,8 +48,8 @@ case "${1:-}" in
 
     printf "Clé API web (AIza…) : "
     read -rs v_cle; echo
-    printf "Identifiant [api-afs-pennylane@smartof.tech] : "
-    read -r v_ident; v_ident="${v_ident:-api-afs-pennylane@smartof.tech}"
+    printf "Identifiant du compte API : "
+    read -r v_ident
     printf "Mot de passe : "
     read -rs v_mdp; echo
     echo

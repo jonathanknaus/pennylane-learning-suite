@@ -1,11 +1,12 @@
 # Test de lecture de l'API SmartOF
 
 Harnais minimal pour cartographier l'API **sans rien modifier** et sans faire sortir de données
-nominatives. Contexte complet : [docs/smartof-api.md](../../docs/smartof-api.md).
+nominatives. Contexte complet : `~/smartof-spd/smartof-api.md` — **hors dépôt**, celui-ci
+étant public.
 
 ## Avant de lancer quoi que ce soit
 
-Le SPD **CONNECT SMARTOF <> PENNYLANE** impose trois choses (Sylvain Sarméjeanne, 2026-10-05) :
+Le SPD **CONNECT SMARTOF <> PENNYLANE** impose trois choses (revue sécurité du 2026-10-05) :
 
 1. la remise des credentials passe par un **ticket IT** ;
 2. les scopes de la clé suivent le **moindre privilège** (demander explicitement lecture seule) ;
@@ -33,7 +34,7 @@ passe**. Le jeton obtenu n'est valable qu'une heure.
 
 Documentation officielle de l'éditeur :
 [Swagger API SmartOF](https://europe-west3-afs-pennylane-mobileo.cloudfunctions.net/docs/swagger/).
-Analyse complète du périmètre : [docs/smartof-api.md](../../docs/smartof-api.md).
+Analyse complète du périmètre : `~/smartof-spd/smartof-api.md` (hors dépôt).
 
 ## Les scripts
 

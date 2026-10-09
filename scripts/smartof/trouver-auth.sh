@@ -37,7 +37,7 @@ if [[ -z "${SMARTOF_CLE:-}" ]]; then
 fi
 
 URL="${SMARTOF_BASE_URL:-https://europe-west3-afs-pennylane-mobileo.cloudfunctions.net/external}/"
-IDENT="${SMARTOF_IDENTIFIANT:-api-afs-pennylane@smartof.tech}"
+IDENT="${SMARTOF_IDENTIFIANT:?identifiant SmartOF absent — exporte SMARTOF_IDENTIFIANT ou enregistre-le au trousseau}"
 BASIC=$(printf '%s:%s' "$IDENT" "$SMARTOF_CLE" | base64)
 
 echo "→ Cible : ${URL}"

@@ -234,20 +234,51 @@ présentée au cabinet dans le simulateur.
 
 ## SmartOF : ce que l'API donne, et ce qu'elle ne donne pas
 
-Cartographie complète dans [docs/smartof-api.md](docs/smartof-api.md). En résumé :
+Cartographie complète dans **`~/smartof-spd/smartof-api.md`**. **Il y a deux API.**
 
-**Disponible** — 16 routes de lecture sur 10 ressources : apprenants, contacts clients, formateurs,
-entreprises, opportunités commerciales, produits, factures, sessions, demandes d'inscription,
-sessions ouvertes.
+⚠️ **Ces documents ne sont PAS dans le dépôt, et ne doivent pas y revenir** (retirés le
+2026-10-09). `smartof-api.md`, `reponse-sylvain-spd.md`, `mail-smartof-demande-api.md` et
+`message-data-team-smartof.md` portent de la documentation de revue de sécurité interne — exigences
+du SPD-1148, propos cités du validateur AppSec, compte de service, et jusqu'à l'état de santé d'un
+collègue. Le dépôt est public : ils vivent désormais dans `~/smartof-spd/`, dont le `README.md`
+explique le motif. Rédiger un document de ce genre, c'est le rédiger **là-bas**.
 
-**Absent** — le **lien apprenant ↔ session** (qui a participé à quoi), les **enquêtes de
-satisfaction**, les **émargements**, les **documents générés**, les **questionnaires pédagogiques**,
-le **BPF**, les **modules** (seul `Produit` existe).
+### 🔴 Ne pas confondre V1 et V2
+
+**Tout ce qui est branché aujourd'hui parle à la V1**, et la V1 est pauvre. Une **V2 existe depuis
+septembre 2026** ([doc publique](https://smartof-developers.web.app/reference/api-smartof)), **mais
+elle n'est pas déployée sur notre instance** — l'éditeur attend une confirmation de notre part
+(question ouverte au 2026-10-08).
+
+| | V1 (en service) | V2 (non déployée) |
+|---|---|---|
+| Lien apprenant ↔ session | ❌ | ✅ |
+| Émargements | ❌ | ✅ |
+| Questionnaires satisfaction / pédagogiques + réponses | ❌ | ✅ |
+| Créneaux, commanditaires, devis, avoirs | ❌ | ✅ |
+| Filtres, pagination, tri, choix des champs | ❌ rien | ✅ curseur + `where` |
+| Documents générés, BPF | ❌ | ❌ |
+| Modules | ❌ | ❌ (pas d'objet « module » dans le modèle) |
+
+⚠️ **Le piège** : jusqu'au 2026-10-08, ce fichier et les docs affirmaient que le CSAT, les
+émargements et le lien apprenant ↔ session étaient **hors d'atteinte par l'API**, et en déduisaient
+qu'il fallait passer par le data warehouse. **C'était vrai de la V1 seulement.** Ne pas relancer un
+chantier de contournement sans avoir vérifié où en est le déploiement de la V2.
+
+**Disponible en V1** — 16 routes de lecture sur 10 ressources : apprenants, contacts clients,
+formateurs, entreprises, opportunités commerciales, produits, factures, sessions, demandes
+d'inscription, sessions ouvertes.
 
 Particularités : API de style **RPC** — toutes les routes sont en `POST`, y compris les lectures,
-donc « n'autoriser que les GET » ne protège de rien. Les routes `list` **n'acceptent aucun
+donc « n'autoriser que les GET » ne protège de rien. En V1 les routes `list` **n'acceptent aucun
 paramètre** : pas de filtre, pas de pagination, chaque appel ramène toute la collection. Le jeton
-d'authentification expire au bout d'une heure.
+expire au bout d'une heure et se renouvelle par `refreshToken` sur `securetoken.googleapis.com`.
+**Aucun webhook n'existe**, en V1 comme en V2 : pas de temps réel possible.
+
+⚠️ **Le compte de service ne peut PAS être restreint en lecture seule** — l'éditeur l'a confirmé le
+2026-10-08 : l'API ne sait pas créer de jetons à droits différenciés. Le compte garde donc ses
+droits `delete` sur les apprenants, les formateurs et les entreprises. La liste blanche des scripts
+est la **seule** barrière, et elle ne protège que ce qui passe par nos scripts.
 
 Les scripts de `scripts/smartof/` appliquent une **liste blanche** des 16 routes de lecture et
 refusent toute route `create`/`update`/`delete`. Les identifiants sont lus dans le trousseau macOS,
