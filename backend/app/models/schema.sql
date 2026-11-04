@@ -200,7 +200,7 @@ INSERT INTO parametres (cle, valeur) VALUES
     ('of_adresse',    '2 RUE JULES LEFEBVRE 75009 PARIS'),
     ('of_da',         '28 50 01542 50'),
     ('of_signataire', 'Jonathan Knaus'),
-    ('of_titre',      'Team Lead Accounting Firm Services'),
+    ('of_titre',      'Team Lead External Consulting'),
     ('from_email',    'afs-training@pennylane.com'),
     ('tpl_convocation_sujet',    'Convocation — {{session_titre}}'),
     ('tpl_convocation_corps',    'Bonjour {{prenom}},\n\nVous êtes convoqué(e) à la formation "{{session_titre}}" le {{date}}.\n\nCordialement,\nL''équipe AFS Pennylane'),
