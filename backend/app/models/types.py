@@ -99,9 +99,9 @@ class QuestionnaireReponse(msgspec.Struct, kw_only=True):
 
 
 class EnqueteReponse(msgspec.Struct, kw_only=True):
-    session_id: str
-    stagiaire_id: str
-    type: str  # chaud | froid
+    # L'identité (session / stagiaire / type) est résolue côté serveur à partir
+    # du token unique du lien email — jamais fournie par le client.
+    token: str
     reponses: dict[str, Any]
 
 
