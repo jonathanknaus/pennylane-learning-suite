@@ -55,7 +55,7 @@
     "veille": {
       "traitements": {
         ".read": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
-        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com' || auth.token.email === 'sarah.briden.ext@pennylane.com')",
+        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com' || auth.token.email === 'sarah.briden.ext@pennylane.com' || auth.token.email === 'malorie.chovin@pennylane.com')",
         "$trace": {
           ".validate": "newData.hasChildren(['articleId', 'decision', 'traiteAt'])",
           "articleId": {
@@ -109,7 +109,7 @@
       },
       "archives": {
         ".read": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
-        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com' || auth.token.email === 'sarah.briden.ext@pennylane.com')",
+        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com' || auth.token.email === 'sarah.briden.ext@pennylane.com' || auth.token.email === 'malorie.chovin@pennylane.com')",
         "$article": {
           ".validate": "newData.hasChildren(['archiveLe'])",
           "titre": {
@@ -137,7 +137,7 @@
       },
       "articles-manuels": {
         ".read": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
-        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com' || auth.token.email === 'sarah.briden.ext@pennylane.com')",
+        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com' || auth.token.email === 'sarah.briden.ext@pennylane.com' || auth.token.email === 'malorie.chovin@pennylane.com')",
         "$article": {
           ".validate": "newData.hasChildren(['titre', 'url', 'date'])",
           "titre": {
@@ -174,7 +174,7 @@
       },
       "formateurs": {
         ".read": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email.endsWith('@pennylane.com') || auth.token.email.endsWith('@pennylane-partners.com'))",
-        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com' || auth.token.email === 'sarah.briden.ext@pennylane.com')",
+        ".write": "auth != null && auth.token.email != null && auth.token.email_verified === true && (auth.token.email === 'jonathan.knaus@pennylane.com' || auth.token.email === 'sarah.briden@pennylane-partners.com' || auth.token.email === 'sarah.briden.ext@pennylane.com' || auth.token.email === 'malorie.chovin@pennylane.com')",
         "$formateur": {
           ".validate": "newData.hasChildren(['prenom', 'nom', 'email'])",
           "prenom": {
